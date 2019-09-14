@@ -1,0 +1,34 @@
+{
+  "name": "firebase-driver-testing",
+  "version": "0.0.1",
+  "description": "Swap out Firebase as a driver for in-process testing",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": "https://github.com/hughgrigg/firebase-driver-testing",
+  "author": "Hugh Grigg",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@types/node": "^12.7.5"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "prettier": "^1.18.2",
+    "ts-jest": "^24.1.0",
+    "tslint": "^5.20.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!tests/**",
+      "!**/*test.ts"
+    ]
+  }
+}
