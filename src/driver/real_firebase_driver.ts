@@ -1,8 +1,10 @@
+import * as pubsubcl from "@google-cloud/pubsub"
 import { database } from "firebase-admin"
 import { runWith } from "firebase-functions"
 import {
     IFirebaseDriver,
     IFirebaseFunctionBuilder,
+    IFirebasePubSubCl,
     IFirebaseRealtimeDatabase,
     MemoryOption,
 } from "./firebase_driver"
@@ -14,17 +16,11 @@ export class RealFirebaseDriver implements IFirebaseDriver {
         return this.db
     }
 
-    runWith(runtimeOptions): IFirebaseFunctionBuilder {
+    runWith(runtimeOptions: { memory: MemoryOption; timeoutSeconds: number }): IFirebaseFunctionBuilder {
         return runWith(runtimeOptions)
     }
 
-    runOptions(
-        memory: MemoryOption = "256MB",
-        timeoutSeconds: number = 540,
-    ): { memory: MemoryOption; timeoutSeconds: number } {
-        return {
-            memory,
-            timeoutSeconds,
-        }
+    pubSubCl(): IFirebasePubSubCl {
+        return pubsubcl()
     }
 }

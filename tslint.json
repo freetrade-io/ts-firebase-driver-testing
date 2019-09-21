@@ -7,7 +7,8 @@
   "rules": {
     "semicolon": [true, "never"],
     "member-access": [true, "no-public"],
-    "max-classes-per-file": [false, 1]
+    "max-classes-per-file": [false, 1],
+    "object-literal-sort-keys": [false]
   },
   "rulesDirectory": []
 }

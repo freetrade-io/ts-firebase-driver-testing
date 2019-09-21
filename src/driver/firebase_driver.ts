@@ -1,29 +1,53 @@
 export interface IFirebaseDriver {
     realTimeDatabase(): IFirebaseRealtimeDatabase
-    runWith(runtimeOptions: IRunTimeOptions): IFirebaseFunctionBuilder
-    runOptions(memory?: MemoryOption, timeoutSeconds?: number): IRunTimeOptions
+    pubSubCl(): IFirebasePubSubCl
+    runWith(runtimeOptions?: { memory: MemoryOption; timeoutSeconds: number }): IFirebaseFunctionBuilder
 }
 
 export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB"
-export interface IRunTimeOptions {
-    memory?: MemoryOption,
-    timeoutSeconds?: number,
-}
 
 export interface IFirebaseRealtimeDatabase {
     ref(path?: string): IFirebaseRealtimeDatabaseRef
 }
 
+export interface IFirebasePubSubCl {
+    topic(name: string): IPubSubTopic
+}
+
+export interface IPubSubTopic {
+    publisher(): IPubSubPublisher
+}
+
+export interface IPubSubPublisher {
+    publish(data: Buffer): Promise<void>
+}
+
 export interface IFirebaseRealtimeDatabaseSnapshot {
     exists(): boolean
     val(): any
+    forEach(action: (snapshot: IFirebaseRealtimeDatabaseSnapshot) => boolean | void): void
 }
 
-export interface IFirebaseRealtimeDatabaseRef {
+export interface IFirebaseRealtimeDatabaseQuery {
+    orderByChild(path: string): IFirebaseRealtimeDatabaseQuery
+    orderByValue(): IFirebaseRealtimeDatabaseQuery
+    startAt(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
+    endAt(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
+    equalTo(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
+    once(eventType: string): Promise<IFirebaseRealtimeDatabaseSnapshot>
+}
+
+export interface IFirebaseRealtimeDatabaseRef extends IFirebaseRealtimeDatabaseQuery {
     child(path: string): IFirebaseRealtimeDatabaseRef
     set(value: any): Promise<void>
     update(value: object): Promise<void>
-    once(eventType: string): Promise<IFirebaseRealtimeDatabaseSnapshot>
+    remove(): Promise<void>
+    transaction(
+        transactionUpdate: (currentValue: any) => any,
+    ): Promise<{
+        committed: boolean
+        snapshot: IFirebaseRealtimeDatabaseSnapshot | null,
+    }>
 }
 
 export interface IFirebaseFunctionBuilder {
@@ -32,6 +56,7 @@ export interface IFirebaseFunctionBuilder {
 
 export interface IFirebasePubSub {
     schedule(schedule: string): IFirebaseScheduleBuilder
+    topic(topic: string): IFirebaseTopicBuilder
 }
 
 export interface IFirebaseRunnable<T> {
@@ -43,4 +68,8 @@ export type CloudFunction<T> = IFirebaseRunnable<T> &
 export interface IFirebaseScheduleBuilder {
     timeZone(timeZone: string): IFirebaseScheduleBuilder
     onRun(handler: (context: object) => PromiseLike<any>): CloudFunction<{}>
+}
+
+export interface IFirebaseTopicBuilder {
+    onPublish(handler: (message: object, context: object) => any): CloudFunction<any>
 }
