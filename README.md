@@ -1,5 +1,8 @@
 # Firebase Driver Testing
 
+[![Build Status](https://travis-ci.org/hughgrigg/firebase-driver-testing.svg?branch=master)](https://travis-ci.org/freetrade-io/firebase-driver-testing)
+[![npm version](https://badge.fury.io/js/firebase-driver-testing.svg)](http://badge.fury.io/js/firebase-driver-testing)
+
 ## Swap out Firebase as a driver for in-process testing
 
 This package allows easier high-level testing of business logic in Firebase applications by
