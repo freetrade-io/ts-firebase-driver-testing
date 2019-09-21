@@ -1,4 +1,4 @@
-import { InProcessRealtimeDatabase } from "../../../src/driver/in_process_firebase_driver"
+import { InProcessRealtimeDatabase } from "../../../src"
 
 describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
     const database = new InProcessRealtimeDatabase()

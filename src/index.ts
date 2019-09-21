@@ -6,3 +6,5 @@ if (!Object.entries) {
 }
 
 export * from "./driver/firebase_driver"
+export * from "./driver/in_process_firebase_driver"
+export * from "./driver/real_firebase_driver"
