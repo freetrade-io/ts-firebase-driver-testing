@@ -1,4 +1,4 @@
-import {InProcessRealtimeDatabase} from "../../../src/driver/in_process_firebase_driver"
+import { InProcessRealtimeDatabase } from "../../../src/driver/in_process_firebase_driver"
 
 describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
     const database = new InProcessRealtimeDatabase()
@@ -20,8 +20,20 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
         await database.ref("animals").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["three", "one", "five", "two", "four"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "three",
+            "one",
+            "five",
+            "two",
+            "four",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we get the collection ordered by value;
         const snapshot = await database
@@ -37,7 +49,13 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
             four: "platypus",
             five: "zebra",
         })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
         expect(Object.keys(snapshot.val())).not.toStrictEqual([
             "three",
             "one",
@@ -107,8 +125,20 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
         await database.ref("animals").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["three", "one", "five", "two", "four"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "three",
+            "one",
+            "five",
+            "two",
+            "four",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items starting at a value;
         const snapshot = await database
@@ -118,11 +148,31 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
             .once("value")
 
         // Then we should get the items ordered starting from that value.
-        expect(snapshot.val()).toStrictEqual({ three: "cyclops", four: "donkey", five: "elephant" })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["three", "four", "five"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["three", "five", "four"])
-        expect(Object.values(snapshot.val())).toStrictEqual(["cyclops", "donkey", "elephant"])
-        expect(Object.values(snapshot.val())).not.toStrictEqual(["cyclops", "elephant", "donkey"])
+        expect(snapshot.val()).toStrictEqual({
+            three: "cyclops",
+            four: "donkey",
+            five: "elephant",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "three",
+            "four",
+            "five",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "three",
+            "five",
+            "four",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "cyclops",
+            "donkey",
+            "elephant",
+        ])
+        expect(Object.values(snapshot.val())).not.toStrictEqual([
+            "cyclops",
+            "elephant",
+            "donkey",
+        ])
     })
 
     test("InProcessRealtimeDatabaseRef.orderByValue.endAt", async () => {
@@ -138,8 +188,20 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
         await database.ref("animals").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["three", "one", "five", "two", "four"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "three",
+            "one",
+            "five",
+            "two",
+            "four",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items ending at a value;
         const snapshot = await database
@@ -149,11 +211,31 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
             .once("value")
 
         // Then we should get the items ordered ending at that value.
-        expect(snapshot.val()).toStrictEqual({ one: "aardvark", two: "badger", three: "cyclops" })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["one", "two", "three"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["three", "one", "two"])
-        expect(Object.values(snapshot.val())).toStrictEqual(["aardvark", "badger", "cyclops"])
-        expect(Object.values(snapshot.val())).not.toStrictEqual(["cyclops", "aardvark", "badger"])
+        expect(snapshot.val()).toStrictEqual({
+            one: "aardvark",
+            two: "badger",
+            three: "cyclops",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "three",
+            "one",
+            "two",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "aardvark",
+            "badger",
+            "cyclops",
+        ])
+        expect(Object.values(snapshot.val())).not.toStrictEqual([
+            "cyclops",
+            "aardvark",
+            "badger",
+        ])
     })
 
     test("InProcessRealtimeDatabaseRef.orderByValue.startAt.endAt", async () => {
@@ -169,8 +251,20 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
         await database.ref("animals").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["four", "three", "one", "five", "two"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "four",
+            "three",
+            "one",
+            "five",
+            "two",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items starting at one value and ending at another;
         const snapshot = await database
@@ -181,10 +275,30 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
             .once("value")
 
         // Then we should get the items ordered starting from that value and ending at the other.
-        expect(snapshot.val()).toStrictEqual({ two: "badger", three: "cyclops", four: "donkey" })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["two", "three", "four"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["four", "three", "two"])
-        expect(Object.values(snapshot.val())).toStrictEqual(["badger", "cyclops", "donkey"])
-        expect(Object.values(snapshot.val())).not.toStrictEqual(["donkey", "cyclops", "badger"])
+        expect(snapshot.val()).toStrictEqual({
+            two: "badger",
+            three: "cyclops",
+            four: "donkey",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "two",
+            "three",
+            "four",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "four",
+            "three",
+            "two",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "badger",
+            "cyclops",
+            "donkey",
+        ])
+        expect(Object.values(snapshot.val())).not.toStrictEqual([
+            "donkey",
+            "cyclops",
+            "badger",
+        ])
     })
 })

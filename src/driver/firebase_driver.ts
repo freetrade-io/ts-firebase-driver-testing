@@ -1,7 +1,10 @@
 export interface IFirebaseDriver {
     realTimeDatabase(): IFirebaseRealtimeDatabase
     pubSubCl(): IFirebasePubSubCl
-    runWith(runtimeOptions?: { memory: MemoryOption; timeoutSeconds: number }): IFirebaseFunctionBuilder
+    runWith(runtimeOptions?: {
+        memory: MemoryOption
+        timeoutSeconds: number
+    }): IFirebaseFunctionBuilder
 }
 
 export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB"
@@ -25,19 +28,29 @@ export interface IPubSubPublisher {
 export interface IFirebaseRealtimeDatabaseSnapshot {
     exists(): boolean
     val(): any
-    forEach(action: (snapshot: IFirebaseRealtimeDatabaseSnapshot) => boolean | void): void
+    forEach(
+        action: (snapshot: IFirebaseRealtimeDatabaseSnapshot) => boolean | void,
+    ): void
+    child(path: string): IFirebaseRealtimeDatabaseSnapshot
 }
 
 export interface IFirebaseRealtimeDatabaseQuery {
     orderByChild(path: string): IFirebaseRealtimeDatabaseQuery
     orderByValue(): IFirebaseRealtimeDatabaseQuery
-    startAt(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
-    endAt(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
-    equalTo(value: number | string | boolean | null): IFirebaseRealtimeDatabaseQuery
+    startAt(
+        value: number | string | boolean | null,
+    ): IFirebaseRealtimeDatabaseQuery
+    endAt(
+        value: number | string | boolean | null,
+    ): IFirebaseRealtimeDatabaseQuery
+    equalTo(
+        value: number | string | boolean | null,
+    ): IFirebaseRealtimeDatabaseQuery
     once(eventType: string): Promise<IFirebaseRealtimeDatabaseSnapshot>
 }
 
-export interface IFirebaseRealtimeDatabaseRef extends IFirebaseRealtimeDatabaseQuery {
+export interface IFirebaseRealtimeDatabaseRef
+    extends IFirebaseRealtimeDatabaseQuery {
     child(path: string): IFirebaseRealtimeDatabaseRef
     set(value: any): Promise<void>
     update(value: object): Promise<void>
@@ -46,7 +59,7 @@ export interface IFirebaseRealtimeDatabaseRef extends IFirebaseRealtimeDatabaseQ
         transactionUpdate: (currentValue: any) => any,
     ): Promise<{
         committed: boolean
-        snapshot: IFirebaseRealtimeDatabaseSnapshot | null,
+        snapshot: IFirebaseRealtimeDatabaseSnapshot | null
     }>
 }
 
@@ -71,5 +84,7 @@ export interface IFirebaseScheduleBuilder {
 }
 
 export interface IFirebaseTopicBuilder {
-    onPublish(handler: (message: object, context: object) => any): CloudFunction<any>
+    onPublish(
+        handler: (message: object, context: object) => any,
+    ): CloudFunction<any>
 }

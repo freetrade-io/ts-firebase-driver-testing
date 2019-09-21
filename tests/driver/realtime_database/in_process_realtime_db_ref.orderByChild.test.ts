@@ -1,4 +1,4 @@
-import {InProcessRealtimeDatabase} from "../../../src/driver/in_process_firebase_driver"
+import { InProcessRealtimeDatabase } from "../../../src/driver/in_process_firebase_driver"
 
 describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
     const database = new InProcessRealtimeDatabase()
@@ -20,8 +20,20 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
         await database.ref("items").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["four", "two", "one", "five", "three"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "four",
+            "two",
+            "one",
+            "five",
+            "three",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
         expect(Object.values(dataset)).toStrictEqual([
             { date: "2019-09-04" },
             { date: "2019-09-02" },
@@ -51,7 +63,13 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
             four: { date: "2019-09-04" },
             five: { date: "2019-09-05" },
         })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
         expect(Object.keys(snapshot.val())).not.toStrictEqual([
             "four",
             "two",
@@ -138,8 +156,20 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
         await database.ref("items").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["four", "two", "one", "five", "three"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "four",
+            "two",
+            "one",
+            "five",
+            "three",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items with a child field starting at a value;
         const snapshot = await database
@@ -154,8 +184,16 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
             four: { date: "2019-09-04" },
             five: { date: "2019-09-05" },
         })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["three", "four", "five"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["four", "five", "three"])
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "three",
+            "four",
+            "five",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "four",
+            "five",
+            "three",
+        ])
         expect(Object.values(snapshot.val())).toStrictEqual([
             { date: "2019-09-03" },
             { date: "2019-09-04" },
@@ -181,8 +219,20 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
         await database.ref("items").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["four", "two", "one", "five", "three"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "four",
+            "two",
+            "one",
+            "five",
+            "three",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items with a child field ending at a value;
         const snapshot = await database
@@ -197,8 +247,16 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
             two: { date: "2019-09-02" },
             three: { date: "2019-09-03" },
         })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["one", "two", "three"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["two", "one", "three"])
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "two",
+            "one",
+            "three",
+        ])
         expect(Object.values(snapshot.val())).toStrictEqual([
             { date: "2019-09-01" },
             { date: "2019-09-02" },
@@ -224,8 +282,20 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
         await database.ref("items").set(dataset)
 
         // And the collection is not ordered;
-        expect(Object.keys(dataset)).toStrictEqual(["four", "two", "one", "five", "three"])
-        expect(Object.keys(dataset)).not.toStrictEqual(["one", "two", "three", "four", "five"])
+        expect(Object.keys(dataset)).toStrictEqual([
+            "four",
+            "two",
+            "one",
+            "five",
+            "three",
+        ])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ])
 
         // When we filter to items with a child field starting at one value and ending at another;
         const snapshot = await database
@@ -242,8 +312,16 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
             three: { date: "2019-09-03" },
             four: { date: "2019-09-04" },
         })
-        expect(Object.keys(snapshot.val())).toStrictEqual(["two", "three", "four"])
-        expect(Object.keys(snapshot.val())).not.toStrictEqual(["four", "two", "three"])
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "two",
+            "three",
+            "four",
+        ])
+        expect(Object.keys(snapshot.val())).not.toStrictEqual([
+            "four",
+            "two",
+            "three",
+        ])
         expect(Object.values(snapshot.val())).toStrictEqual([
             { date: "2019-09-02" },
             { date: "2019-09-03" },

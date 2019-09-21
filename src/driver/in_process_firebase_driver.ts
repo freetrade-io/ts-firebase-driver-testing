@@ -15,10 +15,14 @@ import {
     MemoryOption,
 } from "./firebase_driver"
 
-class InProcessFirebaseRealtimeDatabaseSnapshot implements IFirebaseRealtimeDatabaseSnapshot {
+class InProcessFirebaseRealtimeDatabaseSnapshot
+    implements IFirebaseRealtimeDatabaseSnapshot {
     constructor(readonly key: string, private readonly value: any) {}
 
     exists(): boolean {
+        if (this.value && typeof this.value === "object") {
+            return Object.entries(this.value).length !== 0
+        }
         return this.value !== undefined && this.value !== null
     }
 
@@ -26,13 +30,32 @@ class InProcessFirebaseRealtimeDatabaseSnapshot implements IFirebaseRealtimeData
         return this.value
     }
 
-    forEach(action: (snapshot: InProcessFirebaseRealtimeDatabaseSnapshot) => boolean | void): void {
+    forEach(
+        action: (
+            snapshot: InProcessFirebaseRealtimeDatabaseSnapshot,
+        ) => boolean | void,
+    ): void {
         if (typeof this.value !== "object") {
             return
         }
         for (const key of this.value) {
-            action(new InProcessFirebaseRealtimeDatabaseSnapshot(key, this.value[key]))
+            action(
+                new InProcessFirebaseRealtimeDatabaseSnapshot(
+                    key,
+                    this.value[key],
+                ),
+            )
         }
+    }
+
+    child(path: string): InProcessFirebaseRealtimeDatabaseSnapshot {
+        if (typeof this.value !== "object") {
+            return new InProcessFirebaseRealtimeDatabaseSnapshot(path, null)
+        }
+        return new InProcessFirebaseRealtimeDatabaseSnapshot(
+            path.split("/").pop() || "",
+            objectPath.get(this.value, makeDotPath(path), null),
+        )
     }
 }
 
@@ -55,13 +78,11 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
     orderByChild(childPath: string): InProcessRealtimeDatabaseRef {
         this.childOrderingPath = childPath
-        this.orderings.push(
-            (a: any, b: any): number => {
-                const childA = typeof a === "object" ? a[childPath] : undefined
-                const childB = typeof b === "object" ? b[childPath] : undefined
-                return this.compare(childA, childB)
-            },
-        )
+        this.orderings.push((a: any, b: any): number => {
+            const childA = typeof a === "object" ? a[childPath] : undefined
+            const childB = typeof b === "object" ? b[childPath] : undefined
+            return this.compare(childA, childB)
+        })
         return this
     }
 
@@ -70,39 +91,39 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         return this
     }
 
-    startAt(value: number | string | boolean | null): InProcessRealtimeDatabaseRef {
-        this.filters.push(
-            (item: any): boolean => {
-                if (typeof item === "object" && this.childOrderingPath) {
-                    item = item[this.childOrderingPath]
-                }
-                return this.compare(item, value) >= 0
-            },
-        )
+    startAt(
+        value: number | string | boolean | null,
+    ): InProcessRealtimeDatabaseRef {
+        this.filters.push((item: any): boolean => {
+            if (typeof item === "object" && this.childOrderingPath) {
+                item = item[this.childOrderingPath]
+            }
+            return this.compare(item, value) >= 0
+        })
         return this
     }
 
-    endAt(value: number | string | boolean | null): InProcessRealtimeDatabaseRef {
-        this.filters.push(
-            (item: any): boolean => {
-                if (typeof item === "object" && this.childOrderingPath) {
-                    item = item[this.childOrderingPath]
-                }
-                return this.compare(item, value) <= 0
-            },
-        )
+    endAt(
+        value: number | string | boolean | null,
+    ): InProcessRealtimeDatabaseRef {
+        this.filters.push((item: any): boolean => {
+            if (typeof item === "object" && this.childOrderingPath) {
+                item = item[this.childOrderingPath]
+            }
+            return this.compare(item, value) <= 0
+        })
         return this
     }
 
-    equalTo(value: number | string | boolean | null): InProcessRealtimeDatabaseRef {
-        this.filters.push(
-            (item: any): boolean => {
-                if (typeof item === "object" && this.childOrderingPath) {
-                    item = item[this.childOrderingPath]
-                }
-                return item === value
-            },
-        )
+    equalTo(
+        value: number | string | boolean | null,
+    ): InProcessRealtimeDatabaseRef {
+        this.filters.push((item: any): boolean => {
+            if (typeof item === "object" && this.childOrderingPath) {
+                item = item[this.childOrderingPath]
+            }
+            return item === value
+        })
         return this
     }
 
@@ -128,7 +149,9 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         this.db._updatePath(this.path, value)
     }
 
-    async once(eventType: string = "value"): Promise<InProcessFirebaseRealtimeDatabaseSnapshot> {
+    async once(
+        eventType: string = "value",
+    ): Promise<InProcessFirebaseRealtimeDatabaseSnapshot> {
         let value = this.db._getPath(this.path)
         if (typeof value === "object") {
             for (const ordering of this.orderings) {
@@ -150,7 +173,10 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                     }, {})
             }
         }
-        return new InProcessFirebaseRealtimeDatabaseSnapshot(this.path.split("/").pop() || "", value)
+        return new InProcessFirebaseRealtimeDatabaseSnapshot(
+            this.path.split("/").pop() || "",
+            value,
+        )
     }
 
     async remove(): Promise<void> {
@@ -161,14 +187,15 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         transactionUpdate: (currentValue: any) => any,
     ): Promise<{
         committed: boolean
-        snapshot: IFirebaseRealtimeDatabaseSnapshot | null,
+        snapshot: IFirebaseRealtimeDatabaseSnapshot | null
     }> {
         const initialValue = (await this.once()).val()
         let attempts = 0
         let result = transactionUpdate((await this.once()).val())
         while (
             result !== TransactionResult.ABORT &&
-            ((await this.once()).val() !== initialValue || result === TransactionResult.RETRY)
+            ((await this.once()).val() !== initialValue ||
+                result === TransactionResult.RETRY)
         ) {
             attempts++
             if (attempts > 10) {
@@ -192,50 +219,51 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         }
     }
 
-    private compare = (a: any, b: any): number => String(a).localeCompare(String(b))
+    private compare = (a: any, b: any): number =>
+        String(a).localeCompare(String(b))
 }
 
 export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
-
-    private static dotPath(path: string): string {
-        path = path.replace(/^(\/|\/$)+/g, "")
-        return path.trim().replace(/\/+/g, ".")
-    }
-
     private storage = {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
-        const dotPath = InProcessRealtimeDatabase.dotPath(path)
-        objectPath.ensureExists(this.storage, dotPath, undefined)
+        const dotPath = makeDotPath(path)
         return new InProcessRealtimeDatabaseRef(this, path.replace(".", "/"))
     }
 
     _getPath(path: string): any {
-        return objectPath.get(this.storage, InProcessRealtimeDatabase.dotPath(path))
+        return objectPath.get(this.storage, makeDotPath(path))
     }
 
     _setPath(path: string, value: any): void {
-        const dotPath = InProcessRealtimeDatabase.dotPath(path)
+        const dotPath = makeDotPath(path)
         objectPath.set(this.storage, dotPath, value)
     }
 
     _updatePath(path: string, value: any): void {
-        const dotPath = InProcessRealtimeDatabase.dotPath(path)
+        const dotPath = makeDotPath(path)
         const existing = objectPath.get(this.storage, dotPath, undefined)
-        if (existing === undefined || typeof existing !== "object" || typeof value !== "object") {
+        if (
+            existing === undefined ||
+            typeof existing !== "object" ||
+            typeof value !== "object"
+        ) {
             objectPath.set(this.storage, dotPath, value)
             return
         }
-        objectPath.set(this.storage, dotPath, { ...existing as object, ...value })
+        objectPath.set(this.storage, dotPath, {
+            ...(existing as object),
+            ...value,
+        })
     }
 
     _removePath(path: string): void {
-        const dotPath = InProcessRealtimeDatabase.dotPath(path)
+        const dotPath = makeDotPath(path)
         objectPath.del(this.storage, dotPath)
     }
 
-    reset(): void {
-        this.storage = {}
+    reset(dataset: object = {}): void {
+        this.storage = dataset
     }
 }
 
@@ -254,9 +282,17 @@ class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
 }
 
 class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
-    constructor(readonly name: string, private readonly pubSub: InProcessFirebasePubSub) {}
-    onPublish(handler: (message: object, context: object) => any): CloudFunction<any> {
-        const topicFunction = async (message: {json?: object}, context: object): Promise<any> => {
+    constructor(
+        readonly name: string,
+        private readonly pubSub: InProcessFirebasePubSub,
+    ) {}
+    onPublish(
+        handler: (message: object, context: object) => any,
+    ): CloudFunction<any> {
+        const topicFunction = async (
+            message: { json?: object },
+            context: object,
+        ): Promise<any> => {
             return handler(message, context)
         }
         topicFunction.run = topicFunction
@@ -266,7 +302,9 @@ class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
 }
 
 class InProcessFirebasePubSub implements IFirebasePubSub {
-    private readonly subscriptions: { [key: string]: Array<CloudFunction<any>> } = {}
+    private readonly subscriptions: {
+        [key: string]: Array<CloudFunction<any>>
+    } = {}
 
     constructor(private readonly driver: InProcessFirebaseDriver) {}
 
@@ -309,7 +347,10 @@ class InProcessPubSubPublisher implements IPubSubPublisher {
 }
 
 class InProcessFirebasePubSubTopic implements IPubSubTopic {
-    constructor(readonly name: string, private readonly pubSub: InProcessFirebasePubSub) {}
+    constructor(
+        readonly name: string,
+        private readonly pubSub: InProcessFirebasePubSub,
+    ) {}
 
     publisher(): IPubSubPublisher {
         return new InProcessPubSubPublisher(this)
@@ -321,13 +362,18 @@ class InProcessFirebasePubSubTopic implements IPubSubTopic {
 }
 
 class InProcessFirebasePubSubCl implements IFirebasePubSubCl {
-    private readonly topics: { [key: string]: InProcessFirebasePubSubTopic } = {}
+    private readonly topics: {
+        [key: string]: InProcessFirebasePubSubTopic
+    } = {}
 
     constructor(private readonly pubSub: InProcessFirebasePubSub) {}
 
     topic(name: string): InProcessFirebasePubSubTopic {
         if (!this.topics[name]) {
-            this.topics[name] = new InProcessFirebasePubSubTopic(name, this.pubSub)
+            this.topics[name] = new InProcessFirebasePubSubTopic(
+                name,
+                this.pubSub,
+            )
         }
         return this.topics[name]
     }
@@ -351,9 +397,14 @@ export class InProcessFirebaseDriver implements IFirebaseDriver {
         return this.db
     }
 
-    runWith(runtimeOptions?: { memory: MemoryOption; timeoutSeconds: number }): InProcessFirebaseFunctionBuilder {
+    runWith(runtimeOptions?: {
+        memory: MemoryOption
+        timeoutSeconds: number
+    }): InProcessFirebaseFunctionBuilder {
         if (!this.functionBuilder) {
-            this.functionBuilder = new InProcessFirebaseFunctionBuilder(this.inProcessPubSub())
+            this.functionBuilder = new InProcessFirebaseFunctionBuilder(
+                this.inProcessPubSub(),
+            )
         }
         return this.functionBuilder
     }
@@ -379,4 +430,9 @@ export class InProcessFirebaseDriver implements IFirebaseDriver {
             await this.jobs.pop()
         }
     }
+}
+
+function makeDotPath(path: string): string {
+    path = path.replace(/^(\/|\/$)+/g, "")
+    return path.trim().replace(/\/+/g, ".")
 }

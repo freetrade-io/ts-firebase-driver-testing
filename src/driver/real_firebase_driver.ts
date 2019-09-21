@@ -16,11 +16,15 @@ export class RealFirebaseDriver implements IFirebaseDriver {
         return this.db
     }
 
-    runWith(runtimeOptions: { memory: MemoryOption; timeoutSeconds: number }): IFirebaseFunctionBuilder {
+    runWith(runtimeOptions: {
+        memory: MemoryOption
+        timeoutSeconds: number
+    }): IFirebaseFunctionBuilder {
         return runWith(runtimeOptions)
     }
 
     pubSubCl(): IFirebasePubSubCl {
+        // @ts-ignore
         return pubsubcl()
     }
 }
