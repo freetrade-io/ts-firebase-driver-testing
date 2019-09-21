@@ -14,12 +14,6 @@ import {
     IPubSubTopic,
     MemoryOption,
 } from "./firebase_driver"
-// tslint:disable-next-line:no-var-requires
-const entries = require("object.entries")
-
-if (!Object.entries) {
-    entries.shim()
-}
 
 class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseRealtimeDatabaseSnapshot {
