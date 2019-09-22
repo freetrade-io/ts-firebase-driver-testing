@@ -7,7 +7,7 @@ import {
     IFirebasePubSubCl,
     IFirebaseRealtimeDatabase,
     MemoryOption,
-} from "./firebase_driver"
+} from "./FirebaseDriver"
 
 export class RealFirebaseDriver implements IFirebaseDriver {
     constructor(private readonly db: database.Database) {}

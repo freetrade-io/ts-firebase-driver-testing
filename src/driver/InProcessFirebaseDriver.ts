@@ -13,7 +13,7 @@ import {
     IPubSubPublisher,
     IPubSubTopic,
     MemoryOption,
-} from "./firebase_driver"
+} from "./FirebaseDriver"
 
 class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseRealtimeDatabaseSnapshot {
