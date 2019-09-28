@@ -95,7 +95,7 @@ export class CreatedChangeFilter extends ChangeFilter {
             }
             const afterAtPath = objectPath.get(
                 change.after,
-                afterPath.replace("/", "."),
+                afterPath.replace(/\//g, "."),
             )
             if (afterAtPath === undefined || afterAtPath === null) {
                 continue

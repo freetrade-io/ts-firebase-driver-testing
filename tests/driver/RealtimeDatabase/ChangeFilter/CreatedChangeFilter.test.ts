@@ -51,6 +51,62 @@ describe("CreatedChangeFilter", () => {
                 },
             ],
         ],
+        [
+            "/{id}/bar",
+            { after: { foo: { bar: "baz" } } },
+            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+        ],
+        [
+            "/animals/{animalName}/features/{featureName}",
+            {
+                before: {
+                    animals: {},
+                },
+                after: {
+                    animals: {
+                        tiger: {
+                            features: {
+                                stripey: "very stripey",
+                                swimming: "not swimming",
+                            },
+                        },
+                        dolphin: {
+                            features: {
+                                stripey: "not stripey",
+                                swimming: "much swimming",
+                            },
+                        },
+                    },
+                },
+            },
+            [
+                {
+                    parameters: { animalName: "tiger", featureName: "stripey" },
+                    change: { before: undefined, after: "very stripey" },
+                },
+                {
+                    parameters: {
+                        animalName: "tiger",
+                        featureName: "swimming",
+                    },
+                    change: { before: undefined, after: "not swimming" },
+                },
+                {
+                    parameters: {
+                        animalName: "dolphin",
+                        featureName: "stripey",
+                    },
+                    change: { before: undefined, after: "not stripey" },
+                },
+                {
+                    parameters: {
+                        animalName: "dolphin",
+                        featureName: "swimming",
+                    },
+                    change: { before: undefined, after: "much swimming" },
+                },
+            ],
+        ],
     ] as Array<[string, IChange, IParameterisedChange[]]>)(
         "changeEvents cases",
         (
