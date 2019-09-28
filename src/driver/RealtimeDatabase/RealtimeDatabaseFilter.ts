@@ -15,7 +15,7 @@ export interface IParameterisedChange {
 
 export interface IChangeFilter {
     readonly path: string
-    changeEvents(change: IChange): IChange[]
+    changeEvents(change: IChange): IParameterisedChange[]
 }
 
 abstract class ChangeFilter implements IChangeFilter {
@@ -23,7 +23,7 @@ abstract class ChangeFilter implements IChangeFilter {
         this.path = _.trim(this.path.trim(), "/")
     }
 
-    abstract changeEvents(change: IChange): IChange[]
+    abstract changeEvents(change: IChange): IParameterisedChange[]
 
     protected changePaths(
         change: IChange,
@@ -40,7 +40,9 @@ abstract class ChangeFilter implements IChangeFilter {
         return { beforePaths, afterPaths }
     }
 
-    protected matchPath(otherPath: string): boolean {
+    protected matchPath(
+        otherPath: string,
+    ): { match: boolean; parameters: { [key: string]: string } } {
         const pathParts = this.path
             .split("/")
             .map((p) => p.trim())
@@ -50,28 +52,40 @@ abstract class ChangeFilter implements IChangeFilter {
             .map((p) => p.trim())
             .filter((p) => p.length)
         if (pathParts.length !== otherPathParts.length) {
-            return false
+            return {
+                match: false,
+                parameters: {},
+            }
         }
-        for (const i in pathParts) {
+        const parameters: { [key: string]: string } = {}
+        for (let i = 0; i < pathParts.length; i++) {
             if (pathParts[i].match(/{[a-zA-Z0-9_-]+}/)) {
+                parameters[_.trim(pathParts[i], "{}")] = otherPathParts[i]
                 continue
             }
             if (pathParts[i] === otherPathParts[i]) {
                 continue
             }
-            return false
+            return {
+                match: false,
+                parameters: {},
+            }
         }
-        return true
+        return {
+            match: true,
+            parameters,
+        }
     }
 }
 
 export class CreatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IChange[] {
+    changeEvents(change: IChange): IParameterisedChange[] {
         const paths = this.changePaths(change)
 
-        const created: IChange[] = []
+        const created: IParameterisedChange[] = []
         for (const afterPath of paths.afterPaths) {
-            if (!this.matchPath(afterPath)) {
+            const matchPath = this.matchPath(afterPath)
+            if (!matchPath.match) {
                 // We're not interested in this path.
                 continue
             }
@@ -87,8 +101,11 @@ export class CreatedChangeFilter extends ChangeFilter {
                 continue
             }
             created.push({
-                before: undefined,
-                after: afterAtPath,
+                parameters: matchPath.parameters,
+                change: {
+                    before: undefined,
+                    after: afterAtPath,
+                },
             })
         }
 
@@ -97,12 +114,13 @@ export class CreatedChangeFilter extends ChangeFilter {
 }
 
 export class UpdatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IChange[] {
+    changeEvents(change: IChange): IParameterisedChange[] {
         const paths = this.changePaths(change)
 
-        const updated: IChange[] = []
+        const updated: IParameterisedChange[] = []
         for (const afterPath of paths.afterPaths) {
-            if (!this.matchPath(afterPath)) {
+            const matchPath = this.matchPath(afterPath)
+            if (!matchPath.match) {
                 // We're not interested in this path.
                 continue
             }
@@ -121,7 +139,10 @@ export class UpdatedChangeFilter extends ChangeFilter {
                 continue
             }
             if (afterAtPath !== beforeAtPath) {
-                updated.push({ before: beforeAtPath, after: afterAtPath })
+                updated.push({
+                    parameters: matchPath.parameters,
+                    change: { before: beforeAtPath, after: afterAtPath },
+                })
             }
         }
 
@@ -130,12 +151,13 @@ export class UpdatedChangeFilter extends ChangeFilter {
 }
 
 export class DeletedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IChange[] {
+    changeEvents(change: IChange): IParameterisedChange[] {
         const paths = this.changePaths(change)
 
-        const deleted: IChange[] = []
+        const deleted: IParameterisedChange[] = []
         for (const beforePath of paths.beforePaths) {
-            if (!this.matchPath(beforePath)) {
+            const matchPath = this.matchPath(beforePath)
+            if (!matchPath.match) {
                 // We're not interested in this path.
                 continue
             }
@@ -146,7 +168,10 @@ export class DeletedChangeFilter extends ChangeFilter {
                 change.before,
                 beforePath.replace("/", "."),
             )
-            deleted.push({ before: beforeAtPath, after: undefined })
+            deleted.push({
+                parameters: matchPath.parameters,
+                change: { before: beforeAtPath, after: undefined },
+            })
         }
 
         return deleted
@@ -154,7 +179,7 @@ export class DeletedChangeFilter extends ChangeFilter {
 }
 
 export class WriteChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IChange[] {
+    changeEvents(change: IChange): IParameterisedChange[] {
         return [
             ...new CreatedChangeFilter(this.path).changeEvents(change),
             ...new UpdatedChangeFilter(this.path).changeEvents(change),

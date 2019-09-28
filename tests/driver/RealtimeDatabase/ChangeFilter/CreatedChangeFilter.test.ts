@@ -1,22 +1,27 @@
 import {
     CreatedChangeFilter,
     IChange,
+    IParameterisedChange,
 } from "../../../../src/driver/RealtimeDatabase/RealtimeDatabaseFilter"
 
 describe("CreatedChangeFilter", () => {
     test.each([
         ["", {}, []],
         ["/foo", { after: {} }, []],
-        ["/foo", { after: { foo: "bar" } }, [{ after: "bar" }]],
+        [
+            "/foo",
+            { after: { foo: "bar" } },
+            [{ parameters: {}, change: { after: "bar" } }],
+        ],
         [
             "/foo",
             { after: { foo: { bar: "baz" } } },
-            [{ after: { bar: "baz" } }],
+            [{ parameters: {}, change: { after: { bar: "baz" } } }],
         ],
         [
             "/foo",
             { before: {}, after: { foo: { bar: "baz" } } },
-            [{ after: { bar: "baz" } }],
+            [{ parameters: {}, change: { after: { bar: "baz" } } }],
         ],
         [
             "/foo",
@@ -24,15 +29,19 @@ describe("CreatedChangeFilter", () => {
                 before: { hello: "yes" },
                 after: { hello: "yes", foo: { bar: "baz" } },
             },
-            [{ after: { bar: "baz" } }],
+            [{ parameters: {}, change: { after: { bar: "baz" } } }],
         ],
-        ["/foo/bar", { after: { foo: { bar: "baz" } } }, [{ after: "baz" }]],
-    ] as Array<[string, IChange, IChange[]]>)(
+        [
+            "/foo/bar",
+            { after: { foo: { bar: "baz" } } },
+            [{ parameters: {}, change: { after: "baz" } }],
+        ],
+    ] as Array<[string, IChange, IParameterisedChange[]]>)(
         "changeEvents cases",
         (
             observedPath: string,
             change: IChange,
-            expectedChangeEvents: IChange[],
+            expectedChangeEvents: IParameterisedChange[],
         ) => {
             // Given a Created change filter for a path;
             const filter = new CreatedChangeFilter(observedPath)
