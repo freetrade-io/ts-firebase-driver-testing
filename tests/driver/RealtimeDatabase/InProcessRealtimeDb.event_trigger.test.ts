@@ -1,9 +1,8 @@
 import {
-    IFirebaseEventContext,
     IFirebaseChange,
     IFirebaseDataSnapshot,
+    IFirebaseEventContext,
     InProcessFirebaseDriver,
-    InProcessRealtimeDatabase,
 } from "../../../src"
 
 type SnapshotChange = IFirebaseChange<IFirebaseDataSnapshot>

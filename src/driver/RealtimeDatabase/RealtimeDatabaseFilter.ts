@@ -1,3 +1,4 @@
+import _ from "lodash"
 import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
 
@@ -6,13 +7,21 @@ export interface IChange {
     after: any
 }
 
+// TODO: Return this from filters instead of IChange
+export interface IParameterisedChange {
+    parameters: { [key: string]: string }
+    change: IChange
+}
+
 export interface IChangeFilter {
     readonly path: string
     changeEvents(change: IChange): IChange[]
 }
 
 abstract class ChangeFilter implements IChangeFilter {
-    constructor(readonly path: string) {}
+    constructor(readonly path: string) {
+        this.path = _.trim(this.path.trim(), "/")
+    }
 
     abstract changeEvents(change: IChange): IChange[]
 
@@ -43,11 +52,11 @@ abstract class ChangeFilter implements IChangeFilter {
         if (pathParts.length !== otherPathParts.length) {
             return false
         }
-        for (const pathPart of pathParts) {
-            if (pathPart.match(/{[a-zA-Z0-9_-]+}/)) {
+        for (const i in pathParts) {
+            if (pathParts[i].match(/{[a-zA-Z0-9_-]+}/)) {
                 continue
             }
-            if (pathPart === otherPathParts[0]) {
+            if (pathParts[i] === otherPathParts[i]) {
                 continue
             }
             return false

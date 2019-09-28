@@ -5,9 +5,28 @@ import {
 
 describe("CreatedChangeFilter", () => {
     test.each([
-        // ["", {}, []],
-        // ["/foo", { after: {} }, []],
+        ["", {}, []],
+        ["/foo", { after: {} }, []],
         ["/foo", { after: { foo: "bar" } }, [{ after: "bar" }]],
+        [
+            "/foo",
+            { after: { foo: { bar: "baz" } } },
+            [{ after: { bar: "baz" } }],
+        ],
+        [
+            "/foo",
+            { before: {}, after: { foo: { bar: "baz" } } },
+            [{ after: { bar: "baz" } }],
+        ],
+        [
+            "/foo",
+            {
+                before: { hello: "yes" },
+                after: { hello: "yes", foo: { bar: "baz" } },
+            },
+            [{ after: { bar: "baz" } }],
+        ],
+        ["/foo/bar", { after: { foo: { bar: "baz" } } }, [{ after: "baz" }]],
     ] as Array<[string, IChange, IChange[]]>)(
         "changeEvents cases",
         (
