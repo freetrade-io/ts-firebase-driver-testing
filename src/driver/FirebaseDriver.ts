@@ -25,13 +25,11 @@ export interface IPubSubPublisher {
     publish(data: Buffer): Promise<void>
 }
 
-export interface IFirebaseRealtimeDatabaseSnapshot {
+export interface IFirebaseDataSnapshot {
     exists(): boolean
     val(): any
-    forEach(
-        action: (snapshot: IFirebaseRealtimeDatabaseSnapshot) => boolean | void,
-    ): void
-    child(path: string): IFirebaseRealtimeDatabaseSnapshot
+    forEach(action: (snapshot: IFirebaseDataSnapshot) => boolean | void): void
+    child(path: string): IFirebaseDataSnapshot
 }
 
 export interface IFirebaseRealtimeDatabaseQuery {
@@ -46,7 +44,7 @@ export interface IFirebaseRealtimeDatabaseQuery {
     equalTo(
         value: number | string | boolean | null,
     ): IFirebaseRealtimeDatabaseQuery
-    once(eventType: string): Promise<IFirebaseRealtimeDatabaseSnapshot>
+    once(eventType: string): Promise<IFirebaseDataSnapshot>
 }
 
 export interface IFirebaseRealtimeDatabaseRef
@@ -59,17 +57,22 @@ export interface IFirebaseRealtimeDatabaseRef
         transactionUpdate: (currentValue: any) => any,
     ): Promise<{
         committed: boolean
-        snapshot: IFirebaseRealtimeDatabaseSnapshot | null
+        snapshot: IFirebaseDataSnapshot | null
     }>
 }
 
 export interface IFirebaseFunctionBuilder {
-    pubsub: IFirebasePubSub
+    pubsub: IFirebaseBuilderPubSub
+    database: IFirebaseBuilderDatabase
 }
 
-export interface IFirebasePubSub {
+export interface IFirebaseBuilderPubSub {
     schedule(schedule: string): IFirebaseScheduleBuilder
     topic(topic: string): IFirebaseTopicBuilder
+}
+
+export interface IFirebaseBuilderDatabase {
+    ref(path: string): IFirebaseRefBuilder
 }
 
 export interface IFirebaseRunnable<T> {
@@ -87,4 +90,25 @@ export interface IFirebaseTopicBuilder {
     onPublish(
         handler: (message: object, context: object) => any,
     ): CloudFunction<any>
+}
+
+export interface IFirebaseRefBuilder {
+    onWrite(
+        handler: (
+            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any> | any,
+    ): CloudFunction<any>
+}
+
+export interface IFirebaseChange<T> {
+    before: T
+    after: T
+}
+
+export interface IFirebaseEventContext {
+    eventId: string
+    timestamp: string
+    eventType: string
+    params: { [option: string]: any }
 }

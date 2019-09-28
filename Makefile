@@ -8,7 +8,7 @@ dist: node_modules $(shell find src -type f) prettier
 
 .PHONY: prettier
 prettier:
-	./node_modules/.bin/prettier ./src/**/*.ts ./tests/**/*.ts --write
+	./node_modules/.bin/prettier './src/**/*.ts' './tests/**/*.ts' --write
 
 .PHONY: test
 test: node_modules

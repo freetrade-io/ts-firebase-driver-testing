@@ -1,13 +1,18 @@
+import * as _ from "lodash"
 import objectPath = require("object-path")
 import {
     CloudFunction,
+    IFirebaseBuilderDatabase,
+    IFirebaseBuilderPubSub,
+    IFirebaseChange,
+    IFirebaseDataSnapshot,
     IFirebaseDriver,
+    IFirebaseEventContext,
     IFirebaseFunctionBuilder,
-    IFirebasePubSub,
     IFirebasePubSubCl,
     IFirebaseRealtimeDatabase,
     IFirebaseRealtimeDatabaseRef,
-    IFirebaseRealtimeDatabaseSnapshot,
+    IFirebaseRefBuilder,
     IFirebaseScheduleBuilder,
     IFirebaseTopicBuilder,
     IPubSubPublisher,
@@ -16,7 +21,7 @@ import {
 } from "./FirebaseDriver"
 
 class InProcessFirebaseRealtimeDatabaseSnapshot
-    implements IFirebaseRealtimeDatabaseSnapshot {
+    implements IFirebaseDataSnapshot {
     constructor(readonly key: string, private readonly value: any) {}
 
     exists(): boolean {
@@ -187,7 +192,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         transactionUpdate: (currentValue: any) => any,
     ): Promise<{
         committed: boolean
-        snapshot: IFirebaseRealtimeDatabaseSnapshot | null
+        snapshot: IFirebaseDataSnapshot | null
     }> {
         const initialValue = (await this.once()).val()
         let attempts = 0
@@ -226,8 +231,15 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     private storage = {}
 
+    private triggers: {
+        onWrite: {
+            [key: string]: Array<CloudFunction<any>>
+        }
+    } = {
+        onWrite: {},
+    }
+
     ref(path: string): InProcessRealtimeDatabaseRef {
-        const dotPath = makeDotPath(path)
         return new InProcessRealtimeDatabaseRef(this, path.replace(".", "/"))
     }
 
@@ -237,11 +249,35 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
     _setPath(path: string, value: any): void {
         const dotPath = makeDotPath(path)
+        const originalValue = objectPath.get(this.storage, dotPath, undefined)
         objectPath.set(this.storage, dotPath, value)
+
+        if (_.isEqual(value, originalValue)) {
+            // No change -> no triggers
+            return
+        }
+        // Changed -> always onWrite
+        if (originalValue === undefined) {
+            // New -> onCreate
+        } else if (value === null) {
+            // Existing removed -> onDelete
+        } else {
+            // Existing -> onUpdate
+        }
+
+        // TODO: this won't handle overwriting child fields from a higher level.
+        // E.g. { foo: { bar: "hello" } }
+        // Event trigger on "foo/bar/{value}"
+        // Writing to "/foo" will overwrite but not trigger the relevant events.
+        // Needs some sort of recursive trigger...
+        // Or maybe an actual event/subscriber somehow... Objects and they all
+        // receive every update, decide whether to react?
+        // This seems more manageable.
     }
 
     _updatePath(path: string, value: any): void {
         const dotPath = makeDotPath(path)
+        // TODO: How to trigger events?
         const existing = objectPath.get(this.storage, dotPath, undefined)
         if (
             existing === undefined ||
@@ -259,11 +295,42 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
     _removePath(path: string): void {
         const dotPath = makeDotPath(path)
+        // TODO: How to trigger events?
         objectPath.del(this.storage, dotPath)
+    }
+
+    _addTrigger(
+        path: string,
+        type: "onWrite",
+        handler: CloudFunction<any>,
+    ): void {
+        this.triggers[type][path].push(handler)
     }
 
     reset(dataset: object = {}): void {
         this.storage = dataset
+        this.triggers = { onWrite: {} }
+    }
+}
+
+class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
+    constructor(
+        readonly path: string,
+        private readonly database: InProcessRealtimeDatabase,
+    ) {}
+
+    onWrite(
+        handler: (
+            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any> | any,
+    ): CloudFunction<any> {
+        const cloudFunction = async (change: any, context: any) => {
+            return handler(change, context)
+        }
+        cloudFunction.run = cloudFunction
+        this.database._addTrigger(this.path, "onWrite", cloudFunction)
+        return cloudFunction
     }
 }
 
@@ -284,7 +351,7 @@ class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
 class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     constructor(
         readonly name: string,
-        private readonly pubSub: InProcessFirebasePubSub,
+        private readonly pubSub: InProcessFirebaseBuilderPubSub,
     ) {}
     onPublish(
         handler: (message: object, context: object) => any,
@@ -301,7 +368,15 @@ class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     }
 }
 
-class InProcessFirebasePubSub implements IFirebasePubSub {
+class InProcessFirebaseBuilderDatabase implements IFirebaseBuilderDatabase {
+    constructor(private readonly database: InProcessRealtimeDatabase) {}
+
+    ref(path: string): InProcessFirebaseRefBuilder {
+        return new InProcessFirebaseRefBuilder(path, this.database)
+    }
+}
+
+class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
     private readonly subscriptions: {
         [key: string]: Array<CloudFunction<any>>
     } = {}
@@ -349,7 +424,7 @@ class InProcessPubSubPublisher implements IPubSubPublisher {
 class InProcessFirebasePubSubTopic implements IPubSubTopic {
     constructor(
         readonly name: string,
-        private readonly pubSub: InProcessFirebasePubSub,
+        private readonly pubSub: InProcessFirebaseBuilderPubSub,
     ) {}
 
     publisher(): IPubSubPublisher {
@@ -366,7 +441,7 @@ class InProcessFirebasePubSubCl implements IFirebasePubSubCl {
         [key: string]: InProcessFirebasePubSubTopic
     } = {}
 
-    constructor(private readonly pubSub: InProcessFirebasePubSub) {}
+    constructor(private readonly pubSub: InProcessFirebaseBuilderPubSub) {}
 
     topic(name: string): InProcessFirebasePubSubTopic {
         if (!this.topics[name]) {
@@ -380,14 +455,18 @@ class InProcessFirebasePubSubCl implements IFirebasePubSubCl {
 }
 
 class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
-    constructor(readonly pubsub: InProcessFirebasePubSub) {}
+    constructor(
+        readonly pubsub: InProcessFirebaseBuilderPubSub,
+        readonly database: InProcessFirebaseBuilderDatabase,
+    ) {}
 }
 
 export class InProcessFirebaseDriver implements IFirebaseDriver {
     private db: InProcessRealtimeDatabase | undefined
     private jobs: Array<Promise<any>> = []
 
-    private pubSub: InProcessFirebasePubSub | undefined
+    private builderDatabase: InProcessFirebaseBuilderDatabase | undefined
+    private builderPubSub: InProcessFirebaseBuilderPubSub | undefined
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
 
     realTimeDatabase(): InProcessRealtimeDatabase {
@@ -403,21 +482,31 @@ export class InProcessFirebaseDriver implements IFirebaseDriver {
     }): InProcessFirebaseFunctionBuilder {
         if (!this.functionBuilder) {
             this.functionBuilder = new InProcessFirebaseFunctionBuilder(
-                this.inProcessPubSub(),
+                this.inProcessBuilderPubSub(),
+                this.inProcessBuilderDatabase(),
             )
         }
         return this.functionBuilder
     }
 
     pubSubCl(): IFirebasePubSubCl {
-        return new InProcessFirebasePubSubCl(this.inProcessPubSub())
+        return new InProcessFirebasePubSubCl(this.inProcessBuilderPubSub())
     }
 
-    inProcessPubSub(): InProcessFirebasePubSub {
-        if (!this.pubSub) {
-            this.pubSub = new InProcessFirebasePubSub(this)
+    inProcessBuilderDatabase(): InProcessFirebaseBuilderDatabase {
+        if (!this.builderDatabase) {
+            this.builderDatabase = new InProcessFirebaseBuilderDatabase(
+                this.realTimeDatabase(),
+            )
         }
-        return this.pubSub
+        return this.builderDatabase
+    }
+
+    inProcessBuilderPubSub(): InProcessFirebaseBuilderPubSub {
+        if (!this.builderPubSub) {
+            this.builderPubSub = new InProcessFirebaseBuilderPubSub(this)
+        }
+        return this.builderPubSub
     }
 
     pushJob(job: Promise<any>): void {
