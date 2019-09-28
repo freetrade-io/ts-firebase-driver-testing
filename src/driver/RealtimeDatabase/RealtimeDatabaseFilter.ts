@@ -125,20 +125,20 @@ export class UpdatedChangeFilter extends ChangeFilter {
                 continue
             }
             const afterAtPath = objectPath.get(
-                change.before,
-                afterPath.replace("/", "."),
+                change.after,
+                afterPath.replace(/\//g, "."),
             )
             if (afterAtPath === undefined || afterAtPath === null) {
                 continue
             }
             const beforeAtPath = objectPath.get(
                 change.before,
-                afterPath.replace("/", "."),
+                afterPath.replace(/\//g, "."),
             )
             if (beforeAtPath === undefined || beforeAtPath === null) {
                 continue
             }
-            if (afterAtPath !== beforeAtPath) {
+            if (!_.isEqual(afterAtPath, beforeAtPath)) {
                 updated.push({
                     parameters: matchPath.parameters,
                     change: { before: beforeAtPath, after: afterAtPath },
@@ -166,7 +166,7 @@ export class DeletedChangeFilter extends ChangeFilter {
             }
             const beforeAtPath = objectPath.get(
                 change.before,
-                beforePath.replace("/", "."),
+                beforePath.replace(/\//g, "."),
             )
             deleted.push({
                 parameters: matchPath.parameters,
