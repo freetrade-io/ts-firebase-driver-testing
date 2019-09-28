@@ -36,6 +36,21 @@ describe("CreatedChangeFilter", () => {
             { after: { foo: { bar: "baz" } } },
             [{ parameters: {}, change: { after: "baz" } }],
         ],
+        [
+            "/{id}/bar",
+            { after: { foo: { bar: "baz" } } },
+            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+        ],
+        [
+            "/{id}/{key}",
+            { after: { foo: { bar: "baz" } } },
+            [
+                {
+                    parameters: { id: "foo", key: "bar" },
+                    change: { after: "baz" },
+                },
+            ],
+        ],
     ] as Array<[string, IChange, IParameterisedChange[]]>)(
         "changeEvents cases",
         (
