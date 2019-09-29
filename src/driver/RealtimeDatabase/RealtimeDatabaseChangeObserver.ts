@@ -11,7 +11,7 @@ import {
 } from "./RealtimeDatabaseChangeFilter"
 
 export interface IRealtimeDatabaseChangeObserver {
-    onChange(changedPath: string, change: IChange): Promise<void>
+    onChange(change: IChange): Promise<void>
 }
 
 export function makeChangeObserver(
@@ -33,14 +33,22 @@ export function makeChangeObserver(
 
 export type ChangeType = "created" | "updated" | "deleted" | "written"
 
+export interface IChangeSnapshots {
+    before: IChangeSnapshot
+    after: IChangeSnapshot
+}
 interface IChangeSnapshot {
     val(): any
     exists(): boolean
 }
 
+export interface IChangeContext {
+    params: IChangeParams
+}
+
 type TriggerFunction = (
-    change: { before: IChangeSnapshot; after: IChangeSnapshot },
-    context: { params: IChangeParams },
+    change: IChangeSnapshots,
+    context: IChangeContext,
 ) => PromiseLike<any>
 
 abstract class RealtimeDatabaseChangeObserver
@@ -50,7 +58,7 @@ abstract class RealtimeDatabaseChangeObserver
         protected readonly handler: TriggerFunction,
     ) {}
 
-    async onChange(path: string, change: IChange): Promise<void> {
+    async onChange(change: IChange): Promise<void> {
         const relevantChanges = this.changeFilter().changeEvents(change)
         await Promise.all(
             relevantChanges.map((pc: IParameterisedChange) => {

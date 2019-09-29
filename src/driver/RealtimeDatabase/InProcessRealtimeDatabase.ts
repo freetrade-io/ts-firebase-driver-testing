@@ -1,3 +1,4 @@
+import _ from "lodash"
 import objectPath = require("object-path")
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -239,50 +240,39 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _setPath(path: string, value: any): void {
-        const dotPath = makeDotPath(path)
-        const existing = objectPath.get(this.storage, dotPath)
-        objectPath.set(this.storage, dotPath, value)
-
-        this.triggerChangeEvents(
-            path,
-            existing,
-            objectPath.get(this.storage, dotPath),
-        )
+        this.triggerChangeEvents(() => {
+            path = _.trim(path, "/")
+            const dotPath = makeDotPath(path)
+            objectPath.set(this.storage, dotPath, value)
+        })
     }
 
     _updatePath(path: string, value: any): void {
-        const dotPath = makeDotPath(path)
-        const existing = objectPath.get(this.storage, dotPath)
-        if (
-            existing === undefined ||
-            typeof existing !== "object" ||
-            typeof value !== "object"
-        ) {
-            objectPath.set(this.storage, dotPath, value)
-            return
-        }
-        objectPath.set(this.storage, dotPath, {
-            ...(existing as object),
-            ...value,
+        this.triggerChangeEvents(() => {
+            path = _.trim(path, "/")
+            const dotPath = makeDotPath(path)
+            const existing = objectPath.get(this.storage, dotPath)
+            if (
+                existing === undefined ||
+                typeof existing !== "object" ||
+                typeof value !== "object"
+            ) {
+                objectPath.set(this.storage, dotPath, value)
+                return
+            }
+            objectPath.set(this.storage, dotPath, {
+                ...(existing as object),
+                ...value,
+            })
         })
-
-        this.triggerChangeEvents(
-            path,
-            existing,
-            objectPath.get(this.storage, dotPath),
-        )
     }
 
     _removePath(path: string): void {
-        const dotPath = makeDotPath(path)
-        const existing = objectPath.get(this.storage, dotPath)
-        objectPath.del(this.storage, dotPath)
-
-        this.triggerChangeEvents(
-            path,
-            existing,
-            objectPath.get(this.storage, dotPath),
-        )
+        this.triggerChangeEvents(() => {
+            path = _.trim(path, "/")
+            const dotPath = makeDotPath(path)
+            objectPath.del(this.storage, dotPath)
+        })
     }
 
     _addObserver(
@@ -300,16 +290,23 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         this.changeObservers = []
     }
 
-    private triggerChangeEvents(path: string, before: any, after: any): void {
-        before = makeMinimalChange(path, before)
-        after = makeMinimalChange(path, after)
+    private triggerChangeEvents(makeChange: () => any): void {
+        if (!this.jobs) {
+            makeChange()
+            return
+        }
+
+        const before = _.cloneDeep(this.storage)
+        makeChange()
+        const after = _.cloneDeep(this.storage)
+
         for (const observer of this.changeObservers) {
-            setTimeout(() => {
-                const job = observer.onChange(path, { before, after })
-                if (this.jobs) {
-                    this.jobs.pushJob(job)
-                }
-            }, 1)
+            const job = new Promise((resolve) => {
+                setTimeout(async () => {
+                    resolve(observer.onChange({ before, after }))
+                }, 1)
+            })
+            this.jobs.pushJob(job)
         }
     }
 }
@@ -389,10 +386,4 @@ export class InProcessFirebaseBuilderDatabase
 function makeDotPath(path: string): string {
     path = path.replace(/^(\/|\/$)+/g, "")
     return path.trim().replace(/\/+/g, ".")
-}
-
-function makeMinimalChange(path: string, value: any): any {
-    const change = {}
-    objectPath.ensureExists(change, makeDotPath(path), value)
-    return change
 }
