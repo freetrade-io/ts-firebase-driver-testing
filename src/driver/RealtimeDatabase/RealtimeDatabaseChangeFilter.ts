@@ -12,14 +12,18 @@ export interface IParameterisedChange {
     change: IChange
 }
 
+export interface IChangeParams {
+    [key: string]: string
+}
+
 export interface IChangeFilter {
-    readonly path: string
+    readonly observedPath: string
     changeEvents(change: IChange): IParameterisedChange[]
 }
 
 abstract class ChangeFilter implements IChangeFilter {
-    constructor(readonly path: string) {
-        this.path = _.trim(this.path.trim(), "/")
+    constructor(readonly observedPath: string) {
+        this.observedPath = _.trim(this.observedPath.trim(), "/")
     }
 
     abstract changeEvents(change: IChange): IParameterisedChange[]
@@ -42,7 +46,7 @@ abstract class ChangeFilter implements IChangeFilter {
     protected matchPath(
         otherPath: string,
     ): { match: boolean; parameters: { [key: string]: string } } {
-        const pathParts = this.path
+        const pathParts = this.observedPath
             .split("/")
             .map((p) => p.trim())
             .filter((p) => p.length)
@@ -183,12 +187,12 @@ export class DeletedChangeFilter extends ChangeFilter {
     }
 }
 
-export class WriteChangeFilter extends ChangeFilter {
+export class WrittenChangeFilter extends ChangeFilter {
     changeEvents(change: IChange): IParameterisedChange[] {
         return [
-            ...new CreatedChangeFilter(this.path).changeEvents(change),
-            ...new UpdatedChangeFilter(this.path).changeEvents(change),
-            ...new DeletedChangeFilter(this.path).changeEvents(change),
+            ...new CreatedChangeFilter(this.observedPath).changeEvents(change),
+            ...new UpdatedChangeFilter(this.observedPath).changeEvents(change),
+            ...new DeletedChangeFilter(this.observedPath).changeEvents(change),
         ]
     }
 }

@@ -20,3 +20,4 @@ export * from "./driver/PubSub/InProcessFirebasePubSub"
 
 export * from "./driver/RealtimeDatabase/InProcessRealtimeDatabase"
 export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeFilter"
+export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeObserver"

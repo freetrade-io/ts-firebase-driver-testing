@@ -20,6 +20,7 @@ export class RealFirebaseDriver implements IFirebaseDriver {
         memory: MemoryOption
         timeoutSeconds: number
     }): IFirebaseFunctionBuilder {
+        // @ts-ignore :-(
         return runWith(runtimeOptions)
     }
 

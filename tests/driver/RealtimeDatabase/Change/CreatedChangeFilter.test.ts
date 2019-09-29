@@ -2,7 +2,7 @@ import {
     CreatedChangeFilter,
     IChange,
     IParameterisedChange,
-} from "../../../../src/driver/RealtimeDatabase/RealtimeDatabaseChangeFilter"
+} from "../../../../src"
 
 describe("CreatedChangeFilter", () => {
     test.each([

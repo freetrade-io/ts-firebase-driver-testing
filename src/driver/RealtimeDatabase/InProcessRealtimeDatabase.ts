@@ -1,5 +1,5 @@
-import _ from "lodash"
 import objectPath = require("object-path")
+import { IAsyncJobs } from "../AsyncJobs"
 import {
     CloudFunction,
     IFirebaseBuilderDatabase,
@@ -10,6 +10,11 @@ import {
     IFirebaseRealtimeDatabaseRef,
     IFirebaseRefBuilder,
 } from "../FirebaseDriver"
+import {
+    ChangeType,
+    IRealtimeDatabaseChangeObserver,
+    makeChangeObserver,
+} from "./RealtimeDatabaseChangeObserver"
 
 class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseDataSnapshot {
@@ -221,14 +226,9 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
 export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     private storage = {}
+    private changeObservers: IRealtimeDatabaseChangeObserver[] = []
 
-    private triggers: {
-        onWrite: {
-            [key: string]: Array<CloudFunction<any>>
-        }
-    } = {
-        onWrite: {},
-    }
+    constructor(private readonly jobs?: IAsyncJobs) {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
         return new InProcessRealtimeDatabaseRef(this, path.replace(".", "/"))
@@ -240,27 +240,19 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
     _setPath(path: string, value: any): void {
         const dotPath = makeDotPath(path)
-        const originalValue = objectPath.get(this.storage, dotPath, undefined)
+        const existing = objectPath.get(this.storage, dotPath)
         objectPath.set(this.storage, dotPath, value)
 
-        if (_.isEqual(value, originalValue)) {
-            // No change -> no triggers
-            return
-        }
-        // Changed -> always onWrite
-        if (originalValue === undefined) {
-            // New -> onCreate
-        } else if (value === null) {
-            // Existing removed -> onDelete
-        } else {
-            // Existing -> onUpdate
-        }
+        this.triggerChangeEvents(
+            path,
+            existing,
+            objectPath.get(this.storage, dotPath),
+        )
     }
 
     _updatePath(path: string, value: any): void {
         const dotPath = makeDotPath(path)
-        // TODO: How to trigger events?
-        const existing = objectPath.get(this.storage, dotPath, undefined)
+        const existing = objectPath.get(this.storage, dotPath)
         if (
             existing === undefined ||
             typeof existing !== "object" ||
@@ -273,25 +265,52 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
             ...(existing as object),
             ...value,
         })
+
+        this.triggerChangeEvents(
+            path,
+            existing,
+            objectPath.get(this.storage, dotPath),
+        )
     }
 
     _removePath(path: string): void {
         const dotPath = makeDotPath(path)
-        // TODO: How to trigger events?
+        const existing = objectPath.get(this.storage, dotPath)
         objectPath.del(this.storage, dotPath)
+
+        this.triggerChangeEvents(
+            path,
+            existing,
+            objectPath.get(this.storage, dotPath),
+        )
     }
 
-    _addTrigger(
-        path: string,
-        type: "onWrite",
+    _addObserver(
+        changeType: ChangeType,
+        observedPath: string,
         handler: CloudFunction<any>,
     ): void {
-        this.triggers[type][path].push(handler)
+        this.changeObservers.push(
+            makeChangeObserver(changeType, observedPath, handler),
+        )
     }
 
     reset(dataset: object = {}): void {
         this.storage = dataset
-        this.triggers = { onWrite: {} }
+        this.changeObservers = []
+    }
+
+    private triggerChangeEvents(path: string, before: any, after: any): void {
+        before = makeMinimalChange(path, before)
+        after = makeMinimalChange(path, after)
+        for (const observer of this.changeObservers) {
+            setTimeout(() => {
+                const job = observer.onChange(path, { before, after })
+                if (this.jobs) {
+                    this.jobs.pushJob(job)
+                }
+            }, 1)
+        }
     }
 }
 
@@ -300,6 +319,48 @@ class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
         readonly path: string,
         private readonly database: InProcessRealtimeDatabase,
     ) {}
+
+    onCreate(
+        handler: (
+            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any> | any,
+    ): CloudFunction<any> {
+        const cloudFunction = async (change: any, context: any) => {
+            return handler(change, context)
+        }
+        cloudFunction.run = cloudFunction
+        this.database._addObserver("created", this.path, cloudFunction)
+        return cloudFunction
+    }
+
+    onUpdate(
+        handler: (
+            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any> | any,
+    ): CloudFunction<any> {
+        const cloudFunction = async (change: any, context: any) => {
+            return handler(change, context)
+        }
+        cloudFunction.run = cloudFunction
+        this.database._addObserver("updated", this.path, cloudFunction)
+        return cloudFunction
+    }
+
+    onDelete(
+        handler: (
+            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any> | any,
+    ): CloudFunction<any> {
+        const cloudFunction = async (change: any, context: any) => {
+            return handler(change, context)
+        }
+        cloudFunction.run = cloudFunction
+        this.database._addObserver("deleted", this.path, cloudFunction)
+        return cloudFunction
+    }
 
     onWrite(
         handler: (
@@ -311,7 +372,7 @@ class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
             return handler(change, context)
         }
         cloudFunction.run = cloudFunction
-        this.database._addTrigger(this.path, "onWrite", cloudFunction)
+        this.database._addObserver("written", this.path, cloudFunction)
         return cloudFunction
     }
 }
@@ -328,4 +389,10 @@ export class InProcessFirebaseBuilderDatabase
 function makeDotPath(path: string): string {
     path = path.replace(/^(\/|\/$)+/g, "")
     return path.trim().replace(/\/+/g, ".")
+}
+
+function makeMinimalChange(path: string, value: any): any {
+    const change = {}
+    objectPath.ensureExists(change, makeDotPath(path), value)
+    return change
 }

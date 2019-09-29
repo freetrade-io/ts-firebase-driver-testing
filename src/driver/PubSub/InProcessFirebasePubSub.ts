@@ -7,7 +7,7 @@ import {
     IPubSubPublisher,
     IPubSubTopic,
 } from "../FirebaseDriver"
-import { InProcessFirebaseDriver } from "../InProcessFirebaseDriver"
+import { IAsyncJobs } from "../AsyncJobs"
 
 class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
     onRun(handler: (context: object) => PromiseLike<any>): CloudFunction<{}> {
@@ -49,7 +49,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
         [key: string]: Array<CloudFunction<any>>
     } = {}
 
-    constructor(private readonly driver: InProcessFirebaseDriver) {}
+    constructor(private readonly jobs: IAsyncJobs) {}
 
     schedule(schedule: string): InProcessFirebaseScheduleBuilder {
         return new InProcessFirebaseScheduleBuilder()
@@ -76,7 +76,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
                     resolve(handler(JSON.parse(data.toString())))
                 }, 1),
             )
-            this.driver.pushJob(job)
+            this.jobs.pushJob(job)
         }
     }
 }

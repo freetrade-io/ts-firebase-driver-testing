@@ -1,3 +1,4 @@
+import { IAsyncJobs } from "./AsyncJobs"
 import {
     IFirebaseDriver,
     IFirebaseFunctionBuilder,
@@ -20,7 +21,7 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
     ) {}
 }
 
-export class InProcessFirebaseDriver implements IFirebaseDriver {
+export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private db: InProcessRealtimeDatabase | undefined
     private jobs: Array<Promise<any>> = []
 
@@ -30,7 +31,7 @@ export class InProcessFirebaseDriver implements IFirebaseDriver {
 
     realTimeDatabase(): InProcessRealtimeDatabase {
         if (!this.db) {
-            this.db = new InProcessRealtimeDatabase()
+            this.db = new InProcessRealtimeDatabase(this)
         }
         return this.db
     }
