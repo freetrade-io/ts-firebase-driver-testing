@@ -7,7 +7,6 @@ export interface IChange {
     after: any
 }
 
-// TODO: Return this from filters instead of IChange
 export interface IParameterisedChange {
     parameters: { [key: string]: string }
     change: IChange
