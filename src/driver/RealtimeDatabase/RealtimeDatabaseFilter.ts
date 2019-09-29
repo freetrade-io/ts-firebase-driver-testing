@@ -162,7 +162,13 @@ export class DeletedChangeFilter extends ChangeFilter {
                 continue
             }
             if (paths.afterPaths.includes(beforePath)) {
-                continue
+                const afterAtPath = objectPath.get(
+                    change.after,
+                    beforePath.replace(/\//g, "."),
+                )
+                if (afterAtPath !== undefined && afterAtPath !== null) {
+                    continue
+                }
             }
             const beforeAtPath = objectPath.get(
                 change.before,
