@@ -1,6 +1,6 @@
 import {
     IChangeContext,
-    IChangeSnapshots,
+    IChangeSnapshot,
     InProcessFirebaseDriver,
 } from "../../../../src"
 
@@ -13,14 +13,14 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("onCreate handler is triggered on object create", async () => {
         // Given we set up an onCreate handler on a path;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is created;
@@ -37,14 +37,14 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the change and context.
-        expect(receivedChange!).toBeTruthy()
-        expect(receivedChange!.before.exists()).toBeFalsy()
-        expect(receivedChange!.before.val()).toBeUndefined()
-        expect(receivedChange!.after.exists()).toBeTruthy()
-        expect(receivedChange!.after.val()).toEqual("purr")
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0].exists()).toBeTruthy()
+        expect(receivedSnapshots[0].val()).toEqual("purr")
 
-        expect(receivedContext!).toBeTruthy()
-        expect(receivedContext!).toEqual({
+        expect(receivedContexts).toHaveLength(1)
+        expect(receivedContexts[0]).toBeTruthy()
+        expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
         })
     })
@@ -60,14 +60,14 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on a path in that object;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is created directly inside the object;
@@ -80,28 +80,28 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the change and context.
-        expect(receivedChange!).toBeTruthy()
-        expect(receivedChange!.before.exists()).toBeFalsy()
-        expect(receivedChange!.before.val()).toBeUndefined()
-        expect(receivedChange!.after.exists()).toBeTruthy()
-        expect(receivedChange!.after.val()).toEqual("purr")
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0].exists()).toBeTruthy()
+        expect(receivedSnapshots[0].val()).toEqual("purr")
 
-        expect(receivedContext!).toBeTruthy()
-        expect(receivedContext!).toEqual({
+        expect(receivedContexts).toHaveLength(1)
+        expect(receivedContexts[0]).toBeTruthy()
+        expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
         })
     })
 
     test("onCreate handler not triggered without create", async () => {
         // Given we set up an onCreate handler on a path;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When some other path is created;
@@ -117,8 +117,8 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should not be triggered.
-        expect(receivedChange).toBeUndefined()
-        expect(receivedContext).toBeUndefined()
+        expect(receivedSnapshots).toHaveLength(0)
+        expect(receivedContexts).toHaveLength(0)
     })
 
     test("onCreate handler not triggered on update", async () => {
@@ -133,14 +133,14 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on that path;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is updated;
@@ -157,20 +157,20 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should not be triggered.
-        expect(receivedChange).toBeUndefined()
-        expect(receivedContext).toBeUndefined()
+        expect(receivedSnapshots).toHaveLength(0)
+        expect(receivedContexts).toHaveLength(0)
     })
 
     test("onCreate handler triggered on creation via update method", async () => {
         // Given we set up an onCreate handler on a path;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is created via an update call;
@@ -187,14 +187,14 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the change and context.
-        expect(receivedChange!).toBeTruthy()
-        expect(receivedChange!.before.exists()).toBeFalsy()
-        expect(receivedChange!.before.val()).toBeUndefined()
-        expect(receivedChange!.after.exists()).toBeTruthy()
-        expect(receivedChange!.after.val()).toEqual("purr")
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0].exists()).toBeTruthy()
+        expect(receivedSnapshots[0].val()).toEqual("purr")
 
-        expect(receivedContext!).toBeTruthy()
-        expect(receivedContext!).toEqual({
+        expect(receivedContexts).toHaveLength(1)
+        expect(receivedContexts[0]).toBeTruthy()
+        expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
         })
     })
@@ -210,14 +210,14 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on a path within that object;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is created via an update call;
@@ -232,28 +232,28 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the change and context.
-        expect(receivedChange!).toBeTruthy()
-        expect(receivedChange!.before.exists()).toBeFalsy()
-        expect(receivedChange!.before.val()).toBeUndefined()
-        expect(receivedChange!.after.exists()).toBeTruthy()
-        expect(receivedChange!.after.val()).toEqual("purr")
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0].exists()).toBeTruthy()
+        expect(receivedSnapshots[0].val()).toEqual("purr")
 
-        expect(receivedContext!).toBeTruthy()
-        expect(receivedContext!).toEqual({
+        expect(receivedContexts).toHaveLength(1)
+        expect(receivedContexts[0]).toBeTruthy()
+        expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
         })
     })
 
     test("onCreate trigger with multiple path parameters", async () => {
         // Given we set up an onCreate handler with multiple path parameters;
-        let receivedChange: IChangeSnapshots | undefined
-        let receivedContext: IChangeContext | undefined
+        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/{featureName}")
-            .onCreate(async (change, context) => {
-                receivedChange = change
-                receivedContext = context
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(snapshot)
+                receivedContexts.push(context)
             })
 
         // When that path is created;
@@ -268,27 +268,27 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the change and context.
-        expect(receivedChange!).toBeTruthy()
-        expect(receivedChange!.before.exists()).toBeFalsy()
-        expect(receivedChange!.before.val()).toBeUndefined()
-        expect(receivedChange!.after.exists()).toBeTruthy()
-        expect(receivedChange!.after.val()).toEqual("orange")
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0].exists()).toBeTruthy()
+        expect(receivedSnapshots[0].val()).toEqual("orange")
 
-        expect(receivedContext!).toBeTruthy()
-        expect(receivedContext!).toEqual({
+        expect(receivedContexts).toHaveLength(1)
+        expect(receivedContexts[0]).toBeTruthy()
+        expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger", featureName: "colour" },
         })
     })
 
     test("multiple onCreate triggers", async () => {
         // Given we set up an onCreate handler on a path;
-        const receivedChanges: IChangeSnapshots[] = []
+        const receivedSnapshots: IChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/sound")
             .onCreate(async (change, context) => {
-                receivedChanges.push(change)
+                receivedSnapshots.push(change)
                 receivedContexts.push(context)
             })
 
@@ -315,13 +315,10 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the changes and contexts.
-        expect(receivedChanges).toHaveLength(3)
-        expect(receivedChanges[0].before.val()).toBeUndefined()
-        expect(receivedChanges[0].after.val()).toEqual("meow")
-        expect(receivedChanges[1].before.val()).toBeUndefined()
-        expect(receivedChanges[1].after.val()).toEqual("woof")
-        expect(receivedChanges[2].before.val()).toBeUndefined()
-        expect(receivedChanges[2].after.val()).toEqual("oink")
+        expect(receivedSnapshots).toHaveLength(3)
+        expect(receivedSnapshots[0].val()).toEqual("meow")
+        expect(receivedSnapshots[1].val()).toEqual("woof")
+        expect(receivedSnapshots[2].val()).toEqual("oink")
 
         expect(receivedContexts).toHaveLength(3)
         expect(receivedContexts[0]).toEqual({
@@ -337,13 +334,13 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("multiple onCreate triggers with multiple path parameters", async () => {
         // Given we set up an onCreate handler with multiple path parameters;
-        const receivedChanges: IChangeSnapshots[] = []
+        const receivedSnapshots: IChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
             .database.ref("/animals/{animalName}/{featureName}")
             .onCreate(async (change, context) => {
-                receivedChanges.push(change)
+                receivedSnapshots.push(change)
                 receivedContexts.push(context)
             })
 
@@ -370,13 +367,13 @@ describe("onCreate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then the handler should be triggered with the changes and contexts.
-        expect(receivedChanges).toHaveLength(6)
-        expect(receivedChanges[0].after.val()).toEqual("mice")
-        expect(receivedChanges[1].after.val()).toEqual("meow")
-        expect(receivedChanges[2].after.val()).toEqual("sticks")
-        expect(receivedChanges[3].after.val()).toEqual("woof")
-        expect(receivedChanges[4].after.val()).toEqual("everything")
-        expect(receivedChanges[5].after.val()).toEqual("oink")
+        expect(receivedSnapshots).toHaveLength(6)
+        expect(receivedSnapshots[0].val()).toEqual("mice")
+        expect(receivedSnapshots[1].val()).toEqual("meow")
+        expect(receivedSnapshots[2].val()).toEqual("sticks")
+        expect(receivedSnapshots[3].val()).toEqual("woof")
+        expect(receivedSnapshots[4].val()).toEqual("everything")
+        expect(receivedSnapshots[5].val()).toEqual("oink")
 
         expect(receivedContexts).toHaveLength(6)
         expect(receivedContexts[0]).toEqual({
@@ -409,7 +406,7 @@ describe("onCreate trigger of in-process realtime database", () => {
                 await driver
                     .realTimeDatabase()
                     .ref(`/animal_sounds/${context.params.animalName}`)
-                    .set(change.after.val())
+                    .set(change.val())
             })
 
         // And there is also an onCreate handler for that other path, which
@@ -420,7 +417,7 @@ describe("onCreate trigger of in-process realtime database", () => {
             .onCreate(async (change, context) => {
                 await driver
                     .realTimeDatabase()
-                    .ref(`/sound_to_animal/${change.after.val()}`)
+                    .ref(`/sound_to_animal/${change.val()}`)
                     .set(context.params.animalName)
             })
 

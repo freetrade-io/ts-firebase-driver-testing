@@ -95,7 +95,7 @@ export interface IFirebaseTopicBuilder {
 export interface IFirebaseRefBuilder {
     onCreate(
         handler: (
-            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            snapshot: IFirebaseDataSnapshot,
             context: IFirebaseEventContext,
         ) => Promise<any> | any,
     ): CloudFunction<any>
@@ -109,7 +109,7 @@ export interface IFirebaseRefBuilder {
 
     onDelete(
         handler: (
-            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            snapshot: IFirebaseDataSnapshot,
             context: IFirebaseEventContext,
         ) => Promise<any> | any,
     ): CloudFunction<any>

@@ -319,12 +319,12 @@ class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
 
     onCreate(
         handler: (
-            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            snapshot: IFirebaseDataSnapshot,
             context: IFirebaseEventContext,
         ) => Promise<any> | any,
     ): CloudFunction<any> {
-        const cloudFunction = async (change: any, context: any) => {
-            return handler(change, context)
+        const cloudFunction = async (snap: any, context: any) => {
+            return handler(snap, context)
         }
         cloudFunction.run = cloudFunction
         this.database._addObserver("created", this.path, cloudFunction)
@@ -347,12 +347,12 @@ class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
 
     onDelete(
         handler: (
-            change: IFirebaseChange<IFirebaseDataSnapshot>,
+            snapshot: IFirebaseDataSnapshot,
             context: IFirebaseEventContext,
         ) => Promise<any> | any,
     ): CloudFunction<any> {
-        const cloudFunction = async (change: any, context: any) => {
-            return handler(change, context)
+        const cloudFunction = async (snap: any, context: any) => {
+            return handler(snap, context)
         }
         cloudFunction.run = cloudFunction
         this.database._addObserver("deleted", this.path, cloudFunction)
