@@ -62,4 +62,6 @@ typings/
 
 yarn.lock
 
+dist/
+
 .idea/
