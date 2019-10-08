@@ -10,13 +10,10 @@
   "scripts": {
     "build": "tsc"
   },
-  "repository": "https://github.com/hughgrigg/firebase-driver-testing",
+  "repository": "https://github.com/freetrade-io/ts-firebase-driver-testing",
   "author": "Hugh Grigg",
   "license": "MIT",
   "private": false,
-  "engines": {
-    "node": "^8.11 || ^8.13.0 || >=10.10.0"
-  },
   "dependencies": {
     "@google-cloud/pubsub": ">=0.19",
     "firebase-admin": ">=7.4",
