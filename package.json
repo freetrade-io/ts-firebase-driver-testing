@@ -18,23 +18,23 @@
     "@google-cloud/pubsub": "*",
     "firebase-admin": "*",
     "firebase-functions": "*",
-    "lodash": "^4.17.15",
-    "object-path": "^0.11.4",
-    "object.entries": "^1.1.0"
+    "lodash": "^4",
+    "object-path": "^0",
+    "object.entries": "^1"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.18",
-    "@types/lodash": "^4.14.138",
-    "@types/node": "^12.7.5",
-    "@types/object-path": "^0.11.0",
-    "jest": "^24.9.0",
-    "object.values": "^1.1.0",
-    "prettier": "^1.18.2",
-    "ts-jest": "^24.1.0",
-    "tslint": "^5.20.0",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.6.3"
+    "@types/jest": "^24",
+    "@types/lodash": "^4",
+    "@types/node": "^12",
+    "@types/object-path": "^0",
+    "jest": "^24",
+    "object.values": "^1",
+    "prettier": "^1",
+    "ts-jest": "^24",
+    "tslint": "^5",
+    "tslint-config-prettier": "^1",
+    "tslint-plugin-prettier": "^2",
+    "typescript": "^3"
   },
   "jest": {
     "preset": "ts-jest",
