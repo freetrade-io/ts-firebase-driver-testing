@@ -1,7 +1,7 @@
 # Firebase Driver Testing
 
-[![Build Status](https://travis-ci.org/hughgrigg/firebase-driver-testing.svg?branch=master)](https://travis-ci.org/hughgrigg/firebase-driver-testing)
-[![npm version](https://badge.fury.io/js/firebase-driver-testing.svg)](http://badge.fury.io/js/firebase-driver-testing)
+[![Build Status](https://travis-ci.org/freetrade-io/ts-firebase-driver-testing.svg?branch=master)](https://travis-ci.org/freetrade-io/ts-firebase-driver-testing)
+[![npm version](https://badge.fury.io/js/ts-firebase-driver-testing.svg)](http://badge.fury.io/js/ts-firebase-driver-testing)
 
 ## Swap out Firebase as a driver for in-process testing
 
@@ -12,7 +12,7 @@ The [Firebase Test SDK for Cloud Functions](https://firebase.google.com/docs/fun
 has a similar use-case, but requires a lot more meddling with Firebase internals to stub out the
 parts of the system that interact with the outside world.
 
-_firebase-driver-testing_ instead provides an interface for Firebase as a driver that can be
+_ts-firebase-driver-testing_ instead provides an interface for Firebase as a driver that can be
 swapped out in one go, using either the real Firebase or an in-memory version that exists in a
 single process with your tests.
 
@@ -21,18 +21,18 @@ single process with your tests.
 Install via NPM:
 
 ```bash
-npm i firebase-driver-testing
+npm i ts-firebase-driver-testing
 ```
 
 Or via Yarn:
 
 ```bash
-yarn add firebase-driver-testing
+yarn add ts-firebase-driver-testing
 ```
 
 ## Usage
 
-_firebase-driver-testing_ provides an interface called `IFirebaseDriver`. This interface gives
+_ts-firebase-driver-testing_ provides an interface called `IFirebaseDriver`. This interface gives
 access to various parts of the Firebase API, such as Firebase Realtime Database.
 
 Instead of grabbing the database directly from Firebase, you should instead take it from an instance
@@ -47,7 +47,7 @@ const database = database()
 // ...
 ```
 
-To use _firebase-driver-testing_ you should instead get the Firebase Driver, and get the database
+To use _ts-firebase-driver-testing_ you should instead get the Firebase Driver, and get the database
 instance from there:
 
 ```typescript
@@ -107,7 +107,7 @@ tests in the same process, so that you can debug it and have fast-running, contr
 
 ### What is this for?
 
-_firebase-driver-testing_ is intended to make it easier to write higher-level tests for business
+_ts-firebase-driver-testing_ is intended to make it easier to write higher-level tests for business
 logic in Firebase applications.
 
 For example, this kind of test case:
@@ -124,21 +124,21 @@ There may be business logic in event trigger functions and pub-sub functions tha
 as a whole. This is tricky to do with the _Firebase Test SDK for Cloud Functions_ as you have to
 carefully stub out the right parts and manage the overall behaviour from the test.
 
-_firebase-driver-testing_ lets you swap out the Firebase pub-sub and event trigger functions for the
+_ts-firebase-driver-testing_ lets you swap out the Firebase pub-sub and event trigger functions for the
 test, so that you can interact with an application entry point as normal, and then assert that the
 correct behaviour happened across functions.
 
 ### Why would I want this?
 
 If you want to benefit from high-level business logic tests that run quickly in a single process
-without interacting with the outside world, then you might find _firebase-driver-testing_ useful.
+without interacting with the outside world, then you might find _ts-firebase-driver-testing_ useful.
 
 ### How is this different to the Firebase Function Test SDK?
 
 The [Firebase Test SDK for Cloud Functions](https://firebase.google.com/docs/functions/unit-testing)
 also lets you run in-process tests for your Firebase functions, and provides a more complete and
-accurate representation of the Firebase API than _firebase-driver-testing_.
+accurate representation of the Firebase API than _ts-firebase-driver-testing_.
 
 The _Firebase Test SDK_ requires carefully stubbing out the correct parts of the Firebase
-application under test, whereas _firebase-driver-testing_ allows swapping it all out and once and
+application under test, whereas _ts-firebase-driver-testing_ allows swapping it all out and once and
 then checking that the application interacted with Firebase correctly.
