@@ -15,7 +15,7 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@google-cloud/pubsub": "^1.0.0",
+    "@google-cloud/pubsub": "^1.1.0",
     "firebase-admin": "^8.5.0",
     "firebase-functions": "^3.2.0",
     "lodash": "^4.17.15",
@@ -45,6 +45,7 @@
     ],
     "setupFilesAfterEnv": [
       "<rootDir>/tests/setup.ts"
-    ]
+    ],
+    "testEnvironment": "node"
   }
 }
