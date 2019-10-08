@@ -10,7 +10,9 @@ import {
 } from "./FirebaseDriver"
 
 export class RealFirebaseDriver implements IFirebaseDriver {
-    constructor(private readonly db: database.Database) {}
+    constructor(
+        private readonly db: database.Database | IFirebaseRealtimeDatabase,
+    ) {}
 
     realTimeDatabase(): IFirebaseRealtimeDatabase {
         return this.db
