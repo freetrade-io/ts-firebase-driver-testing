@@ -1,11 +1,12 @@
-import * as pubsubcl from "@google-cloud/pubsub"
+// tslint:disable-next-line:no-var-requires
+const { PubSub } = require("@google-cloud/pubsub")
 import { database } from "firebase-admin"
 import { runWith } from "firebase-functions"
 import {
     IFirebaseDriver,
     IFirebaseFunctionBuilder,
-    IFirebasePubSubCl,
     IFirebaseRealtimeDatabase,
+    IPubSub,
     MemoryOption,
 } from "./FirebaseDriver"
 
@@ -25,8 +26,7 @@ export class RealFirebaseDriver implements IFirebaseDriver {
         return runWith(runtimeOptions)
     }
 
-    pubSubCl(): IFirebasePubSubCl {
-        // @ts-ignore
-        return pubsubcl()
+    pubSubCl(): IPubSub {
+        return new PubSub()
     }
 }

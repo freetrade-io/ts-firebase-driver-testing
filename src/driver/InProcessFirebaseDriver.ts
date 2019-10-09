@@ -2,7 +2,7 @@ import { IAsyncJobs } from "./AsyncJobs"
 import {
     IFirebaseDriver,
     IFirebaseFunctionBuilder,
-    IFirebasePubSubCl,
+    IPubSub,
     MemoryOption,
 } from "./FirebaseDriver"
 import {
@@ -49,7 +49,7 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
         return this.functionBuilder
     }
 
-    pubSubCl(): IFirebasePubSubCl {
+    pubSubCl(): IPubSub {
         return new InProcessFirebasePubSubCl(this.inProcessBuilderPubSub())
     }
 

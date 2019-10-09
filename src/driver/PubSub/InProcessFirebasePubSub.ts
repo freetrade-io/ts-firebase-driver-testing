@@ -1,13 +1,13 @@
+import { IAsyncJobs } from "../AsyncJobs"
 import {
     CloudFunction,
     IFirebaseBuilderPubSub,
-    IFirebasePubSubCl,
     IFirebaseScheduleBuilder,
     IFirebaseTopicBuilder,
+    IPubSub,
     IPubSubPublisher,
     IPubSubTopic,
 } from "../FirebaseDriver"
-import { IAsyncJobs } from "../AsyncJobs"
 
 class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
     onRun(handler: (context: object) => PromiseLike<any>): CloudFunction<{}> {
@@ -105,7 +105,7 @@ class InProcessFirebasePubSubTopic implements IPubSubTopic {
     }
 }
 
-export class InProcessFirebasePubSubCl implements IFirebasePubSubCl {
+export class InProcessFirebasePubSubCl implements IPubSub {
     private readonly topics: {
         [key: string]: InProcessFirebasePubSubTopic
     } = {}

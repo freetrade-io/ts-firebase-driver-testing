@@ -1,6 +1,6 @@
 export interface IFirebaseDriver {
     realTimeDatabase(): IFirebaseRealtimeDatabase
-    pubSubCl(): IFirebasePubSubCl
+    pubSubCl(): IPubSub
     runWith(runtimeOptions?: {
         memory: MemoryOption
         timeoutSeconds: number
@@ -13,7 +13,7 @@ export interface IFirebaseRealtimeDatabase {
     ref(path?: string): IFirebaseRealtimeDatabaseRef
 }
 
-export interface IFirebasePubSubCl {
+export interface IPubSub {
     topic(name: string): IPubSubTopic
 }
 
