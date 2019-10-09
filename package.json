@@ -24,7 +24,8 @@
     "firebase-functions": "^2 || ^3",
     "lodash": "^4",
     "object-path": "^0",
-    "object.entries": "^1"
+    "object.entries": "^1",
+    "object.values": "^1"
   },
   "devDependencies": {
     "@types/jest": "^24",
@@ -32,7 +33,6 @@
     "@types/node": "^12",
     "@types/object-path": "^0",
     "jest": "^24",
-    "object.values": "^1",
     "prettier": "^1",
     "ts-jest": "^24",
     "tslint": "^5",
