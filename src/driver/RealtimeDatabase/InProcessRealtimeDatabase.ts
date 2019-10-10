@@ -17,7 +17,7 @@ import {
     makeChangeObserver,
 } from "./RealtimeDatabaseChangeObserver"
 
-class InProcessFirebaseRealtimeDatabaseSnapshot
+export class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseDataSnapshot {
     constructor(readonly key: string, private readonly value: any) {}
 
