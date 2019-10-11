@@ -211,4 +211,90 @@ describe("InProcessRealtimeDatabaseRef.orderByKey", () => {
             "you",
         ])
     })
+
+    test("InProcessRealtimeDatabaseRef.orderByKey.limitToFirst", async () => {
+        // Given a collection of string keys to values;
+        const dataset = {
+            c: "let",
+            b: "gonna",
+            e: "down",
+            d: "you",
+            a: "never",
+        }
+
+        await database.ref("words").set(dataset)
+
+        // And the collection is not ordered;
+        expect(Object.keys(dataset)).toStrictEqual(["c", "b", "e", "d", "a"])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+        ])
+
+        // When we order items by key limited to the first three;
+        const snapshot = await database
+            .ref("words")
+            .orderByKey()
+            .limitToFirst(3)
+            .once("value")
+
+        // Then we should get the first three items ordered starting from that key.
+        expect(snapshot.val()).toStrictEqual({
+            a: "never",
+            b: "gonna",
+            c: "let",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual(["a", "b", "c"])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "never",
+            "gonna",
+            "let",
+        ])
+    })
+
+    test("InProcessRealtimeDatabaseRef.orderByKey.limitToLast", async () => {
+        // Given a collection of string keys to values;
+        const dataset = {
+            c: "let",
+            b: "gonna",
+            e: "down",
+            d: "you",
+            a: "never",
+        }
+
+        await database.ref("words").set(dataset)
+
+        // And the collection is not ordered;
+        expect(Object.keys(dataset)).toStrictEqual(["c", "b", "e", "d", "a"])
+        expect(Object.keys(dataset)).not.toStrictEqual([
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+        ])
+
+        // When we order items by key limited to the last three;
+        const snapshot = await database
+            .ref("words")
+            .orderByKey()
+            .limitToLast(3)
+            .once("value")
+
+        // Then we should get the last three items ordered starting from that key.
+        expect(snapshot.val()).toStrictEqual({
+            c: "let",
+            d: "you",
+            e: "down",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual(["c", "d", "e"])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "let",
+            "you",
+            "down",
+        ])
+    })
 })

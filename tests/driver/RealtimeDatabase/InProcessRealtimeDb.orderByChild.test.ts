@@ -333,4 +333,78 @@ describe("InProcessRealtimeDatabaseRef.orderByChild", () => {
             { date: "2019-09-03" },
         ])
     })
+
+    test("InProcessRealtimeDatabaseRef.orderByChild.limitToFirst", async () => {
+        // Given a collection of objects with a string child field;
+        const dataset = {
+            four: { date: "2019-09-04" },
+            two: { date: "2019-09-02" },
+            one: { date: "2019-09-01" },
+            five: { date: "2019-09-05" },
+            three: { date: "2019-09-03" },
+        }
+
+        await database.ref("items").set(dataset)
+
+        // When we order items with a child field limited to the first three;
+        const snapshot = await database
+            .ref("items")
+            .orderByChild("date")
+            .limitToFirst(3)
+            .once("value")
+
+        // Then we should get the first three items.
+        expect(snapshot.val()).toStrictEqual({
+            one: { date: "2019-09-01" },
+            two: { date: "2019-09-02" },
+            three: { date: "2019-09-03" },
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            { date: "2019-09-01" },
+            { date: "2019-09-02" },
+            { date: "2019-09-03" },
+        ])
+    })
+
+    test("InProcessRealtimeDatabaseRef.orderByChild.limitToLast", async () => {
+        // Given a collection of objects with a string child field;
+        const dataset = {
+            four: { date: "2019-09-04" },
+            two: { date: "2019-09-02" },
+            one: { date: "2019-09-01" },
+            five: { date: "2019-09-05" },
+            three: { date: "2019-09-03" },
+        }
+
+        await database.ref("items").set(dataset)
+
+        // When we order items with a child field limited to the last three;
+        const snapshot = await database
+            .ref("items")
+            .orderByChild("date")
+            .limitToLast(3)
+            .once("value")
+
+        // Then we should get the last three items.
+        expect(snapshot.val()).toStrictEqual({
+            three: { date: "2019-09-03" },
+            four: { date: "2019-09-04" },
+            five: { date: "2019-09-05" },
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "three",
+            "four",
+            "five",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            { date: "2019-09-03" },
+            { date: "2019-09-04" },
+            { date: "2019-09-05" },
+        ])
+    })
 })

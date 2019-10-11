@@ -301,4 +301,78 @@ describe("InProcessRealtimeDatabaseRef.orderByValue", () => {
             "badger",
         ])
     })
+
+    test("InProcessRealtimeDatabaseRef.orderByValue.limitToFirst", async () => {
+        // Given a collection of string values;
+        const dataset = {
+            three: "cyclops",
+            one: "aardvark",
+            five: "elephant",
+            two: "badger",
+            four: "donkey",
+        }
+
+        await database.ref("animals").set(dataset)
+
+        // When we order items by value and limit to the first three;
+        const snapshot = await database
+            .ref("animals")
+            .orderByValue()
+            .limitToFirst(3)
+            .once("value")
+
+        // Then we should get the first three items items ordered by value.
+        expect(snapshot.val()).toStrictEqual({
+            one: "aardvark",
+            two: "badger",
+            three: "cyclops",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "one",
+            "two",
+            "three",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "aardvark",
+            "badger",
+            "cyclops",
+        ])
+    })
+
+    test("InProcessRealtimeDatabaseRef.orderByValue.limitToLast", async () => {
+        // Given a collection of string values;
+        const dataset = {
+            three: "cyclops",
+            one: "aardvark",
+            five: "elephant",
+            two: "badger",
+            four: "donkey",
+        }
+
+        await database.ref("animals").set(dataset)
+
+        // When we order items by value and limit to the last three;
+        const snapshot = await database
+            .ref("animals")
+            .orderByValue()
+            .limitToLast(3)
+            .once("value")
+
+        // Then we should get the last three items items ordered by value.
+        expect(snapshot.val()).toStrictEqual({
+            three: "cyclops",
+            four: "donkey",
+            five: "elephant",
+        })
+        expect(Object.keys(snapshot.val())).toStrictEqual([
+            "three",
+            "four",
+            "five",
+        ])
+        expect(Object.values(snapshot.val())).toStrictEqual([
+            "cyclops",
+            "donkey",
+            "elephant",
+        ])
+    })
 })

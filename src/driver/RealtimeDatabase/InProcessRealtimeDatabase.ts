@@ -76,6 +76,7 @@ interface IKeyVal {
 class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     private readonly orderings: Array<(a: IKeyVal, b: IKeyVal) => number> = []
     private readonly filters: Array<(item: IKeyVal) => boolean> = []
+    private readonly transforms: Array<(value: any) => any> = []
 
     private childOrderingPath?: string
     private keyOrdering: boolean = false
@@ -114,6 +115,36 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(a.val, b.val)
         })
         this.orderings.push(this.compare)
+        return this
+    }
+
+    limitToFirst(limit: number): InProcessRealtimeDatabaseRef {
+        this.transforms.push((value: any) => {
+            if (typeof value === "object") {
+                value = Object.keys(value)
+                    .slice(0, limit)
+                    .reduce((obj: { [key: string]: any }, key: string) => {
+                        obj[key] = value[key]
+                        return obj
+                    }, {})
+            }
+            return value
+        })
+        return this
+    }
+
+    limitToLast(limit: number): InProcessRealtimeDatabaseRef {
+        this.transforms.push((value: any) => {
+            if (typeof value === "object") {
+                value = Object.keys(value)
+                    .slice(Math.max(Object.keys(value).length - limit, 0))
+                    .reduce((obj: { [key: string]: any }, key: string) => {
+                        obj[key] = value[key]
+                        return obj
+                    }, {})
+            }
+            return value
+        })
         return this
     }
 
@@ -214,6 +245,9 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                         whole[key] = value[key]
                         return whole
                     }, {})
+            }
+            for (const transform of this.transforms) {
+                value = transform(value)
             }
         }
         return new InProcessFirebaseRealtimeDatabaseSnapshot(
