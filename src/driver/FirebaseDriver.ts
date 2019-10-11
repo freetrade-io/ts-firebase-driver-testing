@@ -36,6 +36,8 @@ export interface IFirebaseRealtimeDatabaseQuery {
     orderByKey(): IFirebaseRealtimeDatabaseQuery
     orderByChild(path: string): IFirebaseRealtimeDatabaseQuery
     orderByValue(): IFirebaseRealtimeDatabaseQuery
+    limitToFirst(limit: number): IFirebaseRealtimeDatabaseQuery
+    limitToLast(limit: number): IFirebaseRealtimeDatabaseQuery
     startAt(
         value: number | string | boolean | null,
     ): IFirebaseRealtimeDatabaseQuery
