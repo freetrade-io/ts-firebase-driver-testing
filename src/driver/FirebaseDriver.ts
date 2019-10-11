@@ -33,6 +33,7 @@ export interface IFirebaseDataSnapshot {
 }
 
 export interface IFirebaseRealtimeDatabaseQuery {
+    orderByKey(): IFirebaseRealtimeDatabaseQuery
     orderByChild(path: string): IFirebaseRealtimeDatabaseQuery
     orderByValue(): IFirebaseRealtimeDatabaseQuery
     startAt(
