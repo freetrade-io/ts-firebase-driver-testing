@@ -67,4 +67,36 @@ describe("InProcessFirebaseRealtimeDatabaseSnapshot", () => {
             expect(snapshot.val()).toEqual(expectedVal)
         },
     )
+
+    test("forEach", async () => {
+        // Given an in-process Firebase realtime database with a dataset;
+        database.reset({
+            items: {
+                a: "apple",
+                b: "blueberry",
+                c: "cherry",
+                d: "durian",
+                e: "elderberry",
+            },
+        })
+
+        // When we get a snapshot of a path;
+        const snapshot = await database.ref("items").once("value")
+
+        // And we iterate through the items in the snapshot;
+        const seen: string[] = []
+        snapshot.forEach((fruit) => {
+            seen.push(fruit.val())
+            return false
+        })
+
+        // Then we should get each of the items in turn.
+        expect(seen).toStrictEqual([
+            "apple",
+            "blueberry",
+            "cherry",
+            "durian",
+            "elderberry",
+        ])
+    })
 })

@@ -40,7 +40,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
         if (typeof this.value !== "object") {
             return
         }
-        for (const key of this.value) {
+        for (const key of Object.keys(this.value)) {
             action(
                 new InProcessFirebaseRealtimeDatabaseSnapshot(
                     key,
