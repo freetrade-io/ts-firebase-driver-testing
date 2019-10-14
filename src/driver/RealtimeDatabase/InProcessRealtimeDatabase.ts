@@ -56,7 +56,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
         }
         return new InProcessFirebaseRealtimeDatabaseSnapshot(
             path.split("/").pop() || "",
-            objectPath.get(this.value, makeDotPath(path), null),
+            objectPath.get(this.value, dotPathFromSlashed(path), null),
         )
     }
 }
@@ -96,13 +96,12 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     }
 
     orderByChild(childPath: string): InProcessRealtimeDatabaseRef {
+        childPath = dotPathFromSlashed(childPath)
         this.childOrderingPath = childPath
         this.keyOrdering = false
         this.orderings.push((a: IKeyVal, b: IKeyVal): number => {
-            const childA =
-                typeof a.val === "object" ? a.val[childPath] : undefined
-            const childB =
-                typeof b.val === "object" ? b.val[childPath] : undefined
+            const childA = objectPath.get(a.val, childPath)
+            const childB = objectPath.get(b.val, childPath)
             return this.compare(childA, childB)
         })
         return this
@@ -157,7 +156,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = item.val[this.childOrderingPath]
+                compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return this.compare(compareVal, value) >= 0
         })
@@ -173,7 +172,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = item.val[this.childOrderingPath]
+                compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return this.compare(compareVal, value) <= 0
         })
@@ -189,7 +188,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = item.val[this.childOrderingPath]
+                compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return compareVal === value
         })
@@ -311,13 +310,13 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _getPath(path: string): any {
-        return objectPath.get(this.storage, makeDotPath(path))
+        return objectPath.get(this.storage, dotPathFromSlashed(path))
     }
 
     _setPath(path: string, value: any): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = makeDotPath(path)
+            const dotPath = dotPathFromSlashed(path)
             objectPath.set(this.storage, dotPath, value)
         })
     }
@@ -325,7 +324,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     _updatePath(path: string, value: any): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = makeDotPath(path)
+            const dotPath = dotPathFromSlashed(path)
             const existing = objectPath.get(this.storage, dotPath)
             if (
                 existing === undefined ||
@@ -345,7 +344,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     _removePath(path: string): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = makeDotPath(path)
+            const dotPath = dotPathFromSlashed(path)
             objectPath.del(this.storage, dotPath)
         })
     }
@@ -458,7 +457,7 @@ export class InProcessFirebaseBuilderDatabase
     }
 }
 
-function makeDotPath(path: string): string {
+function dotPathFromSlashed(path: string): string {
     path = path.replace(/^(\/|\/$)+/g, "")
     return path.trim().replace(/\/+/g, ".")
 }
