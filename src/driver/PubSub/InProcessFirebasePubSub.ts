@@ -91,13 +91,13 @@ class InProcessPubSubPublisher implements IPubSubPublisher {
 }
 
 class InProcessFirebasePubSubTopic implements IPubSubTopic {
+    readonly publisher: IPubSubPublisher
+
     constructor(
         readonly name: string,
         private readonly pubSub: InProcessFirebaseBuilderPubSub,
-    ) {}
-
-    publisher(): IPubSubPublisher {
-        return new InProcessPubSubPublisher(this)
+    ) {
+        this.publisher = new InProcessPubSubPublisher(this)
     }
 
     _publish(data: Buffer) {

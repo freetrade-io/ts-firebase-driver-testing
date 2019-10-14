@@ -18,7 +18,7 @@ export interface IPubSub {
 }
 
 export interface IPubSubTopic {
-    publisher(): IPubSubPublisher
+    publisher: IPubSubPublisher
 }
 
 export interface IPubSubPublisher {
