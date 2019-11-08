@@ -264,9 +264,16 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
     async transaction(
         transactionUpdate: (currentValue: any) => any,
-    ): Promise<any> {
+    ): Promise<{
+        committed: boolean
+        snapshot: InProcessFirebaseRealtimeDatabaseSnapshot
+    }> {
         for (let attempts = 0; attempts < 10; attempts++) {
-            const result = transactionUpdate((await this.once()).val())
+            const result = await new Promise((resolve) =>
+                setTimeout(async () => {
+                    resolve(transactionUpdate((await this.once()).val()))
+                }, Math.random() * 10),
+            )
             if (result === TransactionResult.ABORT) {
                 return {
                     committed: false,
@@ -277,6 +284,11 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 continue
             }
             await this.set(result)
+            await new Promise((resolve) =>
+                setTimeout(async () => {
+                    resolve()
+                }, Math.random() * 10),
+            )
             if ((await this.once()).val() === result) {
                 return {
                     committed: true,

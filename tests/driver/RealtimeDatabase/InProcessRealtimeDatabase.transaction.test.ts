@@ -112,22 +112,19 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
             }
             return `new value ${++counter}`
         }
-        const results = await Promise.all([
+        await Promise.all([
             ref.transaction(update),
             ref.transaction(update),
             ref.transaction(update),
         ])
 
-        // Then we should only get one successful result;
-        expect(results[0].committed).toBe(false)
-        expect(results[1].committed).toBe(false)
-        expect(results[2].committed).toBe(true)
-
-        // And one update should be made;
+        // Then one update should win out.
         const updatedValue = (await database
             .ref("contentious")
             .once("value")).val()
-        expect(updatedValue).toBe("new value 3")
+        expect(["new value 1", "new value 2", "new value 3"]).toContain(
+            updatedValue,
+        )
     })
 
     test("retrying transactions with contention", async () => {
@@ -156,5 +153,28 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
             .ref("contentious")
             .once("value")).val()
         expect(updatedValue).toBe(3)
+    })
+
+    test("retry lock", async () => {
+        // Given we're using a database field as a lock;
+        database.reset({})
+
+        // When multiple processes try to acquire the lock;
+        const ref = database.ref("lock_field")
+        const lockAttempts = await Promise.all([
+            ref.transaction((cv) => (cv ? TransactionResult.RETRY : "lock_1")),
+            ref.transaction((cv) => (cv ? TransactionResult.RETRY : "lock_2")),
+            ref.transaction((cv) => (cv ? TransactionResult.RETRY : "lock_3")),
+        ])
+
+        // Then only one process should acquire the lock;
+        const lockAcquired = lockAttempts.filter((la) => la.committed)
+        expect(lockAcquired).toHaveLength(1)
+
+        // And the lock should be set.
+        const updatedValue = (await database
+            .ref("lock_field")
+            .once("value")).val()
+        expect(["lock_1", "lock_2", "lock_3"]).toContain(updatedValue)
     })
 })
