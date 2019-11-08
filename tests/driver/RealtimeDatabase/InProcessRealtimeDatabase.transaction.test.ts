@@ -119,15 +119,15 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         ])
 
         // Then we should only get one successful result;
-        expect(results[0].committed).toBe(true)
+        expect(results[0].committed).toBe(false)
         expect(results[1].committed).toBe(false)
-        expect(results[2].committed).toBe(false)
+        expect(results[2].committed).toBe(true)
 
         // And one update should be made;
         const updatedValue = (await database
             .ref("contentious")
             .once("value")).val()
-        expect(updatedValue).toBe("new value 1")
+        expect(updatedValue).toBe("new value 3")
     })
 
     test("retrying transactions with contention", async () => {

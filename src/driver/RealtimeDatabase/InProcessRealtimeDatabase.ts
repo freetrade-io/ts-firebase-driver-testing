@@ -264,45 +264,28 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
     async transaction(
         transactionUpdate: (currentValue: any) => any,
-    ): Promise<{
-        committed: boolean
-        snapshot: IFirebaseDataSnapshot | null
-    }> {
-        let currentValue = (await this.once()).val()
-        let attempts = 0
-        let result = await new Promise((resolve) =>
-            setTimeout(async () => {
-                resolve(transactionUpdate((await this.once()).val()))
-            }, 1),
-        )
-        while (
-            result !== TransactionResult.ABORT &&
-            ((await this.once()).val() !== currentValue ||
-                result === TransactionResult.RETRY)
-        ) {
-            attempts++
-            if (attempts > 10) {
+    ): Promise<any> {
+        for (let attempts = 0; attempts < 10; attempts++) {
+            const result = transactionUpdate((await this.once()).val())
+            if (result === TransactionResult.ABORT) {
                 return {
                     committed: false,
                     snapshot: await this.once(),
                 }
             }
-            currentValue = (await this.once()).val()
-            result = await new Promise((resolve) =>
-                setTimeout(async () => {
-                    resolve(transactionUpdate((await this.once()).val()))
-                }, 1),
-            )
-        }
-        if (result === TransactionResult.ABORT) {
-            return {
-                committed: false,
-                snapshot: await this.once(),
+            if (result === TransactionResult.RETRY) {
+                continue
+            }
+            await this.set(result)
+            if ((await this.once()).val() === result) {
+                return {
+                    committed: true,
+                    snapshot: await this.once(),
+                }
             }
         }
-        await this.set(result)
         return {
-            committed: true,
+            committed: false,
             snapshot: await this.once(),
         }
     }
