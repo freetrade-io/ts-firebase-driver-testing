@@ -29,6 +29,9 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
     }
 
     val(): any {
+        if (this.value === undefined) {
+            return null
+        }
         return this.value
     }
 
@@ -61,7 +64,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
     }
 }
 
-enum TransactionResult {
+export enum TransactionResult {
     // @ts-ignore: this matches the Firebase API
     RETRY = null,
     // @ts-ignore: this matches the Firebase API
@@ -265,12 +268,16 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         committed: boolean
         snapshot: IFirebaseDataSnapshot | null
     }> {
-        const initialValue = (await this.once()).val()
+        let currentValue = (await this.once()).val()
         let attempts = 0
-        let result = transactionUpdate((await this.once()).val())
+        let result = await new Promise((resolve) =>
+            setTimeout(async () => {
+                resolve(transactionUpdate((await this.once()).val()))
+            }, 1),
+        )
         while (
             result !== TransactionResult.ABORT &&
-            ((await this.once()).val() !== initialValue ||
+            ((await this.once()).val() !== currentValue ||
                 result === TransactionResult.RETRY)
         ) {
             attempts++
@@ -280,7 +287,12 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                     snapshot: await this.once(),
                 }
             }
-            result = transactionUpdate((await this.once()).val())
+            currentValue = (await this.once()).val()
+            result = await new Promise((resolve) =>
+                setTimeout(async () => {
+                    resolve(transactionUpdate((await this.once()).val()))
+                }, 1),
+            )
         }
         if (result === TransactionResult.ABORT) {
             return {
