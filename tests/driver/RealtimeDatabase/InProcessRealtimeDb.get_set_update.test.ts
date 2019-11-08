@@ -8,7 +8,7 @@ describe("InProcessRealtimeDatabaseRef get set", () => {
     })
 
     test.each([
-        [{}, "foobar", undefined],
+        [{}, "foobar", null],
         [{ foobar: "hello" }, "foobar", "hello"],
         [
             { animals: { tiger: { description: "stripey" } } },

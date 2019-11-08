@@ -29,6 +29,9 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
     }
 
     val(): any {
+        if (this.value === undefined) {
+            return null
+        }
         return this.value
     }
 
@@ -61,7 +64,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
     }
 }
 
-enum TransactionResult {
+export enum TransactionResult {
     // @ts-ignore: this matches the Firebase API
     RETRY = null,
     // @ts-ignore: this matches the Firebase API
@@ -263,34 +266,38 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         transactionUpdate: (currentValue: any) => any,
     ): Promise<{
         committed: boolean
-        snapshot: IFirebaseDataSnapshot | null
+        snapshot: InProcessFirebaseRealtimeDatabaseSnapshot
     }> {
-        const initialValue = (await this.once()).val()
-        let attempts = 0
-        let result = transactionUpdate((await this.once()).val())
-        while (
-            result !== TransactionResult.ABORT &&
-            ((await this.once()).val() !== initialValue ||
-                result === TransactionResult.RETRY)
-        ) {
-            attempts++
-            if (attempts > 10) {
+        for (let attempts = 0; attempts < 10; attempts++) {
+            const result = await new Promise((resolve) =>
+                setTimeout(async () => {
+                    resolve(transactionUpdate((await this.once()).val()))
+                }, Math.random() * 10),
+            )
+            if (result === TransactionResult.ABORT) {
                 return {
                     committed: false,
                     snapshot: await this.once(),
                 }
             }
-            result = transactionUpdate((await this.once()).val())
-        }
-        if (result === TransactionResult.ABORT) {
-            return {
-                committed: false,
-                snapshot: await this.once(),
+            if (result === TransactionResult.RETRY) {
+                continue
+            }
+            await this.set(result)
+            await new Promise((resolve) =>
+                setTimeout(async () => {
+                    resolve()
+                }, Math.random() * 10),
+            )
+            if ((await this.once()).val() === result) {
+                return {
+                    committed: true,
+                    snapshot: await this.once(),
+                }
             }
         }
-        await this.set(result)
         return {
-            committed: true,
+            committed: false,
             snapshot: await this.once(),
         }
     }
