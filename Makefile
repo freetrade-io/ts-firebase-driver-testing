@@ -12,6 +12,6 @@ prettier:
 
 .PHONY: test
 test: node_modules
-	./node_modules/.bin/tslint 'src/**/*.ts' 'tests/**/*.ts'
+	./node_modules/.bin/tslint -c ./tslint.json 'src/**/*.ts' 'tests/**/*.ts'
 	./node_modules/.bin/rimraf ./dist/
 	./node_modules/.bin/jest
