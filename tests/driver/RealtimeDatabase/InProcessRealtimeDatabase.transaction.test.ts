@@ -26,10 +26,8 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         }
 
         // And the value should be updated.
-        const updatedValue = (await database
-            .ref("chilled_out")
-            .once("value")).val()
-        expect(updatedValue).toBe("new value")
+        const snapshot = await database.ref("chilled_out").once("value")
+        expect(snapshot.val()).toBe("new value")
     })
 
     test("transaction on missing value", async () => {
@@ -65,10 +63,8 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         expect(result.committed).toBe(false)
 
         // And no update should be made.
-        const updatedValue = (await database
-            .ref("leave_me_alone")
-            .once("value")).val()
-        expect(updatedValue).toBe("foo value")
+        const snapshot = await database.ref("leave_me_alone").once("value")
+        expect(snapshot.val()).toBe("foo value")
     })
 
     test("transaction retry", async () => {
@@ -90,10 +86,8 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         expect(result.committed).toBe(true)
 
         // And the final update should be made.
-        const updatedValue = (await database
-            .ref("keep_trying")
-            .once("value")).val()
-        expect(updatedValue).toBe("new value 5")
+        const snapshot = await database.ref("keep_trying").once("value")
+        expect(snapshot.val()).toBe("new value 5")
     })
 
     test("aborting transactions with contention", async () => {
@@ -119,9 +113,8 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         ])
 
         // Then one update should win out.
-        const updatedValue = (await database
-            .ref("contentious")
-            .once("value")).val()
+        const snapshot = await database.ref("contentious").once("value")
+        const updatedValue = snapshot.val()
         expect(["new value 1", "new value 2", "new value 3"]).toContain(
             updatedValue,
         )
@@ -149,10 +142,8 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         ])
 
         // And the final update should win out;
-        const updatedValue = (await database
-            .ref("contentious")
-            .once("value")).val()
-        expect(updatedValue).toBe(3)
+        const snapshot = await database.ref("contentious").once("value")
+        expect(snapshot.val()).toBe(3)
     })
 
     test("retry lock", async () => {
@@ -172,9 +163,7 @@ describe("InProcessRealtimeDatabaseRef transaction", () => {
         expect(lockAcquired).toHaveLength(1)
 
         // And the lock should be set.
-        const updatedValue = (await database
-            .ref("lock_field")
-            .once("value")).val()
-        expect(["lock_1", "lock_2", "lock_3"]).toContain(updatedValue)
+        const snapshot = await database.ref("lock_field").once("value")
+        expect(["lock_1", "lock_2", "lock_3"]).toContain(snapshot.val())
     })
 })
