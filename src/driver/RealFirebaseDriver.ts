@@ -3,6 +3,7 @@ const { PubSub } = require("@google-cloud/pubsub")
 import { database } from "firebase-admin"
 import { runWith } from "firebase-functions"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
+import { IFirestore } from "./Firestore/IFirestore"
 import {
     IFirebaseFunctionBuilder,
     IFirebaseRealtimeDatabase,
@@ -10,11 +11,16 @@ import {
 
 export class RealFirebaseDriver implements IFirebaseDriver {
     constructor(
-        private readonly db: database.Database | IFirebaseRealtimeDatabase,
+        private readonly realTimeDb: database.Database,
+        private readonly firestoreDb: FirebaseFirestore.Firestore,
     ) {}
 
     realTimeDatabase(): IFirebaseRealtimeDatabase {
-        return this.db
+        return this.realTimeDb
+    }
+
+    fireStore(): IFirestore {
+        return this.firestoreDb
     }
 
     runWith(runtimeOptions: {
