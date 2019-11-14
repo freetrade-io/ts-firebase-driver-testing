@@ -4,13 +4,15 @@ import { IAsyncJobs } from "../AsyncJobs"
 import {
     CloudFunction,
     IFirebaseBuilderDatabase,
+    IFirebaseRefBuilder,
+} from "../FirebaseDriver"
+import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
     IFirebaseEventContext,
     IFirebaseRealtimeDatabase,
     IFirebaseRealtimeDatabaseRef,
-    IFirebaseRefBuilder,
-} from "../FirebaseDriver"
+} from "./IFirebaseRealtimeDatabase"
 import {
     ChangeType,
     IRealtimeDatabaseChangeObserver,

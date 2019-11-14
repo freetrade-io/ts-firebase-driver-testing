@@ -21,3 +21,24 @@ export * from "./driver/PubSub/InProcessFirebasePubSub"
 export * from "./driver/RealtimeDatabase/InProcessRealtimeDatabase"
 export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeFilter"
 export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeObserver"
+export {
+    IFirebaseEventContext,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseChange,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseFunctionBuilder,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseRealtimeDatabaseRef,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseRealtimeDatabaseQuery,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseDataSnapshot,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
+export {
+    IFirebaseRealtimeDatabase,
+} from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"

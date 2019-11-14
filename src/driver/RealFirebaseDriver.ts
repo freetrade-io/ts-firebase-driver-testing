@@ -2,13 +2,11 @@
 const { PubSub } = require("@google-cloud/pubsub")
 import { database } from "firebase-admin"
 import { runWith } from "firebase-functions"
+import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
 import {
-    IFirebaseDriver,
     IFirebaseFunctionBuilder,
     IFirebaseRealtimeDatabase,
-    IPubSub,
-    MemoryOption,
-} from "./FirebaseDriver"
+} from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 
 export class RealFirebaseDriver implements IFirebaseDriver {
     constructor(

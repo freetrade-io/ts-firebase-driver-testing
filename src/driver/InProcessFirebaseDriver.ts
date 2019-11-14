@@ -1,14 +1,10 @@
 import { IAsyncJobs } from "./AsyncJobs"
-import {
-    IFirebaseDriver,
-    IFirebaseFunctionBuilder,
-    IPubSub,
-    MemoryOption,
-} from "./FirebaseDriver"
+import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
 import {
     InProcessFirebaseBuilderPubSub,
     InProcessFirebasePubSubCl,
 } from "./PubSub/InProcessFirebasePubSub"
+import { IFirebaseFunctionBuilder } from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 import {
     InProcessFirebaseBuilderDatabase,
     InProcessRealtimeDatabase,
