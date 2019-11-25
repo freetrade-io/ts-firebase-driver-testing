@@ -9,8 +9,15 @@ export interface IFirestoreCollectionRef {
 
 export interface IFirestoreDocRef {
     collection(collectionPath: string): IFirestoreCollectionRef
-    create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+    get(): Promise<IFirestoreDocumentSnapshot>
     set(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+}
+
+export interface IFirestoreDocumentSnapshot {
+    id: string
+    exists: boolean
+    ref: IFirestoreDocRef
+    data(): IFirestoreDocumentData | undefined
 }
 
 export interface IFirestoreDocumentData {
@@ -18,5 +25,9 @@ export interface IFirestoreDocumentData {
 }
 
 export interface IFirestoreWriteResult {
-    isEqual(other: IFirestoreWriteResult): boolean
+    writeTime: IFirestoreTimestamp
+}
+
+export interface IFirestoreTimestamp {
+    seconds: number
 }
