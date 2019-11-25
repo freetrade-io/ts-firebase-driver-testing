@@ -1,6 +1,6 @@
 // tslint:disable-next-line:no-var-requires
 const { PubSub } = require("@google-cloud/pubsub")
-import { database } from "firebase-admin"
+import * as admin from "firebase-admin"
 import { runWith } from "firebase-functions"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
 import { IFirestore } from "./Firestore/IFirestore"
@@ -11,16 +11,16 @@ import {
 
 export class RealFirebaseDriver implements IFirebaseDriver {
     constructor(
-        private readonly realTimeDb: database.Database,
-        private readonly firestoreDb: FirebaseFirestore.Firestore,
+        private readonly realTimeDb?: admin.database.Database,
+        private readonly firestoreDb?: FirebaseFirestore.Firestore,
     ) {}
 
     realTimeDatabase(): IFirebaseRealtimeDatabase {
-        return this.realTimeDb
+        return this.realTimeDb || admin.database()
     }
 
     fireStore(): IFirestore {
-        return this.firestoreDb
+        return this.firestoreDb || admin.firestore()
     }
 
     runWith(runtimeOptions: {
