@@ -438,19 +438,19 @@ describe("onCreate trigger of in-process realtime database", () => {
         const firstWrite = (await driver
             .realTimeDatabase()
             .ref("animals/tiger/sound")
-            .once()).val()
+            .once("value")).val()
         expect(firstWrite).toEqual("purr")
 
         const secondWrite = (await driver
             .realTimeDatabase()
             .ref("/animal_sounds/tiger")
-            .once()).val()
+            .once("value")).val()
         expect(secondWrite).toEqual("purr")
 
         const thirdWrite = (await driver
             .realTimeDatabase()
             .ref("/sound_to_animal/purr")
-            .once()).val()
+            .once("value")).val()
         expect(thirdWrite).toEqual("tiger")
     })
 })

@@ -223,8 +223,11 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     }
 
     async once(
-        eventType: string = "value",
+        eventType: "value",
     ): Promise<InProcessFirebaseRealtimeDatabaseSnapshot> {
+        if (eventType !== "value") {
+            throw new Error('Only the "value" event type is supported.')
+        }
         let value = this.db._getPath(this.path)
         if (typeof value === "object") {
             for (const ordering of this.orderings) {
@@ -273,13 +276,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         for (let attempts = 0; attempts < 10; attempts++) {
             const result = await new Promise((resolve) =>
                 setTimeout(async () => {
-                    resolve(transactionUpdate((await this.once()).val()))
+                    resolve(transactionUpdate((await this.once("value")).val()))
                 }, Math.random() * 10),
             )
             if (result === TransactionResult.ABORT) {
                 return {
                     committed: false,
-                    snapshot: await this.once(),
+                    snapshot: await this.once("value"),
                 }
             }
             if (result === TransactionResult.RETRY) {
@@ -291,16 +294,16 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                     resolve()
                 }, Math.random() * 10),
             )
-            if ((await this.once()).val() === result) {
+            if ((await this.once("value")).val() === result) {
                 return {
                     committed: true,
-                    snapshot: await this.once(),
+                    snapshot: await this.once("value"),
                 }
             }
         }
         return {
             committed: false,
-            snapshot: await this.once(),
+            snapshot: await this.once("value"),
         }
     }
 
