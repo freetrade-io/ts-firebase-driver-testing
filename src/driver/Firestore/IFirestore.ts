@@ -4,7 +4,12 @@ export interface IFirestore {
 }
 
 export interface IFirestoreCollectionRef {
+    get(): Promise<IFirestoreCollectionSnapshot>
     doc(documentPath: string): IFirestoreDocRef
+}
+
+export interface IFirestoreCollectionSnapshot {
+    docs: IFirestoreDocumentSnapshot[]
 }
 
 export interface IFirestoreDocRef {

@@ -3,6 +3,7 @@ import objectPath = require("object-path")
 import {
     IFirestore,
     IFirestoreCollectionRef,
+    IFirestoreCollectionSnapshot,
     IFirestoreDocRef,
     IFirestoreDocumentData,
     IFirestoreDocumentSnapshot,
@@ -41,6 +42,30 @@ export class InProcessFirestoreCollectionRef
         private readonly parent?: InProcessFirestoreDocRef,
     ) {}
 
+    async get(): Promise<InProcessFirestoreCollectionSnapshot> {
+        const collection = this.db._getPath(this.dotPath()) || {}
+        return new InProcessFirestoreCollectionSnapshot(
+            Object.keys(collection).reduce(
+                (docs: InProcessFirestoreDocumentSnapshot[], key: string) => {
+                    docs.push(
+                        new InProcessFirestoreDocumentSnapshot(
+                            key,
+                            true,
+                            new InProcessFirestoreDocRef(
+                                this.db,
+                                `${this.dotPath()}.${key}`,
+                                this,
+                            ),
+                            collection[key],
+                        ),
+                    )
+                    return docs
+                },
+                [] as InProcessFirestoreDocumentSnapshot[],
+            ),
+        )
+    }
+
     doc(documentPath: string): InProcessFirestoreDocRef {
         return new InProcessFirestoreDocRef(this.db, documentPath, this)
     }
@@ -52,6 +77,11 @@ export class InProcessFirestoreCollectionRef
         }
         return _.trim(dotPath + `.${this.path}`, ".")
     }
+}
+
+export class InProcessFirestoreCollectionSnapshot
+    implements IFirestoreCollectionSnapshot {
+    constructor(readonly docs: InProcessFirestoreDocumentSnapshot[] = []) {}
 }
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
