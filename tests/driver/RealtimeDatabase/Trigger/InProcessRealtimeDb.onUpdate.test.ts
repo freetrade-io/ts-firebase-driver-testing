@@ -274,22 +274,28 @@ describe("onUpdate trigger of in-process realtime database", () => {
         await driver.jobsComplete()
 
         // Then all the cascading writes should be made.
-        const firstWrite = (await driver
-            .realTimeDatabase()
-            .ref("animals/tiger/sound")
-            .once("value")).val()
+        const firstWrite = (
+            await driver
+                .realTimeDatabase()
+                .ref("animals/tiger/sound")
+                .once("value")
+        ).val()
         expect(firstWrite).toEqual("meow")
 
-        const secondWrite = (await driver
-            .realTimeDatabase()
-            .ref("/animal_sounds/tiger")
-            .once("value")).val()
+        const secondWrite = (
+            await driver
+                .realTimeDatabase()
+                .ref("/animal_sounds/tiger")
+                .once("value")
+        ).val()
         expect(secondWrite).toEqual("meow")
 
-        const thirdWrite = (await driver
-            .realTimeDatabase()
-            .ref("/sound_to_animal/meow")
-            .once("value")).val()
+        const thirdWrite = (
+            await driver
+                .realTimeDatabase()
+                .ref("/sound_to_animal/meow")
+                .once("value")
+        ).val()
         expect(thirdWrite).toEqual("tiger")
     })
 })
