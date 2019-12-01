@@ -208,8 +208,17 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         return this.db.ref(`${this.path}/${path}`)
     }
 
-    push(): InProcessRealtimeDatabaseRef {
-        return this
+    async push(value: any): Promise<InProcessRealtimeDatabaseRef> {
+        if (value === undefined) {
+            throw new Error(
+                `Cannot push undefined onto Firebase Realtime Database path (${this.path})`,
+            )
+        }
+
+        const newPath = `${this.path}/${this.idGenerator()}`
+        await this.db._setPath(newPath, value)
+
+        return this.db.ref(newPath)
     }
 
     async set(value: any): Promise<void> {
