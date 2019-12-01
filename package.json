@@ -23,6 +23,7 @@
     "firebase-admin": "^7 || ^8",
     "firebase-functions": "^2 || ^3",
     "lodash": "^4",
+    "nanoid": "^2.1.7",
     "object-path": "^0",
     "object.entries": "^1",
     "object.values": "^1"
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@types/jest": "^24",
     "@types/lodash": "^4",
+    "@types/nanoid": "^2.1.0",
     "@types/node": "^12.12.7",
     "@types/object-path": "^0",
     "jest": "^24",

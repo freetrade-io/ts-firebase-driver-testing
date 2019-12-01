@@ -47,6 +47,8 @@ export interface IFirebaseRealtimeDatabaseRef
     extends IFirebaseRealtimeDatabaseQuery {
     child(path: string): IFirebaseRealtimeDatabaseRef
 
+    push(path: string): IFirebaseRealtimeDatabaseRef
+
     set(value: any): Promise<void>
 
     update(value: object): Promise<void>
