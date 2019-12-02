@@ -6,6 +6,7 @@ import {
     IFirebaseBuilderDatabase,
     IFirebaseRefBuilder,
 } from "../FirebaseDriver"
+import { firebaseLikeId } from "../identifiers"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
@@ -18,6 +19,8 @@ import {
     IRealtimeDatabaseChangeObserver,
     makeChangeObserver,
 } from "./RealtimeDatabaseChangeObserver"
+
+export type IdGenerator = () => string
 
 export class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseDataSnapshot {
@@ -89,6 +92,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     constructor(
         private readonly db: InProcessRealtimeDatabase,
         private readonly path: string,
+        private readonly idGenerator: IdGenerator = firebaseLikeId,
     ) {}
 
     orderByKey(): InProcessRealtimeDatabaseRef {
@@ -204,6 +208,19 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         return this.db.ref(`${this.path}/${path}`)
     }
 
+    async push(value: any): Promise<InProcessRealtimeDatabaseRef> {
+        if (value === undefined) {
+            throw new Error(
+                `Cannot push undefined onto Firebase Realtime Database path (${this.path})`,
+            )
+        }
+
+        const newPath = `${this.path}/${this.idGenerator()}`
+        await this.db._setPath(newPath, value)
+
+        return this.db.ref(newPath)
+    }
+
     async set(value: any): Promise<void> {
         if (value === undefined) {
             throw new Error(
@@ -315,10 +332,17 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     private storage = {}
     private changeObservers: IRealtimeDatabaseChangeObserver[] = []
 
-    constructor(private readonly jobs?: IAsyncJobs) {}
+    constructor(
+        private readonly jobs?: IAsyncJobs,
+        private readonly idGenerator: IdGenerator = firebaseLikeId,
+    ) {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
-        return new InProcessRealtimeDatabaseRef(this, path.replace(".", "/"))
+        return new InProcessRealtimeDatabaseRef(
+            this,
+            path.replace(".", "/"),
+            this.idGenerator,
+        )
     }
 
     _getPath(path: string): any {
