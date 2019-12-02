@@ -1,5 +1,6 @@
 import { IAsyncJobs } from "./AsyncJobs"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
+import { firebaseLikeId } from "./identifiers"
 import {
     InProcessFirebaseBuilderPubSub,
     InProcessFirebasePubSubCl,
@@ -9,8 +10,7 @@ import {
     IdGenerator,
     InProcessFirebaseBuilderDatabase,
     InProcessRealtimeDatabase,
-} from './RealtimeDatabase/InProcessRealtimeDatabase'
-import { firebaseLikeId } from './identifiers'
+} from "./RealtimeDatabase/InProcessRealtimeDatabase"
 
 class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
     constructor(
