@@ -30,7 +30,6 @@
   "devDependencies": {
     "@types/jest": "^24",
     "@types/lodash": "^4",
-    "@types/nanoid": "^2.1.0",
     "@types/node": "^12.12.7",
     "@types/object-path": "^0",
     "jest": "^24",
