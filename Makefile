@@ -9,6 +9,7 @@ dist: node_modules $(shell find src -type f) prettier
 .PHONY: prettier
 prettier:
 	./node_modules/.bin/prettier './src/**/*.ts' './tests/**/*.ts' --write
+	./node_modules/.bin/tslint -c ./tslint.json --fix 'src/**/*.ts' 'tests/**/*.ts'
 
 .PHONY: test
 test: node_modules
