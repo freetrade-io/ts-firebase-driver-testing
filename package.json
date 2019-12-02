@@ -23,7 +23,6 @@
     "firebase-admin": "^7 || ^8",
     "firebase-functions": "^2 || ^3",
     "lodash": "^4",
-    "nanoid": "^2.1.7",
     "object-path": "^0",
     "object.entries": "^1",
     "object.values": "^1"

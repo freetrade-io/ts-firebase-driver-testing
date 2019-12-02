@@ -1,5 +1,4 @@
 import _ from "lodash"
-import nanoid = require("nanoid")
 import objectPath = require("object-path")
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -7,6 +6,7 @@ import {
     IFirebaseBuilderDatabase,
     IFirebaseRefBuilder,
 } from "../FirebaseDriver"
+import { firebaseLikeId } from "../identifiers"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
@@ -92,7 +92,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     constructor(
         private readonly db: InProcessRealtimeDatabase,
         private readonly path: string,
-        private readonly idGenerator: IdGenerator = nanoid,
+        private readonly idGenerator: IdGenerator = firebaseLikeId,
     ) {}
 
     orderByKey(): InProcessRealtimeDatabaseRef {
@@ -334,7 +334,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
     constructor(
         private readonly jobs?: IAsyncJobs,
-        private readonly idGenerator: IdGenerator = nanoid,
+        private readonly idGenerator: IdGenerator = firebaseLikeId,
     ) {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
