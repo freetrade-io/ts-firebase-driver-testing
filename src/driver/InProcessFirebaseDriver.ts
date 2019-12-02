@@ -1,11 +1,13 @@
 import { IAsyncJobs } from "./AsyncJobs"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
+import { firebaseLikeId } from "./identifiers"
 import {
     InProcessFirebaseBuilderPubSub,
     InProcessFirebasePubSubCl,
 } from "./PubSub/InProcessFirebasePubSub"
 import { IFirebaseFunctionBuilder } from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 import {
+    IdGenerator,
     InProcessFirebaseBuilderDatabase,
     InProcessRealtimeDatabase,
 } from "./RealtimeDatabase/InProcessRealtimeDatabase"
@@ -25,9 +27,11 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private builderPubSub: InProcessFirebaseBuilderPubSub | undefined
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
 
-    realTimeDatabase(): InProcessRealtimeDatabase {
+    realTimeDatabase(
+        idGenerator: IdGenerator = firebaseLikeId,
+    ): InProcessRealtimeDatabase {
         if (!this.db) {
-            this.db = new InProcessRealtimeDatabase(this)
+            this.db = new InProcessRealtimeDatabase(this, idGenerator)
         }
         return this.db
     }
