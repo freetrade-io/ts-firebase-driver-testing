@@ -5,7 +5,8 @@ export interface IFirestore {
 
 export interface IFirestoreCollectionRef {
     get(): Promise<IFirestoreCollectionSnapshot>
-    doc(documentPath: string): IFirestoreDocRef
+    doc(documentPath?: string): IFirestoreDocRef
+    add(data: IFirestoreDocumentData): Promise<IFirestoreDocumentSnapshot>
 }
 
 export interface IFirestoreCollectionSnapshot {
@@ -15,7 +16,11 @@ export interface IFirestoreCollectionSnapshot {
 export interface IFirestoreDocRef {
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
-    set(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+    set(
+        data: IFirestoreDocumentData,
+        options?: { merge: boolean },
+    ): Promise<IFirestoreWriteResult>
+    update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
 }
 
 export interface IFirestoreDocumentSnapshot {

@@ -1,5 +1,6 @@
 import _ from "lodash"
 import objectPath = require("object-path")
+import { fireStoreLikeId } from "../identifiers"
 import {
     IFirestore,
     IFirestoreCollectionRef,
@@ -13,6 +14,8 @@ import {
 export class InProcessFirestore implements IFirestore {
     private storage = {}
 
+    constructor(public makeId: () => string = fireStoreLikeId) {}
+
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(this, collectionPath)
     }
@@ -23,6 +26,7 @@ export class InProcessFirestore implements IFirestore {
 
     reset(dataset: object = {}): void {
         this.storage = dataset
+        this.makeId = fireStoreLikeId
     }
 
     _getPath(dotPath: string): any {
@@ -66,8 +70,19 @@ export class InProcessFirestoreCollectionRef
         )
     }
 
-    doc(documentPath: string): InProcessFirestoreDocRef {
+    doc(documentPath?: string): InProcessFirestoreDocRef {
+        if (!documentPath) {
+            documentPath = this.db.makeId()
+        }
         return new InProcessFirestoreDocRef(this.db, documentPath, this)
+    }
+
+    async add(
+        data: IFirestoreDocumentData,
+    ): Promise<InProcessFirestoreDocumentSnapshot> {
+        const doc: InProcessFirestoreDocRef = this.doc()
+        await doc.set(data)
+        return doc.get()
     }
 
     dotPath(): string {
@@ -99,7 +114,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
-    async get(): Promise<IFirestoreDocumentSnapshot> {
+    async get(): Promise<InProcessFirestoreDocumentSnapshot> {
         const value = this.db._getPath(this.dotPath())
         return new InProcessFirestoreDocumentSnapshot(
             this.path,
@@ -109,8 +124,22 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
-    async set(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+    async set(
+        data: IFirestoreDocumentData,
+        options: { merge: boolean } = { merge: false },
+    ): Promise<IFirestoreWriteResult> {
+        if (options && options.merge) {
+            return this.update(data)
+        }
         this.db._setPath(this.dotPath(), data)
+        return { writeTime: { seconds: new Date().getTime() / 1000 } }
+    }
+
+    async update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+        this.db._setPath(
+            this.dotPath(),
+            _.merge(this.db._getPath(this.dotPath()), data),
+        )
         return { writeTime: { seconds: new Date().getTime() / 1000 } }
     }
 
