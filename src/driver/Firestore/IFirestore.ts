@@ -3,14 +3,19 @@ export interface IFirestore {
     doc(documentPath: string): IFirestoreDocRef
 }
 
-export interface IFirestoreCollectionRef {
-    get(): Promise<IFirestoreCollectionSnapshot>
-    doc(documentPath?: string): IFirestoreDocRef
-    add(data: IFirestoreDocumentData): Promise<IFirestoreDocumentSnapshot>
-}
+export type FirestoreWhereFilterOp =
+    | "<"
+    | "<="
+    | "=="
+    | ">="
+    | ">"
+    | "array-contains"
+    | "in"
+    | "array-contains-any"
 
-export interface IFirestoreCollectionSnapshot {
-    docs: IFirestoreDocumentSnapshot[]
+export interface IFirestoreCollectionRef extends IFirestoreQuery {
+    doc(documentPath?: string): IFirestoreDocRef
+    add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
 }
 
 export interface IFirestoreDocRef {
@@ -40,4 +45,18 @@ export interface IFirestoreWriteResult {
 
 export interface IFirestoreTimestamp {
     seconds: number
+}
+
+export interface IFirestoreQuery {
+    where(
+        fieldPath: string,
+        opStr: FirestoreWhereFilterOp,
+        value: any,
+    ): IFirestoreQuery
+    get(): Promise<IFirestoreQuerySnapshot>
+}
+
+export interface IFirestoreQuerySnapshot {
+    docs: IFirestoreDocumentSnapshot[]
+    forEach(callback: (result: IFirestoreDocumentSnapshot) => void): void
 }

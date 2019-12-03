@@ -116,11 +116,12 @@ describe("InProcessFirestore set", () => {
         firestore.makeId = () => "foobar-id-123"
 
         // When we add a new doc to a collection;
-        const doc = await firestore
+        const docRef = await firestore
             .collection("myCollection")
             .add({ foo: "bar", amount: 123 })
 
         // Then we should get the right result;
+        const doc = await docRef.get()
         expect(doc.exists).toBe(true)
         expect(doc.id).toBe("foobar-id-123")
         expect(doc.data()).toEqual({ foo: "bar", amount: 123 })

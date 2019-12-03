@@ -2,12 +2,14 @@ import _ from "lodash"
 import objectPath = require("object-path")
 import { fireStoreLikeId } from "../identifiers"
 import {
+    FirestoreWhereFilterOp,
     IFirestore,
     IFirestoreCollectionRef,
-    IFirestoreCollectionSnapshot,
     IFirestoreDocRef,
     IFirestoreDocumentData,
     IFirestoreDocumentSnapshot,
+    IFirestoreQuery,
+    IFirestoreQuerySnapshot,
     IFirestoreWriteResult,
 } from "./IFirestore"
 
@@ -38,51 +40,85 @@ export class InProcessFirestore implements IFirestore {
     }
 }
 
-export class InProcessFirestoreCollectionRef
-    implements IFirestoreCollectionRef {
+export class InProcessFirestoreQuery implements IFirestoreQuery {
+    private readonly filters: Array<
+        (item: { [key: string]: any }) => boolean
+    > = []
+
     constructor(
-        private readonly db: InProcessFirestore,
-        private readonly path: string,
-        private readonly parent?: InProcessFirestoreDocRef,
+        protected readonly db: InProcessFirestore,
+        protected readonly path: string,
+        protected readonly parent?: InProcessFirestoreDocRef,
     ) {}
 
-    async get(): Promise<InProcessFirestoreCollectionSnapshot> {
-        const collection = this.db._getPath(this.dotPath()) || {}
-        return new InProcessFirestoreCollectionSnapshot(
-            Object.keys(collection).reduce(
-                (docs: InProcessFirestoreDocumentSnapshot[], key: string) => {
-                    docs.push(
-                        new InProcessFirestoreDocumentSnapshot(
-                            key,
-                            true,
-                            new InProcessFirestoreDocRef(
-                                this.db,
-                                `${this.dotPath()}.${key}`,
-                                this,
-                            ),
-                            collection[key],
-                        ),
+    where(
+        fieldPath: string,
+        opStr: FirestoreWhereFilterOp,
+        value: any,
+    ): InProcessFirestoreQuery {
+        let filter: (item: { [key: string]: any }) => boolean
+        switch (opStr) {
+            case "<":
+                filter = (item) => item[fieldPath] < value
+                break
+            case "<=":
+                filter = (item) => item[fieldPath] <= value
+                break
+            case "==":
+                filter = (item) => String(item[fieldPath]) === String(value)
+                break
+            case ">=":
+                filter = (item) => item[fieldPath] >= value
+                break
+            case ">":
+                filter = (item) => item[fieldPath] > value
+                break
+            case "array-contains":
+                filter = (item) => Array(item[fieldPath]).includes(value)
+                break
+            case "in":
+                filter = (item) => Array(value).includes(item[fieldPath])
+                break
+            case "array-contains-any":
+                filter = (item) => {
+                    return Array(item[fieldPath]).some((el) =>
+                        Array(value).includes(el),
                     )
-                    return docs
-                },
-                [] as InProcessFirestoreDocumentSnapshot[],
-            ),
-        )
-    }
-
-    doc(documentPath?: string): InProcessFirestoreDocRef {
-        if (!documentPath) {
-            documentPath = this.db.makeId()
+                }
+                break
+            default:
+                throw new Error(`Unknown Firestore where operator ${opStr}`)
         }
-        return new InProcessFirestoreDocRef(this.db, documentPath, this)
+        this.filters.push(filter)
+        return this
     }
 
-    async add(
-        data: IFirestoreDocumentData,
-    ): Promise<InProcessFirestoreDocumentSnapshot> {
-        const doc: InProcessFirestoreDocRef = this.doc()
-        await doc.set(data)
-        return doc.get()
+    async get(): Promise<InProcessFirestoreQuerySnapshot> {
+        let collection = this.db._getPath(this.dotPath()) || {}
+        for (const filter of this.filters) {
+            collection = Object.keys(collection)
+                .filter((key) => filter(collection[key]))
+                .reduce((whole: object, key: string) => {
+                    // @ts-ignore
+                    whole[key] = collection[key]
+                    return whole
+                }, {})
+        }
+        collection = Object.keys(collection).map(
+            (key: string): InProcessFirestoreDocumentSnapshot => {
+                return new InProcessFirestoreDocumentSnapshot(
+                    key,
+                    true,
+                    new InProcessFirestoreDocRef(
+                        this.db,
+                        `${this.dotPath()}.${key}`,
+                        this,
+                    ),
+                    collection[key],
+                )
+            },
+        )
+        return new InProcessFirestoreQuerySnapshot(collection)
     }
 
     dotPath(): string {
@@ -94,16 +130,38 @@ export class InProcessFirestoreCollectionRef
     }
 }
 
-export class InProcessFirestoreCollectionSnapshot
-    implements IFirestoreCollectionSnapshot {
+export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
+    implements IFirestoreCollectionRef {
+    doc(documentPath?: string): InProcessFirestoreDocRef {
+        if (!documentPath) {
+            documentPath = this.db.makeId()
+        }
+        return new InProcessFirestoreDocRef(this.db, documentPath, this)
+    }
+
+    async add(data: IFirestoreDocumentData): Promise<InProcessFirestoreDocRef> {
+        const doc: InProcessFirestoreDocRef = this.doc()
+        await doc.set(data)
+        return doc
+    }
+}
+
+export class InProcessFirestoreQuerySnapshot
+    implements IFirestoreQuerySnapshot {
     constructor(readonly docs: InProcessFirestoreDocumentSnapshot[] = []) {}
+
+    forEach(
+        callback: (result: InProcessFirestoreDocumentSnapshot) => void,
+    ): void {
+        this.docs.forEach((doc) => callback(doc))
+    }
 }
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     constructor(
         private readonly db: InProcessFirestore,
         private readonly path: string,
-        private readonly parent?: InProcessFirestoreCollectionRef,
+        private readonly parent?: InProcessFirestoreQuery,
     ) {}
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
