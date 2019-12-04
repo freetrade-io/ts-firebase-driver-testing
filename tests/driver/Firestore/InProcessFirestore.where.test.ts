@@ -240,39 +240,365 @@ describe("InProcessFirestore querying with where", () => {
         ])
     })
 
-    test("where => number", async () => {
-        //
+    test("where >= number", async () => {
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    popularityRating: 5,
+                },
+                hyena: {
+                    name: "hyena",
+                    popularityRating: 1,
+                },
+                lion: {
+                    name: "lion",
+                    popularityRating: 3,
+                },
+                bear: {
+                    name: "bear",
+                    popularityRating: 2,
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("popularityRating", ">=", 2)
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(3)
+        expect(result.docs.map((doc) => doc.id)).toEqual([
+            "tiger",
+            "lion",
+            "bear",
+        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", popularityRating: 5 },
+            { name: "lion", popularityRating: 3 },
+            { name: "bear", popularityRating: 2 },
+        ])
     })
 
     test("where > number", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    popularityRating: 5,
+                },
+                hyena: {
+                    name: "hyena",
+                    popularityRating: 1,
+                },
+                lion: {
+                    name: "lion",
+                    popularityRating: 3,
+                },
+                bear: {
+                    name: "bear",
+                    popularityRating: 2,
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("popularityRating", ">", 2)
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["tiger", "lion"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", popularityRating: 5 },
+            { name: "lion", popularityRating: 3 },
+        ])
     })
 
     test("where < string", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    favouriteBand: "Band of Horses",
+                },
+                hyena: {
+                    name: "hyena",
+                    favouriteBand: "AC/DC",
+                },
+                lion: {
+                    name: "lion",
+                    favouriteBand: "ZZ Top",
+                },
+                bear: {
+                    name: "bear",
+                    favouriteBand: "Com Truise",
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("favouriteBand", "<", "C")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["tiger", "hyena"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", favouriteBand: "Band of Horses" },
+            { name: "hyena", favouriteBand: "AC/DC" },
+        ])
     })
 
     test("where <= string", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    favouriteBand: "Band of Horses",
+                },
+                hyena: {
+                    name: "hyena",
+                    favouriteBand: "AC/DC",
+                },
+                lion: {
+                    name: "lion",
+                    favouriteBand: "ZZ Top",
+                },
+                bear: {
+                    name: "bear",
+                    favouriteBand: "Com Truise",
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("favouriteBand", "<=", "Com Truise")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(3)
+        expect(result.docs.map((doc) => doc.id)).toEqual([
+            "tiger",
+            "hyena",
+            "bear",
+        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", favouriteBand: "Band of Horses" },
+            { name: "hyena", favouriteBand: "AC/DC" },
+            { name: "bear", favouriteBand: "Com Truise" },
+        ])
     })
 
-    test("where => string", async () => {
-        //
+    test("where >= string", async () => {
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    favouriteBand: "Band of Horses",
+                },
+                hyena: {
+                    name: "hyena",
+                    favouriteBand: "AC/DC",
+                },
+                lion: {
+                    name: "lion",
+                    favouriteBand: "ZZ Top",
+                },
+                bear: {
+                    name: "bear",
+                    favouriteBand: "Com Truise",
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("favouriteBand", ">=", "Com Truise")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["lion", "bear"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "lion", favouriteBand: "ZZ Top" },
+            { name: "bear", favouriteBand: "Com Truise" },
+        ])
     })
 
     test("where > string", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    favouriteBand: "Band of Horses",
+                },
+                hyena: {
+                    name: "hyena",
+                    favouriteBand: "AC/DC",
+                },
+                lion: {
+                    name: "lion",
+                    favouriteBand: "ZZ Top",
+                },
+                bear: {
+                    name: "bear",
+                    favouriteBand: "Com Truise",
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("favouriteBand", ">", "B")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(3)
+        expect(result.docs.map((doc) => doc.id)).toEqual([
+            "tiger",
+            "lion",
+            "bear",
+        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", favouriteBand: "Band of Horses" },
+            { name: "lion", favouriteBand: "ZZ Top" },
+            { name: "bear", favouriteBand: "Com Truise" },
+        ])
     })
 
     test("where array-contains", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    eats: ["chips", "burgers"],
+                },
+                hyena: {
+                    name: "hyena",
+                    eats: ["dead things", "pizza"],
+                },
+                lion: {
+                    name: "lion",
+                    eats: ["gazelles", "pizza"],
+                },
+                bear: {
+                    name: "bear",
+                    eats: ["honey", "chips"],
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("eats", "array-contains", "chips")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["tiger", "bear"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", eats: ["chips", "burgers"] },
+            { name: "bear", eats: ["honey", "chips"] },
+        ])
     })
 
     test("where in", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    favouriteBand: "Band of Horses",
+                },
+                hyena: {
+                    name: "hyena",
+                    favouriteBand: "AC/DC",
+                },
+                lion: {
+                    name: "lion",
+                    favouriteBand: "ZZ Top",
+                },
+                bear: {
+                    name: "bear",
+                    favouriteBand: "Com Truise",
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("favouriteBand", "in", ["AC/DC", "ZZ Top"])
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["hyena", "lion"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "hyena", favouriteBand: "AC/DC" },
+            { name: "lion", favouriteBand: "ZZ Top" },
+        ])
     })
 
     test("where array-contains-any", async () => {
-        //
+        // Given a collection of docs with differing values in a field;
+        firestore.reset({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    eats: ["chips", "burgers", "pizza"],
+                },
+                hyena: {
+                    name: "hyena",
+                    eats: ["dead things"],
+                },
+                lion: {
+                    name: "lion",
+                    eats: ["gazelles", "pizza"],
+                },
+                bear: {
+                    name: "bear",
+                    eats: ["honey", "chips"],
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("eats", "array-contains-any", ["chips", "pizza"])
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(3)
+        expect(result.docs.map((doc) => doc.id)).toEqual([
+            "tiger",
+            "lion",
+            "bear",
+        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", eats: ["chips", "burgers", "pizza"] },
+            { name: "lion", eats: ["gazelles", "pizza"] },
+            { name: "bear", eats: ["honey", "chips"] },
+        ])
     })
 })

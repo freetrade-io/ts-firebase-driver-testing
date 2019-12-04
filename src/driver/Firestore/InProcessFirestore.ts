@@ -74,16 +74,32 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 filter = (item) => item[fieldPath] > value
                 break
             case "array-contains":
-                filter = (item) => Array(item[fieldPath]).includes(value)
+                filter = (item) => {
+                    if (_.isArray(item[fieldPath])) {
+                        return item[fieldPath].includes(value)
+                    }
+                    return false
+                }
                 break
             case "in":
-                filter = (item) => Array(value).includes(item[fieldPath])
+                if (!_.isArray(value)) {
+                    throw new Error("Value must be an array for in operator.")
+                }
+                filter = (item) => value.includes(item[fieldPath])
                 break
             case "array-contains-any":
-                filter = (item) => {
-                    return Array(item[fieldPath]).some((el) =>
-                        Array(value).includes(el),
+                if (!_.isArray(value)) {
+                    throw new Error(
+                        "Value must be an array for array-contains-any operator.",
                     )
+                }
+                filter = (item) => {
+                    if (_.isArray(item[fieldPath])) {
+                        return item[fieldPath].some((el: any) =>
+                            value.includes(el),
+                        )
+                    }
+                    return false
                 }
                 break
             default:
