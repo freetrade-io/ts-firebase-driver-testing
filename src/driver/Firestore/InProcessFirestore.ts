@@ -164,7 +164,11 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
 
 export class InProcessFirestoreQuerySnapshot
     implements IFirestoreQuerySnapshot {
-    constructor(readonly docs: InProcessFirestoreDocumentSnapshot[] = []) {}
+    readonly empty: boolean
+
+    constructor(readonly docs: InProcessFirestoreDocumentSnapshot[] = []) {
+        this.empty = docs.length === 0
+    }
 
     forEach(
         callback: (result: InProcessFirestoreDocumentSnapshot) => void,
