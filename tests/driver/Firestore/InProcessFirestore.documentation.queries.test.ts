@@ -82,6 +82,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
         const citiesRef = db.collection("cities")
 
         const stateQuery = await citiesRef.where("state", "==", "CA").get()
+        expect(stateQuery.empty).toBe(false)
+        expect(stateQuery.docs).toHaveLength(2)
         expect(stateQuery.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -104,6 +106,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
         const populationQuery = await citiesRef
             .where("population", "<", 1000000)
             .get()
+        expect(populationQuery.empty).toBe(false)
+        expect(populationQuery.docs).toHaveLength(2)
         expect(populationQuery.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -113,11 +117,21 @@ describe("InProcessFirestore queries behave as in documentation", () => {
                 population: 860000,
                 regions: ["west_coast", "norcal"],
             },
+            {
+                name: "Washington, D.C.",
+                state: null,
+                country: "USA",
+                capital: true,
+                population: 680000,
+                regions: ["east_coast"],
+            },
         ])
 
         const nameQuery = await citiesRef
             .where("name", ">=", "San Francisco")
             .get()
+        expect(nameQuery.empty).toBe(false)
+        expect(nameQuery.docs).toHaveLength(3)
         expect(nameQuery.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -126,6 +140,22 @@ describe("InProcessFirestore queries behave as in documentation", () => {
                 capital: false,
                 population: 860000,
                 regions: ["west_coast", "norcal"],
+            },
+            {
+                name: "Washington, D.C.",
+                state: null,
+                country: "USA",
+                capital: true,
+                population: 680000,
+                regions: ["east_coast"],
+            },
+            {
+                name: "Tokyo",
+                state: null,
+                country: "Japan",
+                capital: true,
+                population: 9000000,
+                regions: ["kanto", "honshu"],
             },
         ])
     })
@@ -140,6 +170,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("regions", "array-contains", "west_coast")
             .get()
 
+        expect(westCoastCities.empty).toBe(false)
+        expect(westCoastCities.docs).toHaveLength(2)
         expect(westCoastCities.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -170,6 +202,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("country", "in", ["USA", "Japan"])
             .get()
 
+        expect(usaOrJapan.empty).toBe(false)
+        expect(usaOrJapan.docs).toHaveLength(4)
         expect(usaOrJapan.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -211,6 +245,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
                 "west_coast",
             ])
             .get()
+        expect(eastOrWestCoastCities.empty).toBe(false)
+        expect(eastOrWestCoastCities.docs).toHaveLength(3)
         expect(eastOrWestCoastCities.docs.map((doc) => doc.data())).toEqual([
             {
                 name: "San Francisco",
@@ -235,6 +271,80 @@ describe("InProcessFirestore queries behave as in documentation", () => {
                 capital: true,
                 population: 680000,
                 regions: ["east_coast"],
+            },
+        ])
+    })
+
+    /**
+     * https://firebase.google.com/docs/firestore/query-data/queries#compound_queries
+     */
+    test("Compound queries", async () => {
+        const citiesRef = db.collection("cities")
+
+        const stateNameQuery = await citiesRef
+            .where("state", "==", "CO")
+            .where("name", "==", "Denver")
+            .get()
+        expect(stateNameQuery.docs).toHaveLength(0)
+        expect(stateNameQuery.empty).toBe(true)
+        expect(stateNameQuery.docs).toEqual([])
+
+        const statePopulationLtQuery = await citiesRef
+            .where("state", "==", "CA")
+            .where("population", "<", 1000000)
+            .get()
+        expect(statePopulationLtQuery.docs).toHaveLength(1)
+        expect(statePopulationLtQuery.empty).toBe(false)
+        expect(statePopulationLtQuery.docs.map((doc) => doc.data())).toEqual([
+            {
+                name: "San Francisco",
+                state: "CA",
+                country: "USA",
+                capital: false,
+                population: 860000,
+                regions: ["west_coast", "norcal"],
+            },
+        ])
+
+        const stateStateQuery = await citiesRef
+            .where("state", ">=", "CA")
+            .where("state", "<=", "IN")
+            .get()
+        expect(stateStateQuery.docs).toHaveLength(2)
+        expect(stateStateQuery.empty).toBe(false)
+        expect(stateStateQuery.docs.map((doc) => doc.data())).toEqual([
+            {
+                name: "San Francisco",
+                state: "CA",
+                country: "USA",
+                capital: false,
+                population: 860000,
+                regions: ["west_coast", "norcal"],
+            },
+            {
+                name: "Los Angeles",
+                state: "CA",
+                country: "USA",
+                capital: false,
+                population: 3900000,
+                regions: ["west_coast", "socal"],
+            },
+        ])
+
+        const statePopulationGtQuery = await citiesRef
+            .where("state", "==", "CA")
+            .where("population", ">", 1000000)
+            .get()
+        expect(statePopulationGtQuery.docs).toHaveLength(1)
+        expect(statePopulationGtQuery.empty).toBe(false)
+        expect(statePopulationGtQuery.docs.map((doc) => doc.data())).toEqual([
+            {
+                name: "Los Angeles",
+                state: "CA",
+                country: "USA",
+                capital: false,
+                population: 3900000,
+                regions: ["west_coast", "socal"],
             },
         ])
     })
