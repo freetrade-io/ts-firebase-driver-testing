@@ -41,9 +41,8 @@ export class InProcessFirestore implements IFirestore {
 }
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
-    private readonly filters: Array<
-        (item: { [key: string]: any }) => boolean
-    > = []
+    private filters: Array<(item: { [key: string]: any }) => boolean> = []
+    private rangeFilterField: string = ""
 
     constructor(
         protected readonly db: InProcessFirestore,
@@ -59,18 +58,22 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         let filter: (item: { [key: string]: any }) => boolean
         switch (opStr) {
             case "<":
+                this.enforceSingleFieldRangeFilter(fieldPath)
                 filter = (item) => item[fieldPath] < value
                 break
             case "<=":
+                this.enforceSingleFieldRangeFilter(fieldPath)
                 filter = (item) => item[fieldPath] <= value
                 break
             case "==":
                 filter = (item) => String(item[fieldPath]) === String(value)
                 break
             case ">=":
+                this.enforceSingleFieldRangeFilter(fieldPath)
                 filter = (item) => item[fieldPath] >= value
                 break
             case ">":
+                this.enforceSingleFieldRangeFilter(fieldPath)
                 filter = (item) => item[fieldPath] > value
                 break
             case "array-contains":
@@ -134,6 +137,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 )
             },
         )
+        this.filters = []
+        this.rangeFilterField = ""
         return new InProcessFirestoreQuerySnapshot(collection)
     }
 
@@ -143,6 +148,16 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             dotPath = this.parent.dotPath()
         }
         return _.trim(dotPath + `.${this.path}`, ".")
+    }
+
+    private enforceSingleFieldRangeFilter(fieldPath: string): void {
+        if (this.rangeFilterField && fieldPath !== this.rangeFilterField) {
+            throw new Error(
+                "Firestore cannot have range filters on different fields, see " +
+                    "https://firebase.google.com/docs/firestore/query-data/queries",
+            )
+        }
+        this.rangeFilterField = fieldPath
     }
 }
 
