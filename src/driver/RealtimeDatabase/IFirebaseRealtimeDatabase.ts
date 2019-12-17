@@ -1,8 +1,3 @@
-import {
-    IFirebaseBuilderDatabase,
-    IFirebaseBuilderPubSub,
-} from "../FirebaseDriver"
-
 export interface IFirebaseRealtimeDatabase {
     ref(path?: string): IFirebaseRealtimeDatabaseRef
 }
@@ -61,11 +56,6 @@ export interface IFirebaseRealtimeDatabaseRef
         committed: boolean
         snapshot: IFirebaseDataSnapshot | null
     }>
-}
-
-export interface IFirebaseFunctionBuilder {
-    pubsub: IFirebaseBuilderPubSub
-    database: IFirebaseBuilderDatabase
 }
 
 export interface IFirebaseChange<T> {

@@ -1,11 +1,14 @@
 import { IAsyncJobs } from "./AsyncJobs"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
+import {
+    IFirebaseFunctionBuilder,
+    SUPPORTED_REGIONS,
+} from "./FirebaseFunctionBuilder"
 import { firebaseLikeId } from "./identifiers"
 import {
     InProcessFirebaseBuilderPubSub,
     InProcessFirebasePubSubCl,
 } from "./PubSub/InProcessFirebasePubSub"
-import { IFirebaseFunctionBuilder } from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 import {
     IdGenerator,
     InProcessFirebaseBuilderDatabase,
@@ -17,6 +20,12 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
         readonly pubsub: InProcessFirebaseBuilderPubSub,
         readonly database: InProcessFirebaseBuilderDatabase,
     ) {}
+
+    region(
+        ...regions: Array<typeof SUPPORTED_REGIONS[number]>
+    ): IFirebaseFunctionBuilder {
+        return this
+    }
 }
 
 export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {

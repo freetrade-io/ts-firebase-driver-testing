@@ -1,8 +1,8 @@
+import { IFirebaseFunctionBuilder } from "./FirebaseFunctionBuilder"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
     IFirebaseEventContext,
-    IFirebaseFunctionBuilder,
     IFirebaseRealtimeDatabase,
 } from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 
