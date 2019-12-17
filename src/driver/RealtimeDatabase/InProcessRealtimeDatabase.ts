@@ -1,7 +1,10 @@
 import _ from "lodash"
 import objectPath = require("object-path")
-import { ChangeType, IDatabaseChangeObserver } from "../.."
 import { IAsyncJobs } from "../AsyncJobs"
+import {
+    ChangeType,
+    IDatabaseChangeObserver,
+} from "../ChangeObserver/DatabaseChangeObserver"
 import {
     CloudFunction,
     IFirebaseBuilderDatabase,
