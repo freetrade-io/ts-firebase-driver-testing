@@ -1,5 +1,7 @@
 import _ from "lodash"
 import objectPath = require("object-path")
+import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
+import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
 import {
     FirestoreWhereFilterOp,
@@ -255,5 +257,58 @@ class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
 
     data(): IFirestoreDocumentData | undefined {
         return this.value
+    }
+}
+
+export class InProcessFirestoreBuilder implements IFirestoreBuilder {
+    document(path: string): InProcessFirestoreDocumentBuilder {
+        return new InProcessFirestoreDocumentBuilder()
+    }
+}
+
+export class InProcessFirestoreDocumentBuilder
+    implements IFirestoreDocumentBuilder {
+    onCreate(
+        handler: (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any> {
+        const cloudFunction = async () => undefined
+        cloudFunction.run = cloudFunction
+        return cloudFunction
+    }
+
+    onDelete(
+        handler: (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any> {
+        const cloudFunction = async () => undefined
+        cloudFunction.run = cloudFunction
+        return cloudFunction
+    }
+
+    onUpdate(
+        handler: (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any> {
+        const cloudFunction = async () => undefined
+        cloudFunction.run = cloudFunction
+        return cloudFunction
+    }
+
+    onWrite(
+        handler: (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any> {
+        const cloudFunction = async () => undefined
+        cloudFunction.run = cloudFunction
+        return cloudFunction
     }
 }
