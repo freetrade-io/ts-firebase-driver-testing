@@ -1,8 +1,13 @@
 import _ from "lodash"
 import objectPath = require("object-path")
 import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
+import {
+    ChangeType,
+    IDatabaseChangeObserver,
+} from "../ChangeObserver/DatabaseChangeObserver"
 import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
+import { makeFirestoreChangeObserver } from "./FirestoreChangeObserver"
 import {
     FirestoreWhereFilterOp,
     IFirestore,
@@ -17,6 +22,7 @@ import {
 
 export class InProcessFirestore implements IFirestore {
     private storage = {}
+    private changeObservers: IDatabaseChangeObserver[] = []
 
     constructor(public makeId: () => string = fireStoreLikeId) {}
 
@@ -30,6 +36,7 @@ export class InProcessFirestore implements IFirestore {
 
     reset(dataset: object = {}): void {
         this.storage = dataset
+        this.changeObservers = []
         this.makeId = fireStoreLikeId
     }
 
@@ -39,6 +46,16 @@ export class InProcessFirestore implements IFirestore {
 
     _setPath(dotPath: string, value: any): void {
         objectPath.set(this.storage, dotPath, value)
+    }
+
+    _addObserver(
+        changeType: ChangeType,
+        observedPath: string,
+        handler: CloudFunction<any>,
+    ): void {
+        this.changeObservers.push(
+            makeFirestoreChangeObserver(changeType, observedPath, handler),
+        )
     }
 }
 
@@ -261,21 +278,34 @@ class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
 }
 
 export class InProcessFirestoreBuilder implements IFirestoreBuilder {
+    constructor(private readonly firestore: InProcessFirestore) {}
+
     document(path: string): InProcessFirestoreDocumentBuilder {
-        return new InProcessFirestoreDocumentBuilder()
+        return new InProcessFirestoreDocumentBuilder(path, this.firestore)
     }
 }
 
 export class InProcessFirestoreDocumentBuilder
     implements IFirestoreDocumentBuilder {
+    constructor(
+        private readonly path: string,
+        private readonly firestore: InProcessFirestore,
+    ) {}
+
     onCreate(
         handler: (
             snapshot: IFirestoreDocumentSnapshot,
             context: IFirebaseEventContext,
         ) => Promise<any>,
     ): CloudFunction<any> {
-        const cloudFunction = async () => undefined
+        const cloudFunction = async (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => {
+            return handler(snapshot, context)
+        }
         cloudFunction.run = cloudFunction
+        this.firestore._addObserver("created", this.path, cloudFunction)
         return cloudFunction
     }
 
@@ -285,8 +315,14 @@ export class InProcessFirestoreDocumentBuilder
             context: IFirebaseEventContext,
         ) => Promise<any>,
     ): CloudFunction<any> {
-        const cloudFunction = async () => undefined
+        const cloudFunction = async (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => {
+            return handler(snapshot, context)
+        }
         cloudFunction.run = cloudFunction
+        this.firestore._addObserver("deleted", this.path, cloudFunction)
         return cloudFunction
     }
 
@@ -296,8 +332,14 @@ export class InProcessFirestoreDocumentBuilder
             context: IFirebaseEventContext,
         ) => Promise<any>,
     ): CloudFunction<any> {
-        const cloudFunction = async () => undefined
+        const cloudFunction = async (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => {
+            return handler(change, context)
+        }
         cloudFunction.run = cloudFunction
+        this.firestore._addObserver("updated", this.path, cloudFunction)
         return cloudFunction
     }
 
@@ -307,8 +349,14 @@ export class InProcessFirestoreDocumentBuilder
             context: IFirebaseEventContext,
         ) => Promise<any>,
     ): CloudFunction<any> {
-        const cloudFunction = async () => undefined
+        const cloudFunction = async (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => {
+            return handler(change, context)
+        }
         cloudFunction.run = cloudFunction
+        this.firestore._addObserver("written", this.path, cloudFunction)
         return cloudFunction
     }
 }

@@ -2,7 +2,7 @@ import {
     DeletedChangeFilter,
     IChange,
     IParameterisedChange,
-} from "../../../../src"
+} from "../../../src/driver/ChangeObserver/DatabaseChangeFilter"
 
 describe("DeletedChangeFilter", () => {
     test.each([

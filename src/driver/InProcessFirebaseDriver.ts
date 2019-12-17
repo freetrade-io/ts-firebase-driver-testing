@@ -4,8 +4,11 @@ import {
     IFirebaseFunctionBuilder,
     SUPPORTED_REGIONS,
 } from "./FirebaseFunctionBuilder"
-import { InProcessFirestoreBuilder } from "./Firestore/InProcessFirestore"
-import { firebaseLikeId } from "./identifiers"
+import {
+    InProcessFirestore,
+    InProcessFirestoreBuilder,
+} from "./Firestore/InProcessFirestore"
+import { firebaseLikeId, fireStoreLikeId } from "./identifiers"
 import {
     InProcessFirebaseBuilderPubSub,
     InProcessFirebasePubSubCl,
@@ -48,6 +51,10 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
         return this.db
     }
 
+    firestore(makeId: IdGenerator = fireStoreLikeId): InProcessFirestore {
+        return new InProcessFirestore(makeId)
+    }
+
     runWith(runtimeOptions?: {
         memory: MemoryOption
         timeoutSeconds: number
@@ -77,7 +84,9 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
 
     inProcessBuilderFirestore(): InProcessFirestoreBuilder {
         if (!this.builderFirestore) {
-            this.builderFirestore = new InProcessFirestoreBuilder()
+            this.builderFirestore = new InProcessFirestoreBuilder(
+                this.firestore(),
+            )
         }
         return this.builderFirestore
     }

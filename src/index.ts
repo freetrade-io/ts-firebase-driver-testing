@@ -19,7 +19,6 @@ export * from "./driver/RealFirebaseDriver"
 export * from "./driver/PubSub/InProcessFirebasePubSub"
 
 export * from "./driver/RealtimeDatabase/InProcessRealtimeDatabase"
-export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeFilter"
 export * from "./driver/RealtimeDatabase/RealtimeDatabaseChangeObserver"
 export { IFirebaseEventContext } from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
 export { IFirebaseChange } from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"

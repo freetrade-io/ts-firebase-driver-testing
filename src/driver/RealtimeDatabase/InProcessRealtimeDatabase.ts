@@ -2,6 +2,10 @@ import _ from "lodash"
 import objectPath = require("object-path")
 import { IAsyncJobs } from "../AsyncJobs"
 import {
+    ChangeType,
+    IDatabaseChangeObserver,
+} from "../ChangeObserver/DatabaseChangeObserver"
+import {
     CloudFunction,
     IFirebaseBuilderDatabase,
     IFirebaseRefBuilder,
@@ -14,11 +18,7 @@ import {
     IFirebaseRealtimeDatabase,
     IFirebaseRealtimeDatabaseRef,
 } from "./IFirebaseRealtimeDatabase"
-import {
-    ChangeType,
-    IRealtimeDatabaseChangeObserver,
-    makeChangeObserver,
-} from "./RealtimeDatabaseChangeObserver"
+import { makeRealtimeDatabaseChangeObserver } from "./RealtimeDatabaseChangeObserver"
 
 export type IdGenerator = () => string
 
@@ -330,7 +330,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
 export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     private storage = {}
-    private changeObservers: IRealtimeDatabaseChangeObserver[] = []
+    private changeObservers: IDatabaseChangeObserver[] = []
 
     constructor(
         private readonly jobs?: IAsyncJobs,
@@ -391,7 +391,11 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         handler: CloudFunction<any>,
     ): void {
         this.changeObservers.push(
-            makeChangeObserver(changeType, observedPath, handler),
+            makeRealtimeDatabaseChangeObserver(
+                changeType,
+                observedPath,
+                handler,
+            ),
         )
     }
 
