@@ -1,12 +1,10 @@
 import _ from "lodash"
 import objectPath = require("object-path")
+import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
 import {
     ChangeType,
-    CloudFunction,
     IDatabaseChangeObserver,
-    IFirebaseChange,
-    IFirebaseEventContext,
-} from "../.."
+} from "../ChangeObserver/DatabaseChangeObserver"
 import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
 import { makeFirestoreChangeObserver } from "./FirestoreChangeObserver"
