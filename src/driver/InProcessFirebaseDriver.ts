@@ -4,6 +4,7 @@ import {
     IFirebaseFunctionBuilder,
     SUPPORTED_REGIONS,
 } from "./FirebaseFunctionBuilder"
+import { InProcessFirestoreBuilder } from "./Firestore/InProcessFirestore"
 import { firebaseLikeId } from "./identifiers"
 import {
     InProcessFirebaseBuilderPubSub,
@@ -19,6 +20,7 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
     constructor(
         readonly pubsub: InProcessFirebaseBuilderPubSub,
         readonly database: InProcessFirebaseBuilderDatabase,
+        readonly firestore: InProcessFirestoreBuilder,
     ) {}
 
     region(
@@ -33,6 +35,7 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private jobs: Array<Promise<any>> = []
 
     private builderDatabase: InProcessFirebaseBuilderDatabase | undefined
+    private builderFirestore: InProcessFirestoreBuilder | undefined
     private builderPubSub: InProcessFirebaseBuilderPubSub | undefined
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
 
@@ -53,6 +56,7 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
             this.functionBuilder = new InProcessFirebaseFunctionBuilder(
                 this.inProcessBuilderPubSub(),
                 this.inProcessBuilderDatabase(),
+                this.inProcessBuilderFirestore(),
             )
         }
         return this.functionBuilder
@@ -69,6 +73,13 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
             )
         }
         return this.builderDatabase
+    }
+
+    inProcessBuilderFirestore(): InProcessFirestoreBuilder {
+        if (!this.builderFirestore) {
+            this.builderFirestore = new InProcessFirestoreBuilder()
+        }
+        return this.builderFirestore
     }
 
     inProcessBuilderPubSub(): InProcessFirebaseBuilderPubSub {

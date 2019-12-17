@@ -1,6 +1,7 @@
 import {
     IFirebaseBuilderDatabase,
     IFirebaseBuilderPubSub,
+    IFirestoreBuilder,
 } from "./FirebaseDriver"
 
 export declare const SUPPORTED_REGIONS: readonly [
@@ -16,6 +17,7 @@ export declare const SUPPORTED_REGIONS: readonly [
 export interface IFirebaseFunctionBuilder {
     pubsub: IFirebaseBuilderPubSub
     database: IFirebaseBuilderDatabase
+    firestore: IFirestoreBuilder
 
     region(
         ...regions: Array<typeof SUPPORTED_REGIONS[number]>

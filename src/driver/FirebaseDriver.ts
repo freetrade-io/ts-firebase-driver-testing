@@ -1,4 +1,5 @@
 import { IFirebaseFunctionBuilder } from "./FirebaseFunctionBuilder"
+import { IFirestoreDocumentSnapshot } from "./Firestore/IFirestore"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
@@ -82,5 +83,39 @@ export interface IFirebaseRefBuilder {
             change: IFirebaseChange<IFirebaseDataSnapshot>,
             context: IFirebaseEventContext,
         ) => Promise<any> | any,
+    ): CloudFunction<any>
+}
+
+export interface IFirestoreBuilder {
+    document(path: string): IFirestoreDocumentBuilder
+}
+
+export interface IFirestoreDocumentBuilder {
+    onCreate(
+        handler: (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any>
+
+    onUpdate(
+        handler: (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any>
+
+    onDelete(
+        handler: (
+            snapshot: IFirestoreDocumentSnapshot,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
+    ): CloudFunction<any>
+
+    onWrite(
+        handler: (
+            change: IFirebaseChange<IFirestoreDocumentSnapshot>,
+            context: IFirebaseEventContext,
+        ) => Promise<any>,
     ): CloudFunction<any>
 }
