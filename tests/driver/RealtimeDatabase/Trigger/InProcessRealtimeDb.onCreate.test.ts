@@ -1,8 +1,8 @@
 import {
-    IChangeContext,
-    IChangeSnapshot,
     InProcessFirebaseDriver,
+    IRealtimeDatabaseChangeSnapshot,
 } from "../../../../src"
+import { IChangeContext } from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
 
 describe("onCreate trigger of in-process realtime database", () => {
     let driver: InProcessFirebaseDriver
@@ -13,7 +13,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("onCreate handler is triggered on object create", async () => {
         // Given we set up an onCreate handler on a path;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -60,7 +60,7 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on a path in that object;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -94,7 +94,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("onCreate handler not triggered without create", async () => {
         // Given we set up an onCreate handler on a path;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -133,7 +133,7 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on that path;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -163,7 +163,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("onCreate handler triggered on creation via update method", async () => {
         // Given we set up an onCreate handler on a path;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -210,7 +210,7 @@ describe("onCreate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onCreate handler on a path within that object;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -246,7 +246,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("onCreate trigger with multiple path parameters", async () => {
         // Given we set up an onCreate handler with multiple path parameters;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -282,7 +282,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("multiple onCreate triggers", async () => {
         // Given we set up an onCreate handler on a path;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
@@ -334,7 +334,7 @@ describe("onCreate trigger of in-process realtime database", () => {
 
     test("multiple onCreate triggers with multiple path parameters", async () => {
         // Given we set up an onCreate handler with multiple path parameters;
-        const receivedSnapshots: IChangeSnapshot[] = []
+        const receivedSnapshots: IRealtimeDatabaseChangeSnapshot[] = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()

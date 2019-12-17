@@ -1,8 +1,11 @@
 import {
+    InProcessFirebaseDriver,
+    IRealtimeDatabaseChangeSnapshot,
+} from "../../../../src"
+import {
     IChangeContext,
     IChangeSnapshots,
-    InProcessFirebaseDriver,
-} from "../../../../src"
+} from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
 
 describe("onUpdate trigger of in-process realtime database", () => {
     let driver: InProcessFirebaseDriver
@@ -23,7 +26,9 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange: IChangeSnapshots | undefined
+        let receivedChange:
+            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+            | undefined
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -71,7 +76,9 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange: IChangeSnapshots | undefined
+        let receivedChange:
+            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+            | undefined
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -127,7 +134,9 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange: IChangeSnapshots | undefined
+        let receivedChange:
+            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+            | undefined
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -157,7 +166,9 @@ describe("onUpdate trigger of in-process realtime database", () => {
 
     test("onUpdate handler is not triggered on create", async () => {
         // Given we set up an onUpdate handler on a path;
-        let receivedChange: IChangeSnapshots | undefined
+        let receivedChange:
+            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+            | undefined
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -197,7 +208,9 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange: IChangeSnapshots | undefined
+        let receivedChange:
+            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+            | undefined
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()

@@ -2,23 +2,24 @@ import _ from "lodash"
 import {
     CreatedChangeFilter,
     DeletedChangeFilter,
-    IChange,
     IChangeFilter,
-    IChangeParams,
     IParameterisedChange,
     UpdatedChangeFilter,
     WrittenChangeFilter,
-} from "./RealtimeDatabaseChangeFilter"
+} from "../ChangeObserver/DatabaseChangeFilter"
+import {
+    ChangeType,
+    DatabaseChangeObserver,
+    IChangeSnapshots,
+    IDatabaseChangeObserver,
+    TriggerFunction,
+} from "../ChangeObserver/DatabaseChangeObserver"
 
-export interface IRealtimeDatabaseChangeObserver {
-    onChange(change: IChange): Promise<void>
-}
-
-export function makeChangeObserver(
+export function makeRealtimeDatabaseChangeObserver(
     changeType: ChangeType,
     observedPath: string,
-    handler: TriggerFunction,
-): IRealtimeDatabaseChangeObserver {
+    handler: TriggerFunction<IRealtimeDatabaseChangeSnapshot>,
+): IDatabaseChangeObserver {
     switch (changeType) {
         case "created":
             return new RealtimeDatabaseCreatedObserver(observedPath, handler)
@@ -31,57 +32,22 @@ export function makeChangeObserver(
     }
 }
 
-export type ChangeType = "created" | "updated" | "deleted" | "written"
-
-export interface IChangeSnapshots {
-    before: IChangeSnapshot
-    after: IChangeSnapshot
-}
-export interface IChangeSnapshot {
+export interface IRealtimeDatabaseChangeSnapshot {
     val(): any
     exists(): boolean
 }
 
-export interface IChangeContext {
-    params: IChangeParams
-}
-
-type TriggerFunction = (
-    change: IChangeSnapshots | IChangeSnapshot,
-    context: IChangeContext,
-) => PromiseLike<any>
-
-abstract class RealtimeDatabaseChangeObserver
-    implements IRealtimeDatabaseChangeObserver {
-    constructor(
-        protected readonly observedPath: string,
-        protected readonly handler: TriggerFunction,
-    ) {}
-
-    async onChange(change: IChange): Promise<void> {
-        const relevantChanges = this.changeFilter().changeEvents(change)
-        await Promise.all(
-            relevantChanges.map((pc: IParameterisedChange) => {
-                return this.handler(this.makeChangeObject(pc), {
-                    params: pc.parameters,
-                })
-            }),
-        )
-    }
-
-    protected abstract changeFilter(): IChangeFilter
-    protected abstract makeChangeObject(
-        pc: IParameterisedChange,
-    ): IChangeSnapshots | IChangeSnapshot
-}
-
-class RealtimeDatabaseCreatedObserver extends RealtimeDatabaseChangeObserver {
+class RealtimeDatabaseCreatedObserver extends DatabaseChangeObserver<
+    IRealtimeDatabaseChangeSnapshot
+> {
     protected changeFilter(): IChangeFilter {
         return new CreatedChangeFilter(this.observedPath)
     }
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots | IChangeSnapshot {
+    ):
+        | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+        | IRealtimeDatabaseChangeSnapshot {
         return {
             val: () => pc.change.after,
             exists: () => !_.isNil(pc.change.after),
@@ -89,13 +55,17 @@ class RealtimeDatabaseCreatedObserver extends RealtimeDatabaseChangeObserver {
     }
 }
 
-class RealtimeDatabaseUpdatedObserver extends RealtimeDatabaseChangeObserver {
+class RealtimeDatabaseUpdatedObserver extends DatabaseChangeObserver<
+    IRealtimeDatabaseChangeSnapshot
+> {
     protected changeFilter(): IChangeFilter {
         return new UpdatedChangeFilter(this.observedPath)
     }
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots | IChangeSnapshot {
+    ):
+        | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+        | IRealtimeDatabaseChangeSnapshot {
         return {
             before: {
                 val: () => pc.change.before,
@@ -109,13 +79,17 @@ class RealtimeDatabaseUpdatedObserver extends RealtimeDatabaseChangeObserver {
     }
 }
 
-class RealtimeDatabaseDeletedObserver extends RealtimeDatabaseChangeObserver {
+class RealtimeDatabaseDeletedObserver extends DatabaseChangeObserver<
+    IRealtimeDatabaseChangeSnapshot
+> {
     protected changeFilter(): IChangeFilter {
         return new DeletedChangeFilter(this.observedPath)
     }
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots | IChangeSnapshot {
+    ):
+        | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+        | IRealtimeDatabaseChangeSnapshot {
         return {
             val: () => pc.change.after,
             exists: () => !_.isNil(pc.change.after),
@@ -123,13 +97,17 @@ class RealtimeDatabaseDeletedObserver extends RealtimeDatabaseChangeObserver {
     }
 }
 
-class RealtimeDatabaseWrittenObserver extends RealtimeDatabaseChangeObserver {
+class RealtimeDatabaseWrittenObserver extends DatabaseChangeObserver<
+    IRealtimeDatabaseChangeSnapshot
+> {
     protected changeFilter(): IChangeFilter {
         return new WrittenChangeFilter(this.observedPath)
     }
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots | IChangeSnapshot {
+    ):
+        | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
+        | IRealtimeDatabaseChangeSnapshot {
         return {
             before: {
                 val: () => pc.change.before,
