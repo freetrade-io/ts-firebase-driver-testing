@@ -82,52 +82,72 @@ interface IKeyVal {
 }
 
 class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
-    private readonly orderings: Array<(a: IKeyVal, b: IKeyVal) => number> = []
-    private readonly filters: Array<(item: IKeyVal) => boolean> = []
-    private readonly transforms: Array<(value: any) => any> = []
-
-    private childOrderingPath?: string
-    private keyOrdering: boolean = false
-
     constructor(
         private readonly db: InProcessRealtimeDatabase,
         private readonly path: string,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
+        private readonly orderings: Array<
+            (a: IKeyVal, b: IKeyVal) => number
+        > = [],
+        private readonly filters: Array<(item: IKeyVal) => boolean> = [],
+        private readonly transforms: Array<(value: any) => any> = [],
+        private readonly keyOrdering: boolean = false,
+        private readonly childOrderingPath?: string,
     ) {}
 
     orderByKey(): InProcessRealtimeDatabaseRef {
-        this.keyOrdering = true
-        this.childOrderingPath = undefined
-        this.orderings.push((a: IKeyVal, b: IKeyVal): number => {
+        const ordering = (a: IKeyVal, b: IKeyVal): number => {
             return this.compare(a.key, b.key)
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings, ordering],
+            [...this.filters],
+            [...this.transforms],
+            true,
+            undefined,
+        )
     }
 
     orderByChild(childPath: string): InProcessRealtimeDatabaseRef {
         childPath = dotPathFromSlashed(childPath)
-        this.childOrderingPath = childPath
-        this.keyOrdering = false
-        this.orderings.push((a: IKeyVal, b: IKeyVal): number => {
+        const ordering = (a: IKeyVal, b: IKeyVal): number => {
             const childA = objectPath.get(a.val, childPath)
             const childB = objectPath.get(b.val, childPath)
             return this.compare(childA, childB)
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings, ordering],
+            [...this.filters],
+            [...this.transforms],
+            false,
+            childPath,
+        )
     }
 
     orderByValue(): InProcessRealtimeDatabaseRef {
-        this.keyOrdering = false
-        this.childOrderingPath = undefined
-        this.orderings.push((a: IKeyVal, b: IKeyVal): number => {
+        const ordering = (a: IKeyVal, b: IKeyVal): number => {
             return this.compare(a.val, b.val)
-        })
-        this.orderings.push(this.compare)
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings, ordering, this.compare],
+            [...this.filters],
+            [...this.transforms],
+            false,
+            undefined,
+        )
     }
 
     limitToFirst(limit: number): InProcessRealtimeDatabaseRef {
-        this.transforms.push((value: any) => {
+        const transform = (value: any) => {
             if (typeof value === "object") {
                 value = Object.keys(value)
                     .slice(0, limit)
@@ -137,12 +157,21 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                     }, {})
             }
             return value
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings],
+            [...this.filters],
+            [...this.transforms, transform],
+            this.keyOrdering,
+            this.childOrderingPath,
+        )
     }
 
     limitToLast(limit: number): InProcessRealtimeDatabaseRef {
-        this.transforms.push((value: any) => {
+        const transform = (value: any) => {
             if (typeof value === "object") {
                 value = Object.keys(value)
                     .slice(Math.max(Object.keys(value).length - limit, 0))
@@ -152,14 +181,23 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                     }, {})
             }
             return value
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings],
+            [...this.filters],
+            [...this.transforms, transform],
+            this.keyOrdering,
+            this.childOrderingPath,
+        )
     }
 
     startAt(
         value: number | string | boolean | null,
     ): InProcessRealtimeDatabaseRef {
-        this.filters.push((item: IKeyVal): boolean => {
+        const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
             if (this.keyOrdering) {
                 compareVal = item.key
@@ -168,14 +206,23 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return this.compare(compareVal, value) >= 0
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings],
+            [...this.filters, filter],
+            [...this.transforms],
+            this.keyOrdering,
+            this.childOrderingPath,
+        )
     }
 
     endAt(
         value: number | string | boolean | null,
     ): InProcessRealtimeDatabaseRef {
-        this.filters.push((item: IKeyVal): boolean => {
+        const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
             if (this.keyOrdering) {
                 compareVal = item.key
@@ -184,14 +231,26 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return this.compare(compareVal, value) <= 0
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings],
+            [...this.filters, filter],
+            [...this.transforms],
+            this.keyOrdering,
+            this.childOrderingPath,
+        )
     }
 
     equalTo(
         value: number | string | boolean | null,
     ): InProcessRealtimeDatabaseRef {
-        this.filters.push((item: IKeyVal): boolean => {
+        if (this.filters.length > 0) {
+            throw new Error("Cannot combine equalTo with other filters")
+        }
+        const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
             if (this.keyOrdering) {
                 compareVal = item.key
@@ -200,8 +259,17 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = objectPath.get(item.val, this.childOrderingPath)
             }
             return compareVal === value
-        })
-        return this
+        }
+        return new InProcessRealtimeDatabaseRef(
+            this.db,
+            this.path,
+            this.idGenerator,
+            [...this.orderings],
+            [...this.filters, filter],
+            [...this.transforms],
+            this.keyOrdering,
+            this.childOrderingPath,
+        )
     }
 
     child(path: string): InProcessRealtimeDatabaseRef {
