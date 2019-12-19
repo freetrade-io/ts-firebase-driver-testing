@@ -81,18 +81,26 @@ interface IKeyVal {
     val: any
 }
 
+interface IInProcessRealtimeDatabaseRefQuery {
+    readonly orderings: Array<(a: IKeyVal, b: IKeyVal) => number>
+    readonly filters: Array<(item: IKeyVal) => boolean>
+    readonly transforms: Array<(value: any) => any>
+    readonly keyOrdering: boolean
+    readonly childOrderingPath?: string
+}
+
 class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     constructor(
         private readonly db: InProcessRealtimeDatabase,
         private readonly path: string,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
-        private readonly orderings: Array<
-            (a: IKeyVal, b: IKeyVal) => number
-        > = [],
-        private readonly filters: Array<(item: IKeyVal) => boolean> = [],
-        private readonly transforms: Array<(value: any) => any> = [],
-        private readonly keyOrdering: boolean = false,
-        private readonly childOrderingPath?: string,
+        private readonly query: IInProcessRealtimeDatabaseRefQuery = {
+            orderings: [],
+            filters: [],
+            transforms: [],
+            keyOrdering: false,
+            childOrderingPath: undefined,
+        },
     ) {}
 
     orderByKey(): InProcessRealtimeDatabaseRef {
@@ -103,11 +111,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings, ordering],
-            [...this.filters],
-            [...this.transforms],
-            true,
-            undefined,
+            {
+                orderings: [...this.query.orderings, ordering],
+                filters: [...this.query.filters],
+                transforms: [...this.query.transforms],
+                keyOrdering: true,
+                childOrderingPath: undefined,
+            },
         )
     }
 
@@ -122,11 +132,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings, ordering],
-            [...this.filters],
-            [...this.transforms],
-            false,
-            childPath,
+            {
+                orderings: [...this.query.orderings, ordering],
+                filters: [...this.query.filters],
+                transforms: [...this.query.transforms],
+                keyOrdering: false,
+                childOrderingPath: childPath,
+            },
         )
     }
 
@@ -138,11 +150,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings, ordering, this.compare],
-            [...this.filters],
-            [...this.transforms],
-            false,
-            undefined,
+            {
+                orderings: [...this.query.orderings, ordering, this.compare],
+                filters: [...this.query.filters],
+                transforms: [...this.query.transforms],
+                keyOrdering: false,
+                childOrderingPath: undefined,
+            },
         )
     }
 
@@ -162,11 +176,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings],
-            [...this.filters],
-            [...this.transforms, transform],
-            this.keyOrdering,
-            this.childOrderingPath,
+            {
+                orderings: [...this.query.orderings],
+                filters: [...this.query.filters],
+                transforms: [...this.query.transforms, transform],
+                keyOrdering: this.query.keyOrdering,
+                childOrderingPath: this.query.childOrderingPath,
+            },
         )
     }
 
@@ -186,11 +202,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings],
-            [...this.filters],
-            [...this.transforms, transform],
-            this.keyOrdering,
-            this.childOrderingPath,
+            {
+                orderings: [...this.query.orderings],
+                filters: [...this.query.filters],
+                transforms: [...this.query.transforms, transform],
+                keyOrdering: this.query.keyOrdering,
+                childOrderingPath: this.query.childOrderingPath,
+            },
         )
     }
 
@@ -199,11 +217,14 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     ): InProcessRealtimeDatabaseRef {
         const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
-            if (this.keyOrdering) {
+            if (this.query.keyOrdering) {
                 compareVal = item.key
             }
-            if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(item.val, this.childOrderingPath)
+            if (this.query.childOrderingPath && typeof item.val === "object") {
+                compareVal = objectPath.get(
+                    item.val,
+                    this.query.childOrderingPath,
+                )
             }
             return this.compare(compareVal, value) >= 0
         }
@@ -211,11 +232,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings],
-            [...this.filters, filter],
-            [...this.transforms],
-            this.keyOrdering,
-            this.childOrderingPath,
+            {
+                orderings: [...this.query.orderings],
+                filters: [...this.query.filters, filter],
+                transforms: [...this.query.transforms],
+                keyOrdering: this.query.keyOrdering,
+                childOrderingPath: this.query.childOrderingPath,
+            },
         )
     }
 
@@ -224,11 +247,14 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     ): InProcessRealtimeDatabaseRef {
         const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
-            if (this.keyOrdering) {
+            if (this.query.keyOrdering) {
                 compareVal = item.key
             }
-            if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(item.val, this.childOrderingPath)
+            if (this.query.childOrderingPath && typeof item.val === "object") {
+                compareVal = objectPath.get(
+                    item.val,
+                    this.query.childOrderingPath,
+                )
             }
             return this.compare(compareVal, value) <= 0
         }
@@ -236,27 +262,32 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings],
-            [...this.filters, filter],
-            [...this.transforms],
-            this.keyOrdering,
-            this.childOrderingPath,
+            {
+                orderings: [...this.query.orderings],
+                filters: [...this.query.filters, filter],
+                transforms: [...this.query.transforms],
+                keyOrdering: this.query.keyOrdering,
+                childOrderingPath: this.query.childOrderingPath,
+            },
         )
     }
 
     equalTo(
         value: number | string | boolean | null,
     ): InProcessRealtimeDatabaseRef {
-        if (this.filters.length > 0) {
+        if (this.query.filters.length > 0) {
             throw new Error("Cannot combine equalTo with other filters")
         }
         const filter = (item: IKeyVal): boolean => {
             let compareVal = item.val
-            if (this.keyOrdering) {
+            if (this.query.keyOrdering) {
                 compareVal = item.key
             }
-            if (this.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(item.val, this.childOrderingPath)
+            if (this.query.childOrderingPath && typeof item.val === "object") {
+                compareVal = objectPath.get(
+                    item.val,
+                    this.query.childOrderingPath,
+                )
             }
             return compareVal === value
         }
@@ -264,11 +295,13 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             this.db,
             this.path,
             this.idGenerator,
-            [...this.orderings],
-            [...this.filters, filter],
-            [...this.transforms],
-            this.keyOrdering,
-            this.childOrderingPath,
+            {
+                orderings: [...this.query.orderings],
+                filters: [...this.query.filters, filter],
+                transforms: [...this.query.transforms],
+                keyOrdering: this.query.keyOrdering,
+                childOrderingPath: this.query.childOrderingPath,
+            },
         )
     }
 
@@ -315,7 +348,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         }
         let value = this.db._getPath(this.path)
         if (typeof value === "object") {
-            for (const ordering of this.orderings) {
+            for (const ordering of this.query.orderings) {
                 value = Object.keys(value)
                     .sort((a, b) =>
                         ordering(
@@ -329,7 +362,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                         return whole
                     }, {})
             }
-            for (const filter of this.filters) {
+            for (const filter of this.query.filters) {
                 value = Object.keys(value)
                     .filter((k) => filter({ key: k, val: value[k] }))
                     .reduce((whole, key) => {
@@ -338,7 +371,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                         return whole
                     }, {})
             }
-            for (const transform of this.transforms) {
+            for (const transform of this.query.transforms) {
                 value = transform(value)
             }
         }
