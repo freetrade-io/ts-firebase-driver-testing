@@ -1,6 +1,7 @@
 import _ from "lodash"
 import objectPath = require("object-path")
 import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
+import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
     IDatabaseChangeObserver,
@@ -24,7 +25,10 @@ export class InProcessFirestore implements IFirestore {
     private storage = {}
     private changeObservers: IDatabaseChangeObserver[] = []
 
-    constructor(public makeId: () => string = fireStoreLikeId) {}
+    constructor(
+        private readonly jobs?: IAsyncJobs,
+        public makeId: () => string = fireStoreLikeId,
+    ) {}
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(this, collectionPath)
@@ -45,7 +49,9 @@ export class InProcessFirestore implements IFirestore {
     }
 
     _setPath(dotPath: string, value: any): void {
-        objectPath.set(this.storage, dotPath, value)
+        this.triggerChangeEvents(() => {
+            objectPath.set(this.storage, dotPath, value)
+        })
     }
 
     _addObserver(
@@ -56,6 +62,26 @@ export class InProcessFirestore implements IFirestore {
         this.changeObservers.push(
             makeFirestoreChangeObserver(changeType, observedPath, handler),
         )
+    }
+
+    private triggerChangeEvents(makeChange: () => any): void {
+        if (!this.jobs) {
+            makeChange()
+            return
+        }
+
+        const before = _.cloneDeep(this.storage)
+        makeChange()
+        const after = _.cloneDeep(this.storage)
+
+        for (const observer of this.changeObservers) {
+            const job = new Promise((resolve) => {
+                setTimeout(async () => {
+                    resolve(observer.onChange({ before, after }))
+                }, 1)
+            })
+            this.jobs.pushJob(job)
+        }
     }
 }
 
