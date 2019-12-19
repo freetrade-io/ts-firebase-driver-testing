@@ -34,7 +34,8 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
 }
 
 export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
-    private db: InProcessRealtimeDatabase | undefined
+    private rtDb: InProcessRealtimeDatabase | undefined
+    private firestoreDb: InProcessFirestore | undefined
     private jobs: Array<Promise<any>> = []
 
     private builderDatabase: InProcessFirebaseBuilderDatabase | undefined
@@ -45,14 +46,17 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     realTimeDatabase(
         idGenerator: IdGenerator = firebaseLikeId,
     ): InProcessRealtimeDatabase {
-        if (!this.db) {
-            this.db = new InProcessRealtimeDatabase(this, idGenerator)
+        if (!this.rtDb) {
+            this.rtDb = new InProcessRealtimeDatabase(this, idGenerator)
         }
-        return this.db
+        return this.rtDb
     }
 
     firestore(makeId: IdGenerator = fireStoreLikeId): InProcessFirestore {
-        return new InProcessFirestore(makeId)
+        if (!this.firestoreDb) {
+            this.firestoreDb = new InProcessFirestore(this, makeId)
+        }
+        return this.firestoreDb
     }
 
     runWith(runtimeOptions?: {
