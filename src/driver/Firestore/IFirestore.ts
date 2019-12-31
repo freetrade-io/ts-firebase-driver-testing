@@ -1,6 +1,10 @@
 export interface IFirestore {
     collection(collectionPath: string): IFirestoreCollectionRef
     doc(documentPath: string): IFirestoreDocRef
+    runTransaction<T>(
+        updateFunction: (transaction: IFirestoreTransaction) => Promise<T>,
+        transactionOptions?: { maxAttempts?: number },
+    ): Promise<T>
 }
 
 export type FirestoreWhereFilterOp =
@@ -19,6 +23,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
 }
 
 export interface IFirestoreDocRef {
+    readonly path: string
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
     set(
@@ -26,6 +31,7 @@ export interface IFirestoreDocRef {
         options?: { merge: boolean },
     ): Promise<IFirestoreWriteResult>
     update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+    delete(): Promise<IFirestoreWriteResult>
 }
 
 export interface IFirestoreDocumentSnapshot {
@@ -60,4 +66,21 @@ export interface IFirestoreQuerySnapshot {
     docs: IFirestoreDocumentSnapshot[]
     empty: boolean
     forEach(callback: (result: IFirestoreDocumentSnapshot) => void): void
+}
+
+export interface IFirestoreTransaction {
+    get(documentRef: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
+    create(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction
+    set(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction
+    update(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction
+    delete(documentRef: IFirestoreDocRef): IFirestoreTransaction
 }

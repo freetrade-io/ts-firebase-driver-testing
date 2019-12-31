@@ -18,16 +18,17 @@ import {
     IFirestoreDocumentSnapshot,
     IFirestoreQuery,
     IFirestoreQuerySnapshot,
+    IFirestoreTransaction,
     IFirestoreWriteResult,
 } from "./IFirestore"
 
 export class InProcessFirestore implements IFirestore {
-    private storage = {}
     private changeObservers: IDatabaseChangeObserver[] = []
 
     constructor(
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
+        private storage = {},
     ) {}
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
@@ -36,6 +37,24 @@ export class InProcessFirestore implements IFirestore {
 
     doc(documentPath: string): InProcessFirestoreDocRef {
         return new InProcessFirestoreDocRef(this, documentPath)
+    }
+
+    async runTransaction<T>(
+        updateFunction: (transaction: IFirestoreTransaction) => Promise<T>,
+        transactionOptions?: { maxAttempts?: number },
+    ): Promise<T> {
+        const initialState = _.cloneDeep(this.storage)
+        const transaction = new InProcessFirestoreTransaction()
+
+        let result
+        try {
+            result = await updateFunction(transaction)
+            await transaction.commit()
+        } catch (err) {
+            this.storage = initialState
+        }
+
+        return result as T
     }
 
     reset(dataset: object = {}): void {
@@ -51,6 +70,12 @@ export class InProcessFirestore implements IFirestore {
     _setPath(dotPath: string, value: any): void {
         this.triggerChangeEvents(() => {
             objectPath.set(this.storage, dotPath, value)
+        })
+    }
+
+    _deletePath(dotPath: string): void {
+        this.triggerChangeEvents(() => {
+            objectPath.del(this.storage, dotPath)
         })
     }
 
@@ -238,11 +263,19 @@ export class InProcessFirestoreQuerySnapshot
 }
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
+    readonly path: string
+
     constructor(
         private readonly db: InProcessFirestore,
-        private readonly path: string,
+        private readonly pathSection: string,
         private readonly parent?: InProcessFirestoreQuery,
-    ) {}
+    ) {
+        let parentFullPath = ""
+        if (parent) {
+            parentFullPath = parent.dotPath()
+        }
+        this.path = `${parentFullPath}.${this.pathSection}`.replace(/\.+/g, "/")
+    }
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
@@ -255,7 +288,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     async get(): Promise<InProcessFirestoreDocumentSnapshot> {
         const value = this.db._getPath(this.dotPath())
         return new InProcessFirestoreDocumentSnapshot(
-            this.path,
+            this.pathSection,
             value !== null && value !== undefined,
             this,
             value,
@@ -281,12 +314,17 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         return { writeTime: { seconds: new Date().getTime() / 1000 } }
     }
 
+    async delete(): Promise<IFirestoreWriteResult> {
+        this.db._deletePath(this.dotPath())
+        return { writeTime: { seconds: new Date().getTime() / 1000 } }
+    }
+
     dotPath(): string {
         let dotPath = ""
         if (this.parent) {
             dotPath = this.parent.dotPath()
         }
-        return _.trim(dotPath + `.${this.path}`, ".")
+        return _.trim(dotPath + `.${this.pathSection}`, ".")
     }
 }
 
@@ -384,5 +422,62 @@ export class InProcessFirestoreDocumentBuilder
         cloudFunction.run = cloudFunction
         this.firestore._addObserver("written", this.path, cloudFunction)
         return cloudFunction
+    }
+}
+
+/**
+ * Basic in-process "transaction" with no concurrency control or retries.
+ */
+class InProcessFirestoreTransaction implements IFirestoreTransaction {
+    private readonly writeOperations: Array<() => Promise<any>> = []
+
+    create(
+        documentRef: InProcessFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction {
+        this.writeOperations.push(async () => {
+            if ((await documentRef.get()).exists) {
+                throw new Error(
+                    "Cannot create document in transaction: already exists",
+                )
+            }
+            await documentRef.set(data)
+        })
+        return this
+    }
+
+    delete(documentRef: InProcessFirestoreDocRef): IFirestoreTransaction {
+        this.writeOperations.push(async () => await documentRef.delete())
+        return this
+    }
+
+    get(ref: InProcessFirestoreDocRef): Promise<IFirestoreDocumentSnapshot> {
+        if (this.writeOperations.length > 0) {
+            throw new Error("Cannot read after write in Firestore transaction")
+        }
+        return ref.get()
+    }
+
+    set(
+        documentRef: InProcessFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction {
+        this.writeOperations.push(async () => await documentRef.set(data))
+        return this
+    }
+
+    update(
+        documentRef: InProcessFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreTransaction {
+        this.writeOperations.push(async () => await documentRef.update(data))
+        return this
+    }
+
+    async commit(): Promise<void> {
+        while (this.writeOperations.length > 0) {
+            const write = this.writeOperations.pop() || (async () => undefined)
+            await write()
+        }
     }
 }
