@@ -19,6 +19,7 @@ import {
     IFirestoreQuery,
     IFirestoreQuerySnapshot,
     IFirestoreTransaction,
+    IFirestoreWriteBatch,
     IFirestoreWriteResult,
 } from "./IFirestore"
 
@@ -55,6 +56,10 @@ export class InProcessFirestore implements IFirestore {
         }
 
         return result as T
+    }
+
+    batch(): InProcessFirestoreWriteBatch {
+        return new InProcessFirestoreWriteBatch()
     }
 
     reset(dataset: object = {}): void {
@@ -479,5 +484,56 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
             const write = this.writeOperations.pop() || (async () => undefined)
             await write()
         }
+    }
+}
+
+class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
+    private readonly writeOperations: Array<
+        () => Promise<IFirestoreWriteResult>
+    > = []
+
+    create(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch {
+        this.writeOperations.push(async () => {
+            if ((await documentRef.get()).exists) {
+                throw new Error(
+                    "Cannot create document in batch write: already exists",
+                )
+            }
+            return documentRef.set(data)
+        })
+        return this
+    }
+
+    delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch {
+        this.writeOperations.push(async () => documentRef.delete())
+        return this
+    }
+
+    set(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch {
+        this.writeOperations.push(async () => documentRef.set(data))
+        return this
+    }
+
+    update(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch {
+        this.writeOperations.push(async () => documentRef.update(data))
+        return this
+    }
+
+    async commit(): Promise<IFirestoreWriteResult[]> {
+        const results: IFirestoreWriteResult[] = []
+        while (this.writeOperations.length > 0) {
+            const write = this.writeOperations.pop() || (async () => undefined)
+            results.push((await write()) as IFirestoreWriteResult)
+        }
+        return results
     }
 }

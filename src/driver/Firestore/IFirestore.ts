@@ -5,6 +5,7 @@ export interface IFirestore {
         updateFunction: (transaction: IFirestoreTransaction) => Promise<T>,
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T>
+    batch(): IFirestoreWriteBatch
 }
 
 export type FirestoreWhereFilterOp =
@@ -70,17 +71,42 @@ export interface IFirestoreQuerySnapshot {
 
 export interface IFirestoreTransaction {
     get(documentRef: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
+
     create(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreTransaction
+
     set(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreTransaction
+
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreTransaction
+
     delete(documentRef: IFirestoreDocRef): IFirestoreTransaction
+}
+
+export interface IFirestoreWriteBatch {
+    create(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch
+
+    set(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch
+
+    update(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): IFirestoreWriteBatch
+
+    delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch
+
+    commit(): Promise<IFirestoreWriteResult[]>
 }
