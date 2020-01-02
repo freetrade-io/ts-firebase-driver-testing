@@ -17,7 +17,7 @@ export class RealFirebaseDriver implements IFirebaseDriver {
         return this.realTimeDb || admin.database()
     }
 
-    fireStore(): IFirestore {
+    firestore(): IFirestore {
         return this.firestoreDb || admin.firestore()
     }
 
