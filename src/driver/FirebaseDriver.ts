@@ -1,5 +1,5 @@
 import { IFirebaseFunctionBuilder } from "./FirebaseFunctionBuilder"
-import { IFirestoreDocumentSnapshot } from "./Firestore/IFirestore"
+import { IFirestore, IFirestoreDocumentSnapshot } from "./Firestore/IFirestore"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
@@ -9,6 +9,7 @@ import {
 
 export interface IFirebaseDriver {
     realTimeDatabase(): IFirebaseRealtimeDatabase
+    firestore(): IFirestore
     pubSubCl(): IPubSub
     runWith(runtimeOptions?: {
         memory: MemoryOption
