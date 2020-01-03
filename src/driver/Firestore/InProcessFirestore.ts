@@ -115,40 +115,80 @@ export class InProcessFirestore implements IFirestore {
     }
 }
 
-export class InProcessFirestoreQuery implements IFirestoreQuery {
-    private filters: Array<(item: { [key: string]: any }) => boolean> = []
-    private rangeFilterField: string = ""
+interface IItem {
+    [key: string]: any
+}
 
+interface IQueryBuilder {
+    filters: Array<(item: IItem) => boolean>
+    orderings: Array<(a: IItem, b: IItem) => number>
+    rangeFilterField: string
+}
+
+export class InProcessFirestoreQuery implements IFirestoreQuery {
     constructor(
         protected readonly db: InProcessFirestore,
         protected readonly path: string,
         protected readonly parent?: InProcessFirestoreDocRef,
+        protected query: IQueryBuilder = {
+            filters: [],
+            orderings: [],
+            rangeFilterField: "",
+        },
     ) {}
+
+    orderBy(
+        fieldPath: string,
+        directionStr: "desc" | "asc" = "asc",
+    ): IFirestoreQuery {
+        const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
+
+        // An orderBy() clause also filters for existence of the given field.
+        newQuery.filters.push((item) => fieldPath in item)
+
+        if (directionStr === "asc") {
+            newQuery.orderings.push((a, b) =>
+                this.compare(a[fieldPath], b[fieldPath]),
+            )
+        } else {
+            newQuery.orderings.push((a, b) =>
+                this.compare(b[fieldPath], a[fieldPath]),
+            )
+        }
+
+        return new InProcessFirestoreQuery(
+            this.db,
+            this.path,
+            this.parent,
+            newQuery,
+        )
+    }
 
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
         value: any,
     ): InProcessFirestoreQuery {
+        const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
         let filter: (item: { [key: string]: any }) => boolean
         switch (opStr) {
             case "<":
-                this.enforceSingleFieldRangeFilter(fieldPath)
+                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
                 filter = (item) => item[fieldPath] < value
                 break
             case "<=":
-                this.enforceSingleFieldRangeFilter(fieldPath)
+                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
                 filter = (item) => item[fieldPath] <= value
                 break
             case "==":
                 filter = (item) => String(item[fieldPath]) === String(value)
                 break
             case ">=":
-                this.enforceSingleFieldRangeFilter(fieldPath)
+                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
                 filter = (item) => item[fieldPath] >= value
                 break
             case ">":
-                this.enforceSingleFieldRangeFilter(fieldPath)
+                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
                 filter = (item) => item[fieldPath] > value
                 break
             case "array-contains":
@@ -183,17 +223,31 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             default:
                 throw new Error(`Unknown Firestore where operator ${opStr}`)
         }
-        this.filters.push(filter)
-        return this
+        newQuery.filters.push(filter)
+        return new InProcessFirestoreQuery(
+            this.db,
+            this.path,
+            this.parent,
+            newQuery,
+        )
     }
 
     async get(): Promise<InProcessFirestoreQuerySnapshot> {
         let collection = this.db._getPath(this.dotPath()) || {}
-        for (const filter of this.filters) {
+        for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
-                .reduce((whole: object, key: string) => {
-                    // @ts-ignore
+                .reduce((whole: IItem, key: string) => {
+                    whole[key] = collection[key]
+                    return whole
+                }, {})
+        }
+        for (const ordering of this.query.orderings) {
+            collection = Object.keys(collection)
+                .sort((keyA, keyB) => {
+                    return ordering(collection[keyA], collection[keyB])
+                })
+                .reduce((whole: IItem, key: string) => {
                     whole[key] = collection[key]
                     return whole
                 }, {})
@@ -212,8 +266,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 )
             },
         )
-        this.filters = []
-        this.rangeFilterField = ""
+        this.query = {
+            filters: [],
+            orderings: [],
+            rangeFilterField: "",
+        }
         return new InProcessFirestoreQuerySnapshot(collection)
     }
 
@@ -225,14 +282,33 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return _.trim(dotPath + `.${this.path}`, ".")
     }
 
-    private enforceSingleFieldRangeFilter(fieldPath: string): void {
-        if (this.rangeFilterField && fieldPath !== this.rangeFilterField) {
+    private enforceSingleFieldRangeFilter(
+        query: IQueryBuilder,
+        fieldPath: string,
+    ): void {
+        if (query.rangeFilterField && fieldPath !== query.rangeFilterField) {
             throw new Error(
-                "Firestore cannot have range filters on different fields, see " +
-                    "https://firebase.google.com/docs/firestore/query-data/queries",
+                "Firestore cannot have range filters on different fields, " +
+                    `tried to add range filter on '${fieldPath}' with ` +
+                    `existing range filter on '${query.rangeFilterField}', ` +
+                    "see https://firebase.google.com/docs/firestore/query-data/queries",
             )
         }
-        this.rangeFilterField = fieldPath
+        query.rangeFilterField = fieldPath
+    }
+
+    private compare(a: any, b: any): number {
+        return this.normalise(a).localeCompare(this.normalise(b))
+    }
+
+    private normalise(val: any): string {
+        if (typeof val.toISOString === "function") {
+            val = val.toISOString()
+        }
+        if (typeof val.toString === "function") {
+            val = val.toString()
+        }
+        return String(val)
     }
 }
 
