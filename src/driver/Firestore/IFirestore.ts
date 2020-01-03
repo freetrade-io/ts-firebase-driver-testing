@@ -55,6 +55,7 @@ export interface IFirestoreTimestamp {
 }
 
 export interface IFirestoreQuery {
+    orderBy(fieldPath: string, directionStr?: "desc" | "asc"): IFirestoreQuery
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
