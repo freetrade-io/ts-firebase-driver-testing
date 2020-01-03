@@ -2,6 +2,7 @@ function randomString() {
     return Math.random()
         .toString(16)
         .slice(-12)
+        .replace(/\./g, "0")
 }
 
 export function firebaseLikeId(time = Date.now()) {
