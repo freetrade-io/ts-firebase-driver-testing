@@ -19,6 +19,8 @@ export type FirestoreWhereFilterOp =
     | "array-contains-any"
 
 export interface IFirestoreCollectionRef extends IFirestoreQuery {
+    readonly path: string
+    readonly parent: IFirestoreDocRef | null
     doc(documentPath?: string): IFirestoreDocRef
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
 }
@@ -26,6 +28,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
 export interface IFirestoreDocRef {
     readonly path: string
     readonly id: string
+    readonly parent: IFirestoreCollectionRef
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
     set(
