@@ -33,11 +33,11 @@ export class InProcessFirestore implements IFirestore {
     ) {}
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
-        return new InProcessFirestoreCollectionRef(this, collectionPath)
+        return new InProcessFirestoreCollectionRef(collectionPath, this)
     }
 
     doc(documentPath: string): InProcessFirestoreDocRef {
-        return new InProcessFirestoreDocRef(documentPath, this)
+        return this.collection("").doc(documentPath)
     }
 
     async runTransaction<T>(
@@ -129,13 +129,14 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     constructor(
         protected readonly db: InProcessFirestore,
         protected readonly path: string,
-        protected readonly parent?: InProcessFirestoreDocRef,
         protected query: IQueryBuilder = {
             filters: [],
             orderings: [],
             rangeFilterField: "",
         },
-    ) {}
+    ) {
+        this.path = _.trim(this.path.replace(/[\/.]+/g, "/"), "/.")
+    }
 
     orderBy(
         fieldPath: string,
@@ -156,12 +157,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             )
         }
 
-        return new InProcessFirestoreQuery(
-            this.db,
-            this.path,
-            this.parent,
-            newQuery,
-        )
+        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
     }
 
     where(
@@ -224,16 +220,12 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 throw new Error(`Unknown Firestore where operator ${opStr}`)
         }
         newQuery.filters.push(filter)
-        return new InProcessFirestoreQuery(
-            this.db,
-            this.path,
-            this.parent,
-            newQuery,
-        )
+
+        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
     }
 
     async get(): Promise<InProcessFirestoreQuerySnapshot> {
-        let collection = this.db._getPath(this.dotPath()) || {}
+        let collection = this.db._getPath(this._dotPath()) || {}
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -258,9 +250,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     key,
                     true,
                     new InProcessFirestoreDocRef(
-                        `${this.dotPath()}.${key}`,
+                        `${this._dotPath()}.${key}`,
                         this.db,
-                        this,
                     ),
                     collection[key],
                 )
@@ -274,12 +265,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuerySnapshot(collection)
     }
 
-    dotPath(): string {
-        let dotPath = ""
-        if (this.parent) {
-            dotPath = this.parent.dotPath()
-        }
-        return _.trim(dotPath + `.${this.path}`, ".")
+    _dotPath(): string {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
     }
 
     private enforceSingleFieldRangeFilter(
@@ -314,11 +301,35 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
 export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
     implements IFirestoreCollectionRef {
+    readonly parent: InProcessFirestoreDocRef | null = null
+
+    constructor(
+        readonly path: string,
+        protected readonly db: InProcessFirestore,
+        protected query: IQueryBuilder = {
+            filters: [],
+            orderings: [],
+            rangeFilterField: "",
+        },
+    ) {
+        super(db, path, query)
+        const pathSplit = this.path.split("/")
+        if (pathSplit.length > 1) {
+            this.parent = new InProcessFirestoreDocRef(
+                pathSplit.slice(0, -1).join("/"),
+                this.db,
+            )
+        }
+    }
+
     doc(documentPath?: string): InProcessFirestoreDocRef {
         if (!documentPath) {
             documentPath = this.db.makeId()
         }
-        return new InProcessFirestoreDocRef(documentPath, this.db, this)
+        return new InProcessFirestoreDocRef(
+            `${this.path}/${documentPath}`,
+            this.db,
+        )
     }
 
     async add(data: IFirestoreDocumentData): Promise<InProcessFirestoreDocRef> {
@@ -344,30 +355,31 @@ export class InProcessFirestoreQuerySnapshot
 }
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
-    readonly path: string
+    readonly id: string
+    readonly parent: InProcessFirestoreCollectionRef
 
     constructor(
-        readonly id: string,
+        readonly path: string,
         private readonly db: InProcessFirestore,
-        private readonly parent?: InProcessFirestoreQuery,
     ) {
-        let parentFullPath = ""
-        if (parent) {
-            parentFullPath = parent.dotPath()
-        }
-        this.path = `${parentFullPath}.${this.id}`.replace(/\.+/g, "/")
+        this.path = _.trim(this.path.replace(/[\/.]+/g, "/"), "/.")
+        const pathSplit = this.path.split("/")
+        this.id = pathSplit.pop() || ""
+        this.parent = new InProcessFirestoreCollectionRef(
+            pathSplit.join("/"),
+            this.db,
+        )
     }
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
+            `${this.path}/${collectionPath}`,
             this.db,
-            collectionPath,
-            this,
         )
     }
 
     async get(): Promise<InProcessFirestoreDocumentSnapshot> {
-        const value = this.db._getPath(this.dotPath())
+        const value = this.db._getPath(this._dotPath())
         return new InProcessFirestoreDocumentSnapshot(
             this.id,
             value !== null && value !== undefined,
@@ -383,29 +395,25 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (options && options.merge) {
             return this.update(data)
         }
-        this.db._setPath(this.dotPath(), data)
+        this.db._setPath(this._dotPath(), data)
         return { writeTime: { seconds: new Date().getTime() / 1000 } }
     }
 
     async update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
         this.db._setPath(
-            this.dotPath(),
-            _.merge(this.db._getPath(this.dotPath()), data),
+            this._dotPath(),
+            _.merge(this.db._getPath(this._dotPath()), data),
         )
         return { writeTime: { seconds: new Date().getTime() / 1000 } }
     }
 
     async delete(): Promise<IFirestoreWriteResult> {
-        this.db._deletePath(this.dotPath())
+        this.db._deletePath(this._dotPath())
         return { writeTime: { seconds: new Date().getTime() / 1000 } }
     }
 
-    dotPath(): string {
-        let dotPath = ""
-        if (this.parent) {
-            dotPath = this.parent.dotPath()
-        }
-        return _.trim(dotPath + `.${this.id}`, ".")
+    _dotPath(): string {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
     }
 }
 
