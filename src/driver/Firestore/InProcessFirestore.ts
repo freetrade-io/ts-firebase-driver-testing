@@ -595,7 +595,9 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
         return this
     }
 
-    get(ref: InProcessFirestoreDocRef): Promise<IFirestoreDocumentSnapshot> {
+    get(
+        ref: InProcessFirestoreDocRef | InProcessFirestoreQuery,
+    ): Promise<IFirestoreDocumentSnapshot | InProcessFirestoreQuerySnapshot> {
         if (this.writeOperations.length > 0) {
             throw new Error("Cannot read after write in Firestore transaction")
         }
