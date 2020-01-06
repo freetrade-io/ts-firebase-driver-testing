@@ -162,7 +162,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
 
     limitToFirst(limit: number): InProcessRealtimeDatabaseRef {
         const transform = (value: any) => {
-            if (typeof value === "object") {
+            if (_.isObject(value)) {
                 value = Object.keys(value)
                     .slice(0, limit)
                     .reduce((obj: { [key: string]: any }, key: string) => {

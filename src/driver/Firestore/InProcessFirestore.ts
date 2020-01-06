@@ -121,6 +121,7 @@ interface IItem {
 
 interface IQueryBuilder {
     filters: Array<(item: IItem) => boolean>
+    transforms: Array<(value: any) => any>
     orderings: Array<(a: IItem, b: IItem) => number>
     rangeFilterField: string
 }
@@ -131,6 +132,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         protected readonly path: string,
         protected query: IQueryBuilder = {
             filters: [],
+            transforms: [],
             orderings: [],
             rangeFilterField: "",
         },
@@ -141,7 +143,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     orderBy(
         fieldPath: string,
         directionStr: "desc" | "asc" = "asc",
-    ): IFirestoreQuery {
+    ): InProcessFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
         // An orderBy() clause also filters for existence of the given field.
@@ -156,6 +158,24 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 this.compare(b[fieldPath], a[fieldPath]),
             )
         }
+
+        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+    }
+
+    limit(limit: number): InProcessFirestoreQuery {
+        const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
+
+        newQuery.transforms.push((value) => {
+            if (_.isObject(value)) {
+                value = Object.keys(value)
+                    .slice(0, limit)
+                    .reduce((obj: { [key: string]: any }, key: string) => {
+                        obj[key] = value[key]
+                        return obj
+                    }, {})
+            }
+            return value
+        })
 
         return new InProcessFirestoreQuery(this.db, this.path, newQuery)
     }
@@ -244,6 +264,9 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     return whole
                 }, {})
         }
+        for (const transform of this.query.transforms) {
+            collection = transform(collection)
+        }
         collection = Object.keys(collection).map(
             (key: string): InProcessFirestoreDocumentSnapshot => {
                 return new InProcessFirestoreDocumentSnapshot(
@@ -259,6 +282,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         )
         this.query = {
             filters: [],
+            transforms: [],
             orderings: [],
             rangeFilterField: "",
         }
@@ -308,6 +332,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         protected readonly db: InProcessFirestore,
         protected query: IQueryBuilder = {
             filters: [],
+            transforms: [],
             orderings: [],
             rangeFilterField: "",
         },
