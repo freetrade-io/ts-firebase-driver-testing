@@ -25,6 +25,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
 
 export interface IFirestoreDocRef {
     readonly path: string
+    readonly id: string
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
     set(
