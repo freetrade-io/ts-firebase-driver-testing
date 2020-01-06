@@ -37,7 +37,7 @@ export class InProcessFirestore implements IFirestore {
     }
 
     doc(documentPath: string): InProcessFirestoreDocRef {
-        return new InProcessFirestoreDocRef(this, documentPath)
+        return new InProcessFirestoreDocRef(documentPath, this)
     }
 
     async runTransaction<T>(
@@ -258,8 +258,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     key,
                     true,
                     new InProcessFirestoreDocRef(
-                        this.db,
                         `${this.dotPath()}.${key}`,
+                        this.db,
                         this,
                     ),
                     collection[key],
@@ -318,7 +318,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         if (!documentPath) {
             documentPath = this.db.makeId()
         }
-        return new InProcessFirestoreDocRef(this.db, documentPath, this)
+        return new InProcessFirestoreDocRef(documentPath, this.db, this)
     }
 
     async add(data: IFirestoreDocumentData): Promise<InProcessFirestoreDocRef> {
@@ -347,15 +347,15 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly path: string
 
     constructor(
+        readonly id: string,
         private readonly db: InProcessFirestore,
-        private readonly pathSection: string,
         private readonly parent?: InProcessFirestoreQuery,
     ) {
         let parentFullPath = ""
         if (parent) {
             parentFullPath = parent.dotPath()
         }
-        this.path = `${parentFullPath}.${this.pathSection}`.replace(/\.+/g, "/")
+        this.path = `${parentFullPath}.${this.id}`.replace(/\.+/g, "/")
     }
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
@@ -369,7 +369,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     async get(): Promise<InProcessFirestoreDocumentSnapshot> {
         const value = this.db._getPath(this.dotPath())
         return new InProcessFirestoreDocumentSnapshot(
-            this.pathSection,
+            this.id,
             value !== null && value !== undefined,
             this,
             value,
@@ -405,7 +405,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (this.parent) {
             dotPath = this.parent.dotPath()
         }
-        return _.trim(dotPath + `.${this.pathSection}`, ".")
+        return _.trim(dotPath + `.${this.id}`, ".")
     }
 }
 
