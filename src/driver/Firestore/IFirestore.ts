@@ -66,6 +66,7 @@ export interface IFirestoreQuery {
         opStr: FirestoreWhereFilterOp,
         value: any,
     ): IFirestoreQuery
+    select(...field: string[]): IFirestoreQuery
     get(): Promise<IFirestoreQuerySnapshot>
 }
 
