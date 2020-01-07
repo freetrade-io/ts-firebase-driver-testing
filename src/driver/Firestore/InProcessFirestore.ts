@@ -1,3 +1,4 @@
+import admin from "firebase-admin"
 import _ from "lodash"
 import objectPath = require("object-path")
 import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
@@ -25,6 +26,7 @@ import {
     IFirestoreWriteResult,
     IPrecondition,
 } from "./IFirestore"
+import FieldPath = admin.firestore.FieldPath
 
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
@@ -126,15 +128,22 @@ interface ICollection {
     [id: string]: IItem
 }
 
+interface IIdItem {
+    id: string
+    item: IItem
+}
+
 interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
     filters: Array<(item: IItem) => boolean>
-    orderings: { [fieldPath: string]: (a: IItem, b: IItem) => number }
+    orderings: { [fieldPath: string]: (a: IIdItem, b: IIdItem) => number }
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
 }
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
+    private static FIELD_PATH_DOCUMENT_ID = "FIELD_PATH_DOCUMENT_ID"
+
     constructor(
         protected readonly db: InProcessFirestore,
         protected readonly path: string,
@@ -150,21 +159,48 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     orderBy(
-        fieldPath: string,
+        fieldPath: string | FieldPath,
         directionStr: "desc" | "asc" = "asc",
     ): InProcessFirestoreQuery {
+        if (fieldPath instanceof FieldPath) {
+            if (!fieldPath.isEqual(FieldPath.documentId())) {
+                throw new Error(
+                    "Ordering by FieldPath other than documentId is not implemented",
+                )
+            }
+            fieldPath = InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+        }
+
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
-        // An orderBy() clause also filters for existence of the given field.
-        newQuery.filters.push((item) => fieldPath in item)
+        if (fieldPath !== InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID) {
+            // An orderBy() clause also filters for existence of the given field.
+            newQuery.filters.push((item) => fieldPath in item)
+        }
 
         if (directionStr === "asc") {
             newQuery.orderings[fieldPath] = (a, b) => {
-                return this.compare(a[fieldPath], b[fieldPath])
+                const compareOfA =
+                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                        ? a.id
+                        : a.item[String(fieldPath)]
+                const compareOfB =
+                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                        ? b.id
+                        : b.item[String(fieldPath)]
+                return this.compare(compareOfA, compareOfB)
             }
         } else {
             newQuery.orderings[fieldPath] = (a, b) => {
-                return this.compare(b[fieldPath], a[fieldPath])
+                const compareOfA =
+                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                        ? a.id
+                        : a.item[String(fieldPath)]
+                const compareOfB =
+                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                        ? b.id
+                        : b.item[String(fieldPath)]
+                return this.compare(compareOfB, compareOfA)
             }
         }
 
@@ -289,10 +325,20 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     return whole
                 }, {})
         }
-        for (const ordering of Object.values(this.query.orderings)) {
+        for (const fieldPath of Object.keys(this.query.orderings)) {
+            const ordering = this.query.orderings[fieldPath]
             collection = Object.keys(collection)
                 .sort((keyA, keyB) => {
-                    return ordering(collection[keyA], collection[keyB])
+                    return ordering(
+                        {
+                            id: keyA,
+                            item: collection[keyA],
+                        },
+                        {
+                            id: keyB,
+                            item: collection[keyB],
+                        },
+                    )
                 })
                 .reduce((whole: IItem, key: string) => {
                     whole[key] = collection[key]

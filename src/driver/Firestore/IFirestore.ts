@@ -1,3 +1,5 @@
+import { FieldPath } from "@google-cloud/firestore"
+
 export interface IFirestore {
     collection(collectionPath: string): IFirestoreCollectionRef
     doc(documentPath: string): IFirestoreDocRef
@@ -66,7 +68,10 @@ export interface IFirestoreTimestamp {
 }
 
 export interface IFirestoreQuery {
-    orderBy(fieldPath: string, directionStr?: "desc" | "asc"): IFirestoreQuery
+    orderBy(
+        fieldPath: string | FieldPath,
+        directionStr?: "desc" | "asc",
+    ): IFirestoreQuery
     limit(limit: number): IFirestoreQuery
     startAfter(...fieldValues: any[]): IFirestoreQuery
     where(
