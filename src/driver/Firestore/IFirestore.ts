@@ -77,9 +77,8 @@ export interface IFirestoreQuerySnapshot {
 }
 
 export interface IFirestoreTransaction {
-    get(
-        ref: IFirestoreDocRef | IFirestoreQuery,
-    ): Promise<IFirestoreDocumentSnapshot | IFirestoreQuerySnapshot>
+    get(ref: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
+    get(ref: IFirestoreQuery): Promise<IFirestoreQuerySnapshot>
 
     create(
         documentRef: IFirestoreDocRef,
