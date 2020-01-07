@@ -687,8 +687,9 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     set(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
+        options: { merge?: boolean } = { merge: false },
     ): IFirestoreWriteBatch {
-        this.writeOperations.push(async () => documentRef.set(data))
+        this.writeOperations.push(async () => documentRef.set(data, options))
         return this
     }
 

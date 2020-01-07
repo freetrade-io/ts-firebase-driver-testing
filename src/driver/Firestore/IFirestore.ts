@@ -34,7 +34,7 @@ export interface IFirestoreDocRef {
     get(): Promise<IFirestoreDocumentSnapshot>
     set(
         data: IFirestoreDocumentData,
-        options?: { merge: boolean },
+        options?: { merge?: boolean },
     ): Promise<IFirestoreWriteResult>
     update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
     delete(): Promise<IFirestoreWriteResult>
@@ -110,6 +110,7 @@ export interface IFirestoreWriteBatch {
     set(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
+        options?: { merge?: boolean },
     ): IFirestoreWriteBatch
 
     update(
