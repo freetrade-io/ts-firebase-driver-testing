@@ -126,7 +126,7 @@ interface ICollection {
 interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
     filters: Array<(item: IItem) => boolean>
-    orderings: Array<(a: IItem, b: IItem) => number>
+    orderings: { [fieldPath: string]: (a: IItem, b: IItem) => number }
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
 }
@@ -139,7 +139,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             filters: [],
             transforms: [],
             maps: [],
-            orderings: [],
+            orderings: {},
             rangeFilterField: "",
         },
     ) {
@@ -156,13 +156,13 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         newQuery.filters.push((item) => fieldPath in item)
 
         if (directionStr === "asc") {
-            newQuery.orderings.push((a, b) =>
-                this.compare(a[fieldPath], b[fieldPath]),
-            )
+            newQuery.orderings[fieldPath] = (a, b) => {
+                return this.compare(a[fieldPath], b[fieldPath])
+            }
         } else {
-            newQuery.orderings.push((a, b) =>
-                this.compare(b[fieldPath], a[fieldPath]),
-            )
+            newQuery.orderings[fieldPath] = (a, b) => {
+                return this.compare(b[fieldPath], a[fieldPath])
+            }
         }
 
         return new InProcessFirestoreQuery(this.db, this.path, newQuery)
@@ -181,6 +181,19 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     }, {})
             }
             return collection
+        })
+
+        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+    }
+
+    startAfter(...fieldValues: any[]): IFirestoreQuery {
+        const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
+
+        fieldValues.forEach((fieldValue: any, i: number) => {
+            const fieldPath = Object.keys(this.query.orderings)[i]
+            newQuery.filters.push((item: IItem): boolean => {
+                return this.compare(item[fieldPath], fieldValue) > 0
+            })
         })
 
         return new InProcessFirestoreQuery(this.db, this.path, newQuery)
@@ -273,7 +286,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     return whole
                 }, {})
         }
-        for (const ordering of this.query.orderings) {
+        for (const ordering of Object.values(this.query.orderings)) {
             collection = Object.keys(collection)
                 .sort((keyA, keyB) => {
                     return ordering(collection[keyA], collection[keyB])
@@ -312,7 +325,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             maps: [],
             filters: [],
             transforms: [],
-            orderings: [],
+            orderings: {},
             rangeFilterField: "",
         }
         return new InProcessFirestoreQuerySnapshot(collection)
@@ -363,7 +376,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
             filters: [],
             transforms: [],
             maps: [],
-            orderings: [],
+            orderings: {},
             rangeFilterField: "",
         },
     ) {

@@ -61,6 +61,7 @@ export interface IFirestoreTimestamp {
 export interface IFirestoreQuery {
     orderBy(fieldPath: string, directionStr?: "desc" | "asc"): IFirestoreQuery
     limit(limit: number): IFirestoreQuery
+    startAfter(...fieldValues: any[]): IFirestoreQuery
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
