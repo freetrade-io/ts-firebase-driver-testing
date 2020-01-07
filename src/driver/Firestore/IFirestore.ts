@@ -38,7 +38,7 @@ export interface IFirestoreDocRef {
     ): Promise<IFirestoreWriteResult>
     update(
         data: IFirestoreDocumentData,
-        precondition?: { updateTime?: IFirestoreTimestamp },
+        precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult>
     delete(): Promise<IFirestoreWriteResult>
 }
@@ -106,6 +106,10 @@ export interface IFirestoreTransaction {
     delete(documentRef: IFirestoreDocRef): IFirestoreTransaction
 }
 
+export interface IPrecondition {
+    readonly lastUpdateTime?: IFirestoreTimestamp
+}
+
 export interface IFirestoreWriteBatch {
     create(
         documentRef: IFirestoreDocRef,
@@ -121,7 +125,7 @@ export interface IFirestoreWriteBatch {
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
-        precondition?: { updateTime?: IFirestoreTimestamp },
+        precondition?: IPrecondition,
     ): IFirestoreWriteBatch
 
     delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch

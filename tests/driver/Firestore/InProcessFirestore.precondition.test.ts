@@ -19,7 +19,10 @@ describe("In-process Firestore update precondition", () => {
 
         // And we try to update it again with a precondition that the update
         // time has not changed;
-        await doc.update({ name: "tiger3" }, { updateTime: firstUpdateTime })
+        await doc.update(
+            { name: "tiger3" },
+            { lastUpdateTime: firstUpdateTime },
+        )
 
         // Then that third write should be ignored due to failing the
         // precondition.

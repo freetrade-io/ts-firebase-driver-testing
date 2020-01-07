@@ -23,6 +23,7 @@ import {
     IFirestoreTransaction,
     IFirestoreWriteBatch,
     IFirestoreWriteResult,
+    IPrecondition,
 } from "./IFirestore"
 
 export class InProcessFirestore implements IFirestore {
@@ -489,14 +490,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
     async update(
         data: IFirestoreDocumentData,
-        precondition?: { updateTime?: IFirestoreTimestamp },
+        precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult> {
         const current = this.db._getPath(this._dotPath())
         const newUpdateTime = this.makeUpdateTime()
-        if (precondition && precondition.updateTime) {
+        if (precondition && precondition.lastUpdateTime) {
             if (
                 current._meta.updateTime &&
-                !current._meta.updateTime.isEqual(precondition.updateTime)
+                !current._meta.updateTime.isEqual(precondition.lastUpdateTime)
             ) {
                 return { writeTime: newUpdateTime }
             }
@@ -734,7 +735,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
-        precondition?: { updateTime?: IFirestoreTimestamp },
+        precondition?: IPrecondition,
     ): IFirestoreWriteBatch {
         this.writeOperations.push(async () =>
             documentRef.update(data, precondition),
