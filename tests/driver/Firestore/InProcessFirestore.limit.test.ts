@@ -20,6 +20,8 @@ describe("In-process Firestore limit queries", () => {
             .get()
 
         // Then we should get those items only.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
         expect(result.docs.map((doc) => doc.data())).toEqual([
             { name: "tiger" },
@@ -40,6 +42,8 @@ describe("In-process Firestore limit queries", () => {
             .get()
 
         // Then we should get all the items.
+        expect(result.size).toBe(3)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
         expect(result.docs.map((doc) => doc.data())).toEqual([
             { name: "tiger" },
@@ -61,6 +65,8 @@ describe("In-process Firestore limit queries", () => {
             .get()
 
         // Then we should get all the items.
+        expect(result.size).toBe(3)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
         expect(result.docs.map((doc) => doc.data())).toEqual([
             { name: "tiger" },

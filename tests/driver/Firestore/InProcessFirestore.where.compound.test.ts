@@ -42,6 +42,8 @@ describe("InProcessFirestore compound querying with where", () => {
             .get()
 
         // Then we should get the correct result.
+        expect(result.size).toBe(1)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(1)
         expect(result.docs.map((doc) => doc.id)).toEqual(["bear"])
         expect(result.docs.map((doc) => doc.data())).toEqual([
@@ -84,6 +86,8 @@ describe("InProcessFirestore compound querying with where", () => {
             .get()
 
         // Then we should get the correct result.
+        expect(result.size).toBe(1)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(1)
         expect(result.docs.map((doc) => doc.id)).toEqual(["hyena"])
         expect(result.docs.map((doc) => doc.data())).toEqual([
@@ -130,6 +134,8 @@ describe("InProcessFirestore compound querying with where", () => {
             .get()
 
         // Then we should get the correct result.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
         expect(result.docs.map((doc) => doc.id)).toEqual([
             "aperolSpritz",
@@ -190,6 +196,8 @@ describe("InProcessFirestore compound querying with where", () => {
             .get()
 
         // Then we should get the correct result.
+        expect(result.size).toBe(1)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(1)
         expect(result.docs.map((doc) => doc.id)).toEqual(["whiskey"])
         expect(result.docs.map((doc) => doc.data())).toEqual([
@@ -290,6 +298,8 @@ describe("InProcessFirestore compound querying with where", () => {
             .get()
 
         // Then we should get the correct result.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
         expect(result.docs.map((doc) => doc.id)).toEqual([
             "aperolSpritz",

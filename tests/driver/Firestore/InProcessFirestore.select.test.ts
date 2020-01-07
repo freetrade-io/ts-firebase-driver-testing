@@ -24,6 +24,8 @@ describe("In-process Firestore select query", () => {
             .get()
 
         // Then we should only get that field on each doc.
+        expect(result.size).toBe(3)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
         expect(result.docs.map((doc) => doc.data())).toEqual([
             { continent: "asia" },
@@ -51,6 +53,8 @@ describe("In-process Firestore select query", () => {
             .get()
 
         // Then we should only get those fields on each doc.
+        expect(result.size).toBe(3)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
         expect(result.docs.map((doc) => doc.data())).toEqual([
             { name: "tiger", continent: "asia" },

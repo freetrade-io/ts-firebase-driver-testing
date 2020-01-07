@@ -22,6 +22,8 @@ describe("In-process Firestore start after query", () => {
             .get()
 
         // Then we should get all the items.
+        expect(result.size).toBe(4)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(4)
         expect(result.docs.map((doc) => doc.data())).toStrictEqual([
             { name: "aardvark" },
@@ -46,6 +48,8 @@ describe("In-process Firestore start after query", () => {
             .get()
 
         // Then we should get the second half of the items.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
         expect(result.docs.map((doc) => doc.data())).toStrictEqual([
             { name: "camel" },
@@ -68,6 +72,8 @@ describe("In-process Firestore start after query", () => {
             .get()
 
         // Then we should get no items.
+        expect(result.size).toBe(0)
+        expect(result.empty).toBeTruthy()
         expect(result.docs).toHaveLength(0)
         expect(result.docs.map((doc) => doc.data())).toStrictEqual([])
     })
