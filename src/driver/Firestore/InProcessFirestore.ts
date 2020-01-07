@@ -400,6 +400,18 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         )
     }
 
+    async listDocuments(): Promise<InProcessFirestoreDocRef[]> {
+        const collection = this.db._getPath(this._dotPath()) || {}
+        return Object.keys(collection).map(
+            (key: string): InProcessFirestoreDocRef => {
+                return new InProcessFirestoreDocRef(
+                    `${this.path}/${key}`,
+                    this.db,
+                )
+            },
+        )
+    }
+
     async add(data: IFirestoreDocumentData): Promise<InProcessFirestoreDocRef> {
         const doc: InProcessFirestoreDocRef = this.doc()
         await doc.set(data)
