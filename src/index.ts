@@ -27,3 +27,6 @@ export { IFirebaseRealtimeDatabaseQuery } from "./driver/RealtimeDatabase/IFireb
 export { IFirebaseDataSnapshot } from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
 export { IFirebaseRealtimeDatabase } from "./driver/RealtimeDatabase/IFirebaseRealtimeDatabase"
 export { IFirebaseFunctionBuilder } from "./driver/FirebaseFunctionBuilder"
+
+export * from "./driver/Firestore/IFirestore"
+export * from "./driver/Firestore/InProcessFirestore"
