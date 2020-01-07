@@ -74,6 +74,7 @@ export interface IFirestoreQuery {
 export interface IFirestoreQuerySnapshot {
     docs: IFirestoreDocumentSnapshot[]
     empty: boolean
+    size: number
     forEach(callback: (result: IFirestoreDocumentSnapshot) => void): void
 }
 

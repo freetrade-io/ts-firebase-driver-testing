@@ -60,6 +60,8 @@ describe("InProcessFirestore get", () => {
             .get()
 
         // Then we should get the expected non-existent collection.
+        expect(collectionSnapshot.size).toBe(0)
+        expect(collectionSnapshot.empty).toBeTruthy()
         expect(collectionSnapshot.docs).toHaveLength(0)
         expect(collectionSnapshot.docs).toEqual([])
     })
@@ -167,6 +169,8 @@ describe("InProcessFirestore get", () => {
             .get()
 
         // Then we should get the expected non-existent collection.
+        expect(collectionSnapshot.size).toBe(0)
+        expect(collectionSnapshot.empty).toBeTruthy()
         expect(collectionSnapshot.docs).toHaveLength(0)
         expect(collectionSnapshot.docs).toEqual([])
     })

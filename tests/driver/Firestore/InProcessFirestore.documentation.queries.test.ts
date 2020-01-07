@@ -83,6 +83,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
 
         const stateQuery = await citiesRef.where("state", "==", "CA").get()
         expect(stateQuery.empty).toBe(false)
+        expect(stateQuery.size).toBe(2)
         expect(stateQuery.docs).toHaveLength(2)
         expect(stateQuery.docs.map((doc) => doc.data())).toEqual([
             {
@@ -107,6 +108,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("population", "<", 1000000)
             .get()
         expect(populationQuery.empty).toBe(false)
+        expect(populationQuery.size).toBe(2)
         expect(populationQuery.docs).toHaveLength(2)
         expect(populationQuery.docs.map((doc) => doc.data())).toEqual([
             {
@@ -131,6 +133,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("name", ">=", "San Francisco")
             .get()
         expect(nameQuery.empty).toBe(false)
+        expect(nameQuery.size).toBe(3)
         expect(nameQuery.docs).toHaveLength(3)
         expect(nameQuery.docs.map((doc) => doc.data())).toEqual([
             {
@@ -171,6 +174,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .get()
 
         expect(westCoastCities.empty).toBe(false)
+        expect(westCoastCities.size).toBe(2)
         expect(westCoastCities.docs).toHaveLength(2)
         expect(westCoastCities.docs.map((doc) => doc.data())).toEqual([
             {
@@ -203,6 +207,8 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .get()
 
         expect(usaOrJapan.empty).toBe(false)
+        expect(usaOrJapan.size).toBe(4)
+        expect(usaOrJapan.empty).toBeFalsy()
         expect(usaOrJapan.docs).toHaveLength(4)
         expect(usaOrJapan.docs.map((doc) => doc.data())).toEqual([
             {
@@ -246,6 +252,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             ])
             .get()
         expect(eastOrWestCoastCities.empty).toBe(false)
+        expect(eastOrWestCoastCities.size).toBe(3)
         expect(eastOrWestCoastCities.docs).toHaveLength(3)
         expect(eastOrWestCoastCities.docs.map((doc) => doc.data())).toEqual([
             {
@@ -285,6 +292,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("state", "==", "CO")
             .where("name", "==", "Denver")
             .get()
+        expect(stateNameQuery.size).toBe(0)
         expect(stateNameQuery.docs).toHaveLength(0)
         expect(stateNameQuery.empty).toBe(true)
         expect(stateNameQuery.docs).toEqual([])
@@ -293,6 +301,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("state", "==", "CA")
             .where("population", "<", 1000000)
             .get()
+        expect(statePopulationLtQuery.size).toBe(1)
         expect(statePopulationLtQuery.docs).toHaveLength(1)
         expect(statePopulationLtQuery.empty).toBe(false)
         expect(statePopulationLtQuery.docs.map((doc) => doc.data())).toEqual([
@@ -310,6 +319,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("state", ">=", "CA")
             .where("state", "<=", "IN")
             .get()
+        expect(stateStateQuery.size).toBe(2)
         expect(stateStateQuery.docs).toHaveLength(2)
         expect(stateStateQuery.empty).toBe(false)
         expect(stateStateQuery.docs.map((doc) => doc.data())).toEqual([
@@ -335,6 +345,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
             .where("state", "==", "CA")
             .where("population", ">", 1000000)
             .get()
+        expect(statePopulationGtQuery.size).toBe(1)
         expect(statePopulationGtQuery.docs).toHaveLength(1)
         expect(statePopulationGtQuery.empty).toBe(false)
         expect(statePopulationGtQuery.docs.map((doc) => doc.data())).toEqual([

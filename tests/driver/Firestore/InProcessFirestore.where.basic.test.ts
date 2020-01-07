@@ -37,6 +37,8 @@ describe("InProcessFirestore querying with where", () => {
             .get()
 
         // Then we should get the correct results.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
         expect(result.docs.map((doc) => doc.id)).toEqual(["tiger", "lion"])
         expect(result.docs.map((doc) => doc.data())).toEqual([
