@@ -1,4 +1,6 @@
+import * as admin from "firebase-admin"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import FieldPath = admin.firestore.FieldPath
 
 describe("InProcessFirestore orderBy", () => {
     let db: InProcessFirestore
@@ -282,6 +284,50 @@ describe("InProcessFirestore orderBy", () => {
             { id: 5, date: new Date("2006-08-08") },
             { id: 2, date: new Date("1999-01-15") },
             { id: 3, date: new Date("1976-05-23") },
+        ])
+    })
+
+    test("order by document id", async () => {
+        // Given there is a collection of documents with ids;
+        await db
+            .collection("animals")
+            .doc("22da618d")
+            .set({ name: "aardvark" })
+        await db
+            .collection("animals")
+            .doc("00a3382")
+            .set({ name: "badger" })
+        await db
+            .collection("animals")
+            .doc("11cbe6b5")
+            .set({ name: "camel" })
+
+        // When we order the collection by the document id;
+        const result = await db
+            .collection("animals")
+            .orderBy(FieldPath.documentId())
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        const docs: Array<{
+            id: number
+            name: string
+        }> = result.docs.map((doc) => doc.data() as any)
+
+        expect(docs.map((doc) => doc.name)).not.toStrictEqual([
+            "aardvark",
+            "badger",
+            "camel",
+        ])
+        expect(docs.map((doc) => doc.name)).toStrictEqual([
+            "badger",
+            "camel",
+            "aardvark",
+        ])
+        expect(docs).toStrictEqual([
+            { name: "badger" },
+            { name: "camel" },
+            { name: "aardvark" },
         ])
     })
 })
