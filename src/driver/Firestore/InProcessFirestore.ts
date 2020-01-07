@@ -473,6 +473,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
+    async create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+        const existing = await this.get()
+        if (existing.exists) {
+            throw new Error(`Cannot create existing document at ${this.path}`)
+        }
+        return this.set(data)
+    }
+
     async set(
         data: IFirestoreDocumentData,
         options: { merge: boolean } = { merge: false },

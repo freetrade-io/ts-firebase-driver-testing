@@ -32,6 +32,7 @@ export interface IFirestoreDocRef {
     readonly parent: IFirestoreCollectionRef
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
+    create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
     set(
         data: IFirestoreDocumentData,
         options?: { merge?: boolean },
