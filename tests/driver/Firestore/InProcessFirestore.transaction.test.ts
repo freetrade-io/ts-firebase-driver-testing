@@ -1,7 +1,11 @@
 /**
  * https://firebase.google.com/docs/firestore/manage-data/transactions
  */
-import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import { IFirestoreDocumentSnapshot } from "../../../src/driver/Firestore/IFirestore"
+import {
+    InProcessFirestore,
+    InProcessFirestoreDocRef,
+} from "../../../src/driver/Firestore/InProcessFirestore"
 
 describe("In-process Firestore transactions", () => {
     test("documentation example transaction", async () => {
