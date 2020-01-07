@@ -1,4 +1,5 @@
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import { sleep } from "../../../src/util/sleep"
 
 describe("In-process Firestore update precondition", () => {
     const db = new InProcessFirestore()
@@ -15,6 +16,7 @@ describe("In-process Firestore update precondition", () => {
         const firstUpdateTime = (await doc.get()).updateTime
 
         // When the document is updated again in the meantime;
+        await sleep(10)
         const interveningUpdate = await doc.update({ name: "tiger2" })
 
         // And we try to update it again with a precondition that the update
