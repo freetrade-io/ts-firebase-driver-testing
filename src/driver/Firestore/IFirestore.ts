@@ -22,6 +22,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
     readonly path: string
     readonly parent: IFirestoreDocRef | null
     doc(documentPath?: string): IFirestoreDocRef
+    listDocuments(): Promise<IFirestoreDocRef[]>
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
 }
 
