@@ -1,6 +1,7 @@
 import _ from "lodash"
 import objectPath = require("object-path")
 import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
+import { stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -18,6 +19,7 @@ import {
     IFirestoreDocumentSnapshot,
     IFirestoreQuery,
     IFirestoreQuerySnapshot,
+    IFirestoreTimestamp,
     IFirestoreTransaction,
     IFirestoreWriteBatch,
     IFirestoreWriteResult,
@@ -69,7 +71,7 @@ export class InProcessFirestore implements IFirestore {
     }
 
     _getPath(dotPath: string): any {
-        return objectPath.get(this.storage, dotPath)
+        return _.cloneDeep(objectPath.get(this.storage, dotPath))
     }
 
     _setPath(dotPath: string, value: any): void {
@@ -477,38 +479,74 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (options && options.merge) {
             return this.update(data)
         }
-        this.db._setPath(this._dotPath(), data)
-        return { writeTime: { seconds: new Date().getTime() / 1000 } }
-    }
-
-    async update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+        const updateTime = this.makeUpdateTime()
         this.db._setPath(
             this._dotPath(),
-            _.merge(this.db._getPath(this._dotPath()), data),
+            _.merge(data, { _meta: { updateTime } }),
         )
-        return { writeTime: { seconds: new Date().getTime() / 1000 } }
+        return { writeTime: updateTime }
+    }
+
+    async update(
+        data: IFirestoreDocumentData,
+        precondition?: { updateTime?: IFirestoreTimestamp },
+    ): Promise<IFirestoreWriteResult> {
+        const current = this.db._getPath(this._dotPath())
+        const newUpdateTime = this.makeUpdateTime()
+        if (precondition && precondition.updateTime) {
+            if (
+                current._meta.updateTime &&
+                !current._meta.updateTime.isEqual(precondition.updateTime)
+            ) {
+                return { writeTime: newUpdateTime }
+            }
+        }
+        this.db._setPath(
+            this._dotPath(),
+            _.merge(current, data, { _meta: { updateTime: newUpdateTime } }),
+        )
+        return { writeTime: newUpdateTime }
     }
 
     async delete(): Promise<IFirestoreWriteResult> {
         this.db._deletePath(this._dotPath())
-        return { writeTime: { seconds: new Date().getTime() / 1000 } }
+        return { writeTime: this.makeUpdateTime() }
     }
 
     _dotPath(): string {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
     }
+
+    private makeUpdateTime(): IFirestoreTimestamp {
+        const seconds = new Date().getTime() / 1000
+        return {
+            seconds,
+            isEqual(other: IFirestoreTimestamp): boolean {
+                return other.seconds === seconds
+            },
+        }
+    }
 }
 
 class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
+    readonly updateTime?: IFirestoreTimestamp
+
     constructor(
         readonly id: string,
         readonly exists: boolean,
         readonly ref: InProcessFirestoreDocRef,
         private readonly value: IFirestoreDocumentData | undefined,
-    ) {}
+    ) {
+        if (value && value._meta && value._meta.updateTime) {
+            this.updateTime = value._meta.updateTime
+        }
+    }
 
     data(): IFirestoreDocumentData | undefined {
-        return this.value
+        if (this.value) {
+            return stripMeta(this.value)
+        }
+        return undefined
     }
 }
 
@@ -696,8 +734,11 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
+        precondition?: { updateTime?: IFirestoreTimestamp },
     ): IFirestoreWriteBatch {
-        this.writeOperations.push(async () => documentRef.update(data))
+        this.writeOperations.push(async () =>
+            documentRef.update(data, precondition),
+        )
         return this
     }
 

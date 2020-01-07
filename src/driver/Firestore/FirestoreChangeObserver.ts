@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { stripMeta } from "../../util/stripMeta"
 import {
     CreatedChangeFilter,
     DeletedChangeFilter,
@@ -36,6 +37,10 @@ export interface IFirestoreChangeSnapshot {
     data(): any
 }
 
+function prepareChangeData(data: object): object {
+    return _.cloneDeep(stripMeta(data))
+}
+
 class FirestoreCreatedObserver extends DatabaseChangeObserver<
     IFirestoreChangeSnapshot
 > {
@@ -48,7 +53,7 @@ class FirestoreCreatedObserver extends DatabaseChangeObserver<
     ): IChangeSnapshots<IFirestoreChangeSnapshot> | IFirestoreChangeSnapshot {
         return {
             exists: !_.isNil(pc.change.after),
-            data: () => pc.change.after,
+            data: () => prepareChangeData(pc.change.after),
         }
     }
 }
@@ -66,11 +71,11 @@ class FirestoreUpdatedObserver extends DatabaseChangeObserver<
         return {
             before: {
                 exists: !_.isNil(pc.change.before),
-                data: () => pc.change.before,
+                data: () => prepareChangeData(pc.change.before),
             },
             after: {
                 exists: !_.isNil(pc.change.after),
-                data: () => pc.change.after,
+                data: () => prepareChangeData(pc.change.after),
             },
         }
     }
@@ -88,7 +93,7 @@ class FirestoreDeletedObserver extends DatabaseChangeObserver<
     ): IChangeSnapshots<IFirestoreChangeSnapshot> | IFirestoreChangeSnapshot {
         return {
             exists: !_.isNil(pc.change.after),
-            data: () => pc.change.after,
+            data: () => prepareChangeData(pc.change.after),
         }
     }
 }
@@ -106,11 +111,11 @@ class FirestoreWrittenObserver extends DatabaseChangeObserver<
         return {
             before: {
                 exists: !_.isNil(pc.change.before),
-                data: () => pc.change.before,
+                data: () => prepareChangeData(pc.change.before),
             },
             after: {
                 exists: !_.isNil(pc.change.after),
-                data: () => pc.change.after,
+                data: () => prepareChangeData(pc.change.after),
             },
         }
     }

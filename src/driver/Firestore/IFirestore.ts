@@ -36,14 +36,18 @@ export interface IFirestoreDocRef {
         data: IFirestoreDocumentData,
         options?: { merge?: boolean },
     ): Promise<IFirestoreWriteResult>
-    update(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+    update(
+        data: IFirestoreDocumentData,
+        precondition?: { updateTime?: IFirestoreTimestamp },
+    ): Promise<IFirestoreWriteResult>
     delete(): Promise<IFirestoreWriteResult>
 }
 
 export interface IFirestoreDocumentSnapshot {
-    id: string
-    exists: boolean
-    ref: IFirestoreDocRef
+    readonly id: string
+    readonly exists: boolean
+    readonly ref: IFirestoreDocRef
+    readonly updateTime?: IFirestoreTimestamp
     data(): IFirestoreDocumentData | undefined
 }
 
@@ -57,6 +61,7 @@ export interface IFirestoreWriteResult {
 
 export interface IFirestoreTimestamp {
     seconds: number
+    isEqual(other: IFirestoreTimestamp): boolean
 }
 
 export interface IFirestoreQuery {
@@ -116,6 +121,7 @@ export interface IFirestoreWriteBatch {
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
+        precondition?: { updateTime?: IFirestoreTimestamp },
     ): IFirestoreWriteBatch
 
     delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch
