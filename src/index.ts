@@ -14,7 +14,6 @@ if (!Object.entries) {
 
 export * from "./driver/FirebaseDriver"
 export * from "./driver/InProcessFirebaseDriver"
-export * from "./driver/RealFirebaseDriver"
 
 export * from "./driver/PubSub/InProcessFirebasePubSub"
 
