@@ -1,6 +1,5 @@
-import * as admin from "firebase-admin"
+import { FieldPath } from "../../../src/driver/Firestore/FieldPath"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
-import FieldPath = admin.firestore.FieldPath
 
 describe("InProcessFirestore orderBy", () => {
     let db: InProcessFirestore

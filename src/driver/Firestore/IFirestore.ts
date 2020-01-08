@@ -1,4 +1,4 @@
-import { FieldPath } from "@google-cloud/firestore"
+import { IFieldPath } from "./FieldPath"
 
 export interface IFirestore {
     collection(collectionPath: string): IFirestoreCollectionRef
@@ -69,7 +69,7 @@ export interface IFirestoreTimestamp {
 
 export interface IFirestoreQuery {
     orderBy(
-        fieldPath: string | FieldPath,
+        fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
     ): IFirestoreQuery
     limit(limit: number): IFirestoreQuery
