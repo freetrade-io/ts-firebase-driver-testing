@@ -28,7 +28,7 @@ export interface IPubSubTopic {
 }
 
 export interface IPubSubPublisher {
-    publish(data: Buffer): Promise<void>
+    publish(data: Buffer): Promise<any>
 }
 
 export interface IFirebaseBuilderPubSub {
