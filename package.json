@@ -16,13 +16,13 @@
   "license": "MIT",
   "private": false,
   "engines": {
-    "node": "^8 || ^10 || ^11 || ^12"
+    "node": ">=8"
   },
   "dependencies": {
-    "@google-cloud/pubsub": "^1",
-    "firebase-admin": "^7 || ^8",
-    "firebase-functions": "^2 || ^3",
-    "lodash": "^4",
+    "@google-cloud/pubsub": ">=1",
+    "firebase-admin": ">=7",
+    "firebase-functions": ">=2",
+    "lodash": ">=4",
     "object-path": "^0",
     "object.entries": "^1",
     "object.values": "^1"
@@ -30,15 +30,15 @@
   "devDependencies": {
     "@types/jest": "^24",
     "@types/lodash": "^4",
-    "@types/node": "^8 || ^10 || ^11 || ^12",
+    "@types/node": ">=8",
     "@types/object-path": "^0",
-    "jest": "^24",
-    "prettier": "^1",
-    "ts-jest": "^24",
-    "tslint": "^5",
-    "tslint-config-prettier": "^1",
-    "tslint-plugin-prettier": "^2",
-    "typescript": "^3"
+    "jest": ">=24",
+    "prettier": ">=1",
+    "ts-jest": ">=24",
+    "tslint": ">=5",
+    "tslint-config-prettier": ">=1",
+    "tslint-plugin-prettier": ">=2",
+    "typescript": ">=3"
   },
   "jest": {
     "preset": "ts-jest",
