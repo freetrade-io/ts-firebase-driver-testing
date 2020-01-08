@@ -15,11 +15,7 @@
   "author": "Hugh Grigg",
   "license": "MIT",
   "private": false,
-  "engines": {
-    "node": ">=8"
-  },
   "dependencies": {
-    "@google-cloud/pubsub": ">=1",
     "firebase-admin": ">=8",
     "firebase-functions": ">=3",
     "lodash": ">=4",
