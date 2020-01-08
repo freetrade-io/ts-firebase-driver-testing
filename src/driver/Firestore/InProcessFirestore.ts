@@ -1,4 +1,3 @@
-import admin from "firebase-admin"
 import _ from "lodash"
 import objectPath = require("object-path")
 import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
@@ -10,6 +9,11 @@ import {
 } from "../ChangeObserver/DatabaseChangeObserver"
 import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
+import {
+    FIELD_PATH_DOCUMENT_ID,
+    IFieldPath,
+    isFieldPathDocumentId,
+} from "./FieldPath"
 import { makeFirestoreChangeObserver } from "./FirestoreChangeObserver"
 import {
     FirestoreWhereFilterOp,
@@ -26,7 +30,6 @@ import {
     IFirestoreWriteResult,
     IPrecondition,
 } from "./IFirestore"
-import FieldPath = admin.firestore.FieldPath
 
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
@@ -142,8 +145,6 @@ interface IQueryBuilder {
 }
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
-    private static FIELD_PATH_DOCUMENT_ID = "FIELD_PATH_DOCUMENT_ID"
-
     constructor(
         protected readonly db: InProcessFirestore,
         protected readonly path: string,
@@ -159,21 +160,21 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     orderBy(
-        fieldPath: string | FieldPath,
+        fieldPath: string | IFieldPath,
         directionStr: "desc" | "asc" = "asc",
     ): InProcessFirestoreQuery {
-        if (fieldPath instanceof FieldPath) {
-            if (!fieldPath.isEqual(FieldPath.documentId())) {
+        if (typeof fieldPath === "object") {
+            if (!isFieldPathDocumentId(fieldPath)) {
                 throw new Error(
                     "Ordering by FieldPath other than documentId is not implemented",
                 )
             }
-            fieldPath = InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+            fieldPath = FIELD_PATH_DOCUMENT_ID
         }
 
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
-        if (fieldPath !== InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID) {
+        if (fieldPath !== FIELD_PATH_DOCUMENT_ID) {
             // An orderBy() clause also filters for existence of the given field.
             newQuery.filters.push((item) => fieldPath in item)
         }
@@ -181,11 +182,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         if (directionStr === "asc") {
             newQuery.orderings[fieldPath] = (a, b) => {
                 const compareOfA =
-                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? a.id
                         : a.item[String(fieldPath)]
                 const compareOfB =
-                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
                         : b.item[String(fieldPath)]
                 return this.compare(compareOfA, compareOfB)
@@ -193,11 +194,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         } else {
             newQuery.orderings[fieldPath] = (a, b) => {
                 const compareOfA =
-                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? a.id
                         : a.item[String(fieldPath)]
                 const compareOfB =
-                    fieldPath === InProcessFirestoreQuery.FIELD_PATH_DOCUMENT_ID
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
                         : b.item[String(fieldPath)]
                 return this.compare(compareOfB, compareOfA)
