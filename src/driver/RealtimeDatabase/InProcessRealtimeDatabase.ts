@@ -24,7 +24,11 @@ export type IdGenerator = () => string
 
 export class InProcessFirebaseRealtimeDatabaseSnapshot
     implements IFirebaseDataSnapshot {
-    constructor(readonly key: string, private readonly value: any) {}
+    constructor(
+        readonly key: string,
+        readonly ref: InProcessRealtimeDatabaseRef,
+        private readonly value: any,
+    ) {}
 
     exists(): boolean {
         if (this.value && typeof this.value === "object") {
@@ -52,6 +56,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
             action(
                 new InProcessFirebaseRealtimeDatabaseSnapshot(
                     key,
+                    this.ref.child(key),
                     this.value[key],
                 ),
             )
@@ -60,10 +65,15 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
 
     child(path: string): InProcessFirebaseRealtimeDatabaseSnapshot {
         if (typeof this.value !== "object") {
-            return new InProcessFirebaseRealtimeDatabaseSnapshot(path, null)
+            return new InProcessFirebaseRealtimeDatabaseSnapshot(
+                path,
+                this.ref.child(path),
+                null,
+            )
         }
         return new InProcessFirebaseRealtimeDatabaseSnapshot(
             path.split("/").pop() || "",
+            this.ref.child(path),
             objectPath.get(this.value, dotPathFromSlashed(path), null),
         )
     }
@@ -374,6 +384,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
         }
         return new InProcessFirebaseRealtimeDatabaseSnapshot(
             this.path.split("/").pop() || "",
+            this,
             value,
         )
     }

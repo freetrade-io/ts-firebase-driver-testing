@@ -3,6 +3,9 @@ export interface IFirebaseRealtimeDatabase {
 }
 
 export interface IFirebaseDataSnapshot {
+    readonly key: string | null
+    readonly ref: IFirebaseRealtimeDatabaseRef
+
     exists(): boolean
 
     val(): any
