@@ -13,6 +13,8 @@ export interface IFirebaseDataSnapshot {
     forEach(action: (snapshot: IFirebaseDataSnapshot) => boolean | void): void
 
     child(path: string): IFirebaseDataSnapshot
+
+    numChildren(): number
 }
 
 export interface IFirebaseRealtimeDatabaseQuery {
