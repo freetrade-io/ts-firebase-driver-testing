@@ -101,8 +101,8 @@ interface IInProcessRealtimeDatabaseRefQuery {
 
 class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     constructor(
+        readonly path: string,
         private readonly db: InProcessRealtimeDatabase,
-        private readonly path: string,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
         private readonly query: IInProcessRealtimeDatabaseRefQuery = {
             orderings: [],
@@ -118,8 +118,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(a.key, b.key)
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings, ordering],
@@ -139,8 +139,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(childA, childB)
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings, ordering],
@@ -157,8 +157,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(a.val, b.val)
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings, ordering, this.compare],
@@ -183,8 +183,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return value
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings],
@@ -209,8 +209,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return value
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings],
@@ -239,8 +239,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(compareVal, value) >= 0
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings],
@@ -269,8 +269,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return this.compare(compareVal, value) <= 0
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings],
@@ -302,8 +302,8 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
             return compareVal === value
         }
         return new InProcessRealtimeDatabaseRef(
-            this.db,
             this.path,
+            this.db,
             this.idGenerator,
             {
                 orderings: [...this.query.orderings],
@@ -448,8 +448,8 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
     ref(path: string): InProcessRealtimeDatabaseRef {
         return new InProcessRealtimeDatabaseRef(
-            this,
             path.replace(".", "/"),
+            this,
             this.idGenerator,
         )
     }

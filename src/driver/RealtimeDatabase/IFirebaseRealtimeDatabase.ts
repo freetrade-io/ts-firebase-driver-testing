@@ -43,6 +43,8 @@ export interface IFirebaseRealtimeDatabaseQuery {
 
 export interface IFirebaseRealtimeDatabaseRef
     extends IFirebaseRealtimeDatabaseQuery {
+    readonly path: string
+
     child(path: string): IFirebaseRealtimeDatabaseRef
 
     push(value?: any): IFirebaseRealtimeDatabaseRef
