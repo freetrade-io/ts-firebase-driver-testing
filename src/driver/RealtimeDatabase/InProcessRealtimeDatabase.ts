@@ -77,6 +77,16 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
             objectPath.get(this.value, dotPathFromSlashed(path), null),
         )
     }
+
+    numChildren(): number {
+        if (typeof this.value !== "object") {
+            return 0
+        }
+        if (this.value.length) {
+            return this.value.length
+        }
+        return Object.keys(this.value).length
+    }
 }
 
 export enum TransactionResult {
