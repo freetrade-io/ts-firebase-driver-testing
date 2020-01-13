@@ -36,6 +36,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
     doc(documentPath?: string): IFirestoreDocRef
     listDocuments(): Promise<IFirestoreDocRef[]>
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
+    isEqual(other: IFirestoreCollectionRef): boolean
 }
 
 export interface IFirestoreDocRef {
@@ -78,6 +79,7 @@ export interface IFirestoreTimestamp {
 }
 
 export interface IFirestoreQuery {
+    // readonly firestore: IFirestore
     orderBy(
         fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
