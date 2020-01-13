@@ -87,7 +87,10 @@ export interface IFirestoreWriteResult {
 }
 
 export interface IFirestoreTimestamp {
-    seconds: number
+    readonly seconds: number
+    readonly nanoseconds: number
+    toDate(): Date
+    toMillis(): number
     isEqual(other: IFirestoreTimestamp): boolean
 }
 

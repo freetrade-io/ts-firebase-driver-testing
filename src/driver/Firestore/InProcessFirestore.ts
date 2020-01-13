@@ -545,12 +545,15 @@ export class InProcessFirestoreQuerySnapshot
 }
 
 function makeUpdateTime(): IFirestoreTimestamp {
-    const seconds = new Date().getTime() / 1000
+    const date = new Date()
+    const milliseconds: number = date.getTime()
+    const seconds: number = milliseconds / 1000
     return {
         seconds,
-        isEqual(other: IFirestoreTimestamp): boolean {
-            return other.seconds === seconds
-        },
+        nanoseconds: milliseconds / 1000000,
+        toDate: () => date,
+        toMillis: (): number => milliseconds,
+        isEqual: (other): boolean => other.toMillis() === milliseconds,
     }
 }
 
