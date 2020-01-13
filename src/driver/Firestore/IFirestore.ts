@@ -30,6 +30,7 @@ export type FirestoreWhereFilterOp =
     | "array-contains-any"
 
 export interface IFirestoreCollectionRef extends IFirestoreQuery {
+    readonly id: string
     readonly path: string
     readonly parent: IFirestoreDocRef | null
     doc(documentPath?: string): IFirestoreDocRef

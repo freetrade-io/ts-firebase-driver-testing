@@ -442,6 +442,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
 export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
     implements IFirestoreCollectionRef {
+    readonly id: string
     readonly parent: InProcessFirestoreDocRef | null = null
 
     constructor(
@@ -463,6 +464,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
                 this.db,
             )
         }
+        this.id = pathSplit.pop() || ""
     }
 
     doc(documentPath?: string): InProcessFirestoreDocRef {
