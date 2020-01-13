@@ -82,6 +82,8 @@ export interface IFirestoreDocumentData {
 
 export interface IFirestoreWriteResult {
     writeTime: IFirestoreTimestamp
+
+    isEqual(other: IFirestoreWriteResult): boolean
 }
 
 export interface IFirestoreTimestamp {

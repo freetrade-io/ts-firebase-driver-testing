@@ -544,6 +544,24 @@ export class InProcessFirestoreQuerySnapshot
     }
 }
 
+function makeUpdateTime(): IFirestoreTimestamp {
+    const seconds = new Date().getTime() / 1000
+    return {
+        seconds,
+        isEqual(other: IFirestoreTimestamp): boolean {
+            return other.seconds === seconds
+        },
+    }
+}
+
+function makeWriteResult(): IFirestoreWriteResult {
+    const updateTime = makeUpdateTime()
+    return {
+        writeTime: updateTime,
+        isEqual: (other) => other.writeTime === updateTime,
+    }
+}
+
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly id: string
     readonly parent: InProcessFirestoreCollectionRef
@@ -590,12 +608,12 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (options && options.merge) {
             return this.update(data)
         }
-        const updateTime = this.makeUpdateTime()
+        const updateTime = makeUpdateTime()
         this.firestore._setPath(
             this._dotPath(),
             _.merge(data, { _meta: { updateTime } }),
         )
-        return { writeTime: updateTime }
+        return makeWriteResult()
     }
 
     async update(
@@ -603,25 +621,25 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult> {
         const current = this.firestore._getPath(this._dotPath())
-        const newUpdateTime = this.makeUpdateTime()
+        const newUpdateTime = makeUpdateTime()
         if (precondition && precondition.lastUpdateTime) {
             if (
                 current._meta.updateTime &&
                 !current._meta.updateTime.isEqual(precondition.lastUpdateTime)
             ) {
-                return { writeTime: newUpdateTime }
+                return makeWriteResult()
             }
         }
         this.firestore._setPath(
             this._dotPath(),
             _.merge(current, data, { _meta: { updateTime: newUpdateTime } }),
         )
-        return { writeTime: newUpdateTime }
+        return makeWriteResult()
     }
 
     async delete(): Promise<IFirestoreWriteResult> {
         this.firestore._deletePath(this._dotPath())
-        return { writeTime: this.makeUpdateTime() }
+        return makeWriteResult()
     }
 
     listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
@@ -643,16 +661,6 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
     _dotPath(): string {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
-    }
-
-    private makeUpdateTime(): IFirestoreTimestamp {
-        const seconds = new Date().getTime() / 1000
-        return {
-            seconds,
-            isEqual(other: IFirestoreTimestamp): boolean {
-                return other.seconds === seconds
-            },
-        }
     }
 }
 
