@@ -548,28 +548,25 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly id: string
     readonly parent: InProcessFirestoreCollectionRef
 
-    constructor(
-        readonly path: string,
-        private readonly db: InProcessFirestore,
-    ) {
+    constructor(readonly path: string, readonly firestore: InProcessFirestore) {
         this.path = _.trim(this.path.replace(/[\/.]+/g, "/"), "/.")
         const pathSplit = this.path.split("/")
         this.id = pathSplit.pop() || ""
         this.parent = new InProcessFirestoreCollectionRef(
-            this.db,
+            this.firestore,
             pathSplit.join("/"),
         )
     }
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
-            this.db,
+            this.firestore,
             `${this.path}/${collectionPath}`,
         )
     }
 
     async get(): Promise<InProcessFirestoreDocumentSnapshot> {
-        const value = this.db._getPath(this._dotPath())
+        const value = this.firestore._getPath(this._dotPath())
         return new InProcessFirestoreDocumentSnapshot(
             this.id,
             value !== null && value !== undefined,
@@ -594,7 +591,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             return this.update(data)
         }
         const updateTime = this.makeUpdateTime()
-        this.db._setPath(
+        this.firestore._setPath(
             this._dotPath(),
             _.merge(data, { _meta: { updateTime } }),
         )
@@ -605,7 +602,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         data: IFirestoreDocumentData,
         precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult> {
-        const current = this.db._getPath(this._dotPath())
+        const current = this.firestore._getPath(this._dotPath())
         const newUpdateTime = this.makeUpdateTime()
         if (precondition && precondition.lastUpdateTime) {
             if (
@@ -615,7 +612,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
                 return { writeTime: newUpdateTime }
             }
         }
-        this.db._setPath(
+        this.firestore._setPath(
             this._dotPath(),
             _.merge(current, data, { _meta: { updateTime: newUpdateTime } }),
         )
@@ -623,8 +620,25 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 
     async delete(): Promise<IFirestoreWriteResult> {
-        this.db._deletePath(this._dotPath())
+        this.firestore._deletePath(this._dotPath())
         return { writeTime: this.makeUpdateTime() }
+    }
+
+    listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
+        throw new Error(
+            "InProcessFirestoreDocRef.listCollections not implemented",
+        )
+    }
+
+    onSnapshot(
+        onNext: (snapshot: InProcessFirestoreDocumentSnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void {
+        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
+    }
+
+    isEqual(other: InProcessFirestoreDocRef): boolean {
+        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
     _dotPath(): string {

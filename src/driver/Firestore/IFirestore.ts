@@ -44,6 +44,7 @@ export interface IFirestoreDocRef {
     readonly path: string
     readonly id: string
     readonly parent: IFirestoreCollectionRef
+    readonly firestore: IFirestore
     collection(collectionPath: string): IFirestoreCollectionRef
     get(): Promise<IFirestoreDocumentSnapshot>
     create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
@@ -56,6 +57,15 @@ export interface IFirestoreDocRef {
         precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult>
     delete(): Promise<IFirestoreWriteResult>
+
+    listCollections(): Promise<IFirestoreCollectionRef[]>
+
+    onSnapshot(
+        onNext: (snapshot: IFirestoreDocumentSnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void
+
+    isEqual(other: IFirestoreDocRef): boolean
 }
 
 export interface IFirestoreDocumentSnapshot {
