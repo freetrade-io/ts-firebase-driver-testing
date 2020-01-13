@@ -1,6 +1,11 @@
 import _ from "lodash"
 import objectPath = require("object-path")
-import { CloudFunction, IFirebaseChange, IFirebaseEventContext } from "../.."
+import {
+    CloudFunction,
+    IFirebaseChange,
+    IFirebaseDataSnapshot,
+    IFirebaseEventContext,
+} from "../.."
 import { stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -68,6 +73,26 @@ export class InProcessFirestore implements IFirestore {
 
     batch(): InProcessFirestoreWriteBatch {
         return new InProcessFirestoreWriteBatch()
+    }
+
+    settings(settings: object): void {
+        throw new Error("Not implemented")
+    }
+
+    collectionGroup(collectionId: string): IFirestoreQuery {
+        throw new Error("Not implemented")
+    }
+
+    getAll(
+        ...documentRefsOrReadOptions: Array<
+            IFirestoreDocRef | { fieldMask?: string }
+        >
+    ): Promise<IFirebaseDataSnapshot> {
+        throw new Error("Not implemented")
+    }
+
+    listCollections(): Promise<IFirestoreCollectionRef[]> {
+        throw new Error("Not implemented")
     }
 
     reset(dataset: object = {}): void {

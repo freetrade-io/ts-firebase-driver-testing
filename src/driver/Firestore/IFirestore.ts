@@ -1,3 +1,4 @@
+import { IFirebaseDataSnapshot } from "../.."
 import { IFieldPath } from "./FieldPath"
 
 export interface IFirestore {
@@ -8,6 +9,14 @@ export interface IFirestore {
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T>
     batch(): IFirestoreWriteBatch
+    settings(settings: object): void
+    collectionGroup(collectionId: string): IFirestoreQuery
+    getAll(
+        ...documentRefsOrReadOptions: Array<
+            IFirestoreDocRef | { fieldMask?: string }
+        >
+    ): Promise<IFirebaseDataSnapshot>
+    listCollections(): Promise<IFirestoreCollectionRef[]>
 }
 
 export type FirestoreWhereFilterOp =
