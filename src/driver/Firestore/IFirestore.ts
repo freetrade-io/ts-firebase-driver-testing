@@ -33,6 +33,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
     readonly id: string
     readonly path: string
     readonly parent: IFirestoreDocRef | null
+    readonly firestore: IFirestore
     doc(documentPath?: string): IFirestoreDocRef
     listDocuments(): Promise<IFirestoreDocRef[]>
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
