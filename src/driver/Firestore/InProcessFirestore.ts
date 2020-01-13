@@ -233,6 +233,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
+    offset(offset: number): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.offset not implemented")
+    }
+
     limit(limit: number): InProcessFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
@@ -341,6 +345,18 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
+    startAt(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.startAt not implemented")
+    }
+
+    endBefore(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.endBefore not implemented")
+    }
+
+    endAt(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.endAt not implemented")
+    }
+
     async get(): Promise<InProcessFirestoreQuerySnapshot> {
         let collection = this.firestore._getPath(this._dotPath()) || {}
         for (const filter of this.query.filters) {
@@ -404,6 +420,17 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             rangeFilterField: "",
         }
         return new InProcessFirestoreQuerySnapshot(collection)
+    }
+
+    stream(): NodeJS.ReadableStream {
+        throw new Error("InProcessFirestoreQuery.stream not implemented")
+    }
+
+    onSnapshot(
+        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void {
+        throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
     }
 
     _dotPath(): string {

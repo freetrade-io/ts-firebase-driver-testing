@@ -84,15 +84,24 @@ export interface IFirestoreQuery {
         fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
     ): IFirestoreQuery
+    offset(offset: number): IFirestoreQuery
     limit(limit: number): IFirestoreQuery
     startAfter(...fieldValues: any[]): IFirestoreQuery
+    endBefore(...fieldValues: any[]): IFirestoreQuery
+    endAt(...fieldValues: any[]): IFirestoreQuery
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
         value: any,
     ): IFirestoreQuery
     select(...field: string[]): IFirestoreQuery
+    startAt(...fieldValues: any[]): IFirestoreQuery
     get(): Promise<IFirestoreQuerySnapshot>
+    stream(): NodeJS.ReadableStream
+    onSnapshot(
+        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void
 }
 
 export interface IFirestoreQuerySnapshot {
