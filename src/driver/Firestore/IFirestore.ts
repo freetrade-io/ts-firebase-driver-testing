@@ -30,11 +30,13 @@ export type FirestoreWhereFilterOp =
     | "array-contains-any"
 
 export interface IFirestoreCollectionRef extends IFirestoreQuery {
+    readonly id: string
     readonly path: string
     readonly parent: IFirestoreDocRef | null
     doc(documentPath?: string): IFirestoreDocRef
     listDocuments(): Promise<IFirestoreDocRef[]>
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
+    isEqual(other: IFirestoreCollectionRef): boolean
 }
 
 export interface IFirestoreDocRef {
@@ -77,19 +79,29 @@ export interface IFirestoreTimestamp {
 }
 
 export interface IFirestoreQuery {
+    // readonly firestore: IFirestore
     orderBy(
         fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
     ): IFirestoreQuery
+    offset(offset: number): IFirestoreQuery
     limit(limit: number): IFirestoreQuery
     startAfter(...fieldValues: any[]): IFirestoreQuery
+    endBefore(...fieldValues: any[]): IFirestoreQuery
+    endAt(...fieldValues: any[]): IFirestoreQuery
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
         value: any,
     ): IFirestoreQuery
     select(...field: string[]): IFirestoreQuery
+    startAt(...fieldValues: any[]): IFirestoreQuery
     get(): Promise<IFirestoreQuerySnapshot>
+    stream(): NodeJS.ReadableStream
+    onSnapshot(
+        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void
 }
 
 export interface IFirestoreQuerySnapshot {

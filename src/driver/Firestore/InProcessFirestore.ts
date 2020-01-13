@@ -46,7 +46,7 @@ export class InProcessFirestore implements IFirestore {
     ) {}
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
-        return new InProcessFirestoreCollectionRef(collectionPath, this)
+        return new InProcessFirestoreCollectionRef(this, collectionPath)
     }
 
     doc(documentPath: string): InProcessFirestoreDocRef {
@@ -171,8 +171,8 @@ interface IQueryBuilder {
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
     constructor(
-        protected readonly db: InProcessFirestore,
-        protected readonly path: string,
+        readonly firestore: InProcessFirestore,
+        readonly path: string,
         protected query: IQueryBuilder = {
             filters: [],
             transforms: [],
@@ -230,7 +230,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             }
         }
 
-        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
+    }
+
+    offset(offset: number): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.offset not implemented")
     }
 
     limit(limit: number): InProcessFirestoreQuery {
@@ -248,7 +252,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             return collection
         })
 
-        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     startAfter(...fieldValues: any[]): IFirestoreQuery {
@@ -261,7 +265,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             })
         })
 
-        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     where(
@@ -325,7 +329,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         }
         newQuery.filters.push(filter)
 
-        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     select(...field: string[]): IFirestoreQuery {
@@ -338,11 +342,23 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     return whole
                 }, {})
         })
-        return new InProcessFirestoreQuery(this.db, this.path, newQuery)
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
+    }
+
+    startAt(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.startAt not implemented")
+    }
+
+    endBefore(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.endBefore not implemented")
+    }
+
+    endAt(...fieldValues: any[]): InProcessFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.endAt not implemented")
     }
 
     async get(): Promise<InProcessFirestoreQuerySnapshot> {
-        let collection = this.db._getPath(this._dotPath()) || {}
+        let collection = this.firestore._getPath(this._dotPath()) || {}
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -390,7 +406,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     true,
                     new InProcessFirestoreDocRef(
                         `${this._dotPath()}.${key}`,
-                        this.db,
+                        this.firestore,
                     ),
                     collection[key],
                 )
@@ -404,6 +420,17 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             rangeFilterField: "",
         }
         return new InProcessFirestoreQuerySnapshot(collection)
+    }
+
+    stream(): NodeJS.ReadableStream {
+        throw new Error("InProcessFirestoreQuery.stream not implemented")
+    }
+
+    onSnapshot(
+        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void {
+        throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
     }
 
     _dotPath(): string {
@@ -442,11 +469,12 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
 export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
     implements IFirestoreCollectionRef {
+    readonly id: string
     readonly parent: InProcessFirestoreDocRef | null = null
 
     constructor(
+        readonly firestore: InProcessFirestore,
         readonly path: string,
-        protected readonly db: InProcessFirestore,
         protected query: IQueryBuilder = {
             filters: [],
             transforms: [],
@@ -455,33 +483,34 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
             rangeFilterField: "",
         },
     ) {
-        super(db, path, query)
+        super(firestore, path, query)
         const pathSplit = this.path.split("/")
         if (pathSplit.length > 1) {
             this.parent = new InProcessFirestoreDocRef(
                 pathSplit.slice(0, -1).join("/"),
-                this.db,
+                this.firestore,
             )
         }
+        this.id = pathSplit.pop() || ""
     }
 
     doc(documentPath?: string): InProcessFirestoreDocRef {
         if (!documentPath) {
-            documentPath = this.db.makeId()
+            documentPath = this.firestore.makeId()
         }
         return new InProcessFirestoreDocRef(
             `${this.path}/${documentPath}`,
-            this.db,
+            this.firestore,
         )
     }
 
     async listDocuments(): Promise<InProcessFirestoreDocRef[]> {
-        const collection = this.db._getPath(this._dotPath()) || {}
+        const collection = this.firestore._getPath(this._dotPath()) || {}
         return Object.keys(collection).map(
             (key: string): InProcessFirestoreDocRef => {
                 return new InProcessFirestoreDocRef(
                     `${this.path}/${key}`,
-                    this.db,
+                    this.firestore,
                 )
             },
         )
@@ -491,6 +520,10 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         const doc: InProcessFirestoreDocRef = this.doc()
         await doc.set(data)
         return doc
+    }
+
+    isEqual(other: IFirestoreCollectionRef): boolean {
+        return other.path === this.path
     }
 }
 
@@ -523,15 +556,15 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const pathSplit = this.path.split("/")
         this.id = pathSplit.pop() || ""
         this.parent = new InProcessFirestoreCollectionRef(
-            pathSplit.join("/"),
             this.db,
+            pathSplit.join("/"),
         )
     }
 
     collection(collectionPath: string): InProcessFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
-            `${this.path}/${collectionPath}`,
             this.db,
+            `${this.path}/${collectionPath}`,
         )
     }
 
