@@ -1,4 +1,4 @@
-import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import { InProcessFirestore } from "../../../src"
 import { sleep } from "../../../src/util/sleep"
 
 describe("In-process Firestore update precondition", () => {
@@ -30,9 +30,9 @@ describe("In-process Firestore update precondition", () => {
         // precondition.
         const finalSnapshot = await doc.get()
         expect(finalSnapshot.updateTime).not.toBeUndefined()
-        expect((finalSnapshot.updateTime || {}).seconds).toEqual(
-            interveningUpdate.writeTime.seconds,
-        )
+        expect(
+            Math.round((finalSnapshot.updateTime || { seconds: 0 }).seconds),
+        ).toEqual(Math.round(interveningUpdate.writeTime.seconds))
         expect(finalSnapshot.data()).toEqual({ name: "tiger2" })
     })
 })
