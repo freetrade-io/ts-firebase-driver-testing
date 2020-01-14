@@ -3,7 +3,6 @@ import objectPath = require("object-path")
 import {
     CloudFunction,
     IFirebaseChange,
-    IFirebaseDataSnapshot,
     IFirebaseEventContext,
     IReadOptions,
 } from "../.."
@@ -86,7 +85,7 @@ export class InProcessFirestore implements IFirestore {
 
     getAll(
         ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
-    ): Promise<IFirebaseDataSnapshot[]> {
+    ): Promise<IFirestoreDocumentSnapshot[]> {
         throw new Error("Not implemented")
     }
 
