@@ -417,7 +417,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             orderings: {},
             rangeFilterField: "",
         }
-        return new InProcessFirestoreQuerySnapshot(collection)
+        return new InProcessFirestoreQuerySnapshot(collection, this)
     }
 
     stream(): NodeJS.ReadableStream {
@@ -535,16 +535,33 @@ export class InProcessFirestoreQuerySnapshot
     implements IFirestoreQuerySnapshot {
     readonly empty: boolean
     readonly size: number
+    readonly readTime: IFirestoreTimestamp
 
-    constructor(readonly docs: InProcessFirestoreDocumentSnapshot[] = []) {
+    constructor(
+        readonly docs: InProcessFirestoreDocumentSnapshot[] = [],
+        readonly query: InProcessFirestoreQuery,
+    ) {
         this.empty = docs.length === 0
         this.size = docs.length
+        this.readTime = makeTimestamp()
     }
 
     forEach(
         callback: (result: InProcessFirestoreDocumentSnapshot) => void,
     ): void {
         this.docs.forEach((doc) => callback(doc))
+    }
+
+    docChanges(): any[] {
+        throw new Error(
+            "InProcessFirestoreQuerySnapshot.docChanges not implemented",
+        )
+    }
+
+    isEqual(other: InProcessFirestoreQuerySnapshot): boolean {
+        throw new Error(
+            "InProcessFirestoreQuerySnapshot.isEqual not implemented",
+        )
     }
 }
 

@@ -148,9 +148,20 @@ export interface IFirestoreQuery {
 }
 
 export interface IFirestoreQuerySnapshot {
-    docs: IFirestoreDocumentSnapshot[]
-    empty: boolean
-    size: number
+    readonly query: IFirestoreQuery
+
+    readonly docs: IFirestoreDocumentSnapshot[]
+
+    readonly empty: boolean
+
+    readonly size: number
+
+    readonly readTime: IFirestoreTimestamp
+
+    docChanges(): any[]
+
+    isEqual(other: IFirestoreQuerySnapshot): boolean
+
     forEach(callback: (result: IFirestoreDocumentSnapshot) => void): void
 }
 
