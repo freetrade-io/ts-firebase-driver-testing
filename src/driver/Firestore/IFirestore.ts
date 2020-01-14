@@ -13,7 +13,7 @@ export interface IFirestore {
     collectionGroup(collectionId: string): IFirestoreQuery
     getAll(
         ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
-    ): Promise<IFirebaseDataSnapshot>
+    ): Promise<IFirebaseDataSnapshot[]>
     listCollections(): Promise<IFirestoreCollectionRef[]>
 }
 

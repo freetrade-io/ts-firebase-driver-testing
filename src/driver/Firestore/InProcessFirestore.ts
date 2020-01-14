@@ -86,7 +86,7 @@ export class InProcessFirestore implements IFirestore {
 
     getAll(
         ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
-    ): Promise<IFirebaseDataSnapshot> {
+    ): Promise<IFirebaseDataSnapshot[]> {
         throw new Error("Not implemented")
     }
 
