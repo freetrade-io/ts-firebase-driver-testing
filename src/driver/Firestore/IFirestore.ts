@@ -85,10 +85,20 @@ export interface IFirestoreDocRef {
 
 export interface IFirestoreDocumentSnapshot {
     readonly id: string
+
     readonly exists: boolean
+
     readonly ref: IFirestoreDocRef
+
     readonly updateTime?: IFirestoreTimestamp
+
+    readonly readTime: IFirestoreTimestamp
+
     data(): IFirestoreDocumentData | undefined
+
+    get(fieldPath: string | IFieldPath): any
+
+    isEqual(other: IFirestoreDocumentSnapshot): boolean
 }
 
 export interface IFirestoreDocumentData {

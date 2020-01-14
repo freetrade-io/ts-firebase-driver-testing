@@ -544,7 +544,7 @@ export class InProcessFirestoreQuerySnapshot
     }
 }
 
-function makeUpdateTime(): IFirestoreTimestamp {
+function makeTimestamp(): IFirestoreTimestamp {
     const date = new Date()
     const milliseconds: number = date.getTime()
     const seconds: number = milliseconds / 1000
@@ -558,7 +558,7 @@ function makeUpdateTime(): IFirestoreTimestamp {
 }
 
 function makeWriteResult(): IFirestoreWriteResult {
-    const updateTime = makeUpdateTime()
+    const updateTime = makeTimestamp()
     return {
         writeTime: updateTime,
         isEqual: (other) => other.writeTime === updateTime,
@@ -611,7 +611,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (options && options.merge) {
             return this.update(data)
         }
-        const updateTime = makeUpdateTime()
+        const updateTime = makeTimestamp()
         this.firestore._setPath(
             this._dotPath(),
             _.merge(data, { _meta: { updateTime } }),
@@ -643,7 +643,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const data = dataOrField as IFirestoreDocumentData
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
-        const newUpdateTime = makeUpdateTime()
+        const newUpdateTime = makeTimestamp()
         if (precondition && precondition.lastUpdateTime) {
             if (
                 current._meta.updateTime &&
@@ -690,6 +690,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
 class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
     readonly updateTime?: IFirestoreTimestamp
+    readonly readTime: IFirestoreTimestamp
 
     constructor(
         readonly id: string,
@@ -700,6 +701,7 @@ class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
         if (value && value._meta && value._meta.updateTime) {
             this.updateTime = value._meta.updateTime
         }
+        this.readTime = makeTimestamp()
     }
 
     data(): IFirestoreDocumentData | undefined {
@@ -707,6 +709,18 @@ class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
             return stripMeta(this.value)
         }
         return undefined
+    }
+
+    get(fieldPath: string | IFieldPath): any {
+        throw new Error(
+            "InProcessFirestoreDocumentSnapshot.get not implemented",
+        )
+    }
+
+    isEqual(other: IFirestoreDocumentSnapshot): boolean {
+        throw new Error(
+            "InProcessFirestoreDocumentSnapshot.isEqual not implemented",
+        )
     }
 }
 
