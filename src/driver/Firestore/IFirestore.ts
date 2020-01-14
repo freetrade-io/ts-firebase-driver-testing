@@ -95,11 +95,19 @@ export interface IFirestoreDocumentSnapshot {
 
     readonly readTime: IFirestoreTimestamp
 
+    readonly createTime?: IFirestoreTimestamp
+
     data(): IFirestoreDocumentData | undefined
 
     get(fieldPath: string | IFieldPath): any
 
     isEqual(other: IFirestoreDocumentSnapshot): boolean
+}
+
+export interface IFirestoreQueryDocumentSnapshot
+    extends IFirestoreDocumentSnapshot {
+    readonly createTime?: IFirestoreTimestamp
+    readonly updateTime: IFirestoreTimestamp
 }
 
 export interface IFirestoreDocumentData {
@@ -150,7 +158,7 @@ export interface IFirestoreQuery {
 export interface IFirestoreQuerySnapshot {
     readonly query: IFirestoreQuery
 
-    readonly docs: IFirestoreDocumentSnapshot[]
+    readonly docs: IFirestoreQueryDocumentSnapshot[]
 
     readonly empty: boolean
 
@@ -162,7 +170,7 @@ export interface IFirestoreQuerySnapshot {
 
     isEqual(other: IFirestoreQuerySnapshot): boolean
 
-    forEach(callback: (result: IFirestoreDocumentSnapshot) => void): void
+    forEach(callback: (result: IFirestoreQueryDocumentSnapshot) => void): void
 }
 
 export interface IFirestoreTransaction {

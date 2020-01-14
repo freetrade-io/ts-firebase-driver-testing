@@ -4,6 +4,7 @@ import {
     CloudFunction,
     IFirebaseChange,
     IFirebaseEventContext,
+    IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
 import { stripMeta } from "../../util/stripMeta"
@@ -571,7 +572,7 @@ function makeTimestamp(): IFirestoreTimestamp {
     const seconds: number = milliseconds / 1000
     return {
         seconds,
-        nanoseconds: milliseconds / 1000000,
+        nanoseconds: milliseconds * 1000000,
         toDate: () => date,
         toMillis: (): number => milliseconds,
         isEqual: (other): boolean => other.toMillis() === milliseconds,
@@ -632,10 +633,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (options && options.merge) {
             return this.update(data)
         }
+        const createTime = makeTimestamp()
         const updateTime = makeTimestamp()
         this.firestore._setPath(
             this._dotPath(),
-            _.merge(data, { _meta: { updateTime } }),
+            _.merge(
+                _.cloneDeep(data),
+                _.cloneDeep({ _meta: { createTime, updateTime } }),
+            ),
         )
         return makeWriteResult()
     }
@@ -673,12 +678,15 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
                 return makeWriteResult()
             }
         }
-        this.firestore._setPath(
-            this._dotPath(),
-            _.merge(current, data, {
+        const newValue = _.merge(
+            _.cloneDeep({ _meta: { createTime: newUpdateTime } }),
+            _.cloneDeep(current),
+            _.cloneDeep(data),
+            _.cloneDeep({
                 _meta: { updateTime: newUpdateTime },
             }),
         )
+        this.firestore._setPath(this._dotPath(), newValue)
         return makeWriteResult()
     }
 
@@ -709,8 +717,10 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 }
 
-class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
-    readonly updateTime?: IFirestoreTimestamp
+class InProcessFirestoreDocumentSnapshot
+    implements IFirestoreQueryDocumentSnapshot {
+    readonly createTime: IFirestoreTimestamp
+    readonly updateTime: IFirestoreTimestamp
     readonly readTime: IFirestoreTimestamp
 
     constructor(
@@ -719,10 +729,18 @@ class InProcessFirestoreDocumentSnapshot implements IFirestoreDocumentSnapshot {
         readonly ref: InProcessFirestoreDocRef,
         private readonly value: IFirestoreDocumentData | undefined,
     ) {
+        const now = makeTimestamp()
+        this.readTime = now
+
+        this.createTime = now
+        if (value && value._meta && value._meta.createTime) {
+            this.createTime = value._meta.createTime
+        }
+
+        this.updateTime = now
         if (value && value._meta && value._meta.updateTime) {
             this.updateTime = value._meta.updateTime
         }
-        this.readTime = makeTimestamp()
     }
 
     data(): IFirestoreDocumentData | undefined {
