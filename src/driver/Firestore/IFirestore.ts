@@ -121,7 +121,7 @@ export interface IFirestoreTimestamp {
 }
 
 export interface IFirestoreQuery {
-    // readonly firestore: IFirestore
+    readonly firestore: IFirestore
     orderBy(
         fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
@@ -144,6 +144,7 @@ export interface IFirestoreQuery {
         onNext: (snapshot: IFirestoreQuerySnapshot) => void,
         onError?: (error: Error) => void,
     ): () => void
+    isEqual(other: IFirestoreQuery): boolean
 }
 
 export interface IFirestoreQuerySnapshot {

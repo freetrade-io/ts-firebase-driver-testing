@@ -431,6 +431,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
     }
 
+    isEqual(other: InProcessFirestoreQuery): boolean {
+        throw new Error("InProcessFirestoreQuery.isEqual not implemented")
+    }
+
     _dotPath(): string {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
     }
@@ -520,8 +524,10 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         return doc
     }
 
-    isEqual(other: IFirestoreCollectionRef): boolean {
-        return other.path === this.path
+    isEqual(other: IFirestoreQuery): boolean {
+        throw new Error(
+            "InProcessFirestoreCollectionRef.isEqual not implemented",
+        )
     }
 }
 
