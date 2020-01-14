@@ -886,6 +886,12 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
         return ref.get()
     }
 
+    getAll(
+        ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
+    ): Promise<IFirestoreDocumentSnapshot[]> {
+        throw new Error("InProcessFirestoreTransaction.getAll not implemented")
+    }
+
     set(
         documentRef: InProcessFirestoreDocRef,
         data: IFirestoreDocumentData,
@@ -896,8 +902,27 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
 
     update(
         documentRef: InProcessFirestoreDocRef,
-        data: IFirestoreDocumentData,
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        preconditionOrValue?: any | IPrecondition,
+        ...fieldsOrPrecondition: any[]
     ): IFirestoreTransaction {
+        if (typeof dataOrField === "string" || dataOrField.segments) {
+            throw new Error(
+                "InProcessFirestoreTransaction.update with string or field path is not implemented",
+            )
+        }
+        if (preconditionOrValue) {
+            throw new Error(
+                "InProcessFirestoreTransaction.update with 3rd arg is not implemented",
+            )
+        }
+        if (fieldsOrPrecondition && fieldsOrPrecondition.length > 0) {
+            throw new Error(
+                "InProcessFirestoreTransaction.update with 4th arg is not implemented",
+            )
+        }
+
+        const data = dataOrField as IFirestoreDocumentData
         this.writeOperations.push(async () => await documentRef.update(data))
         return this
     }
@@ -945,10 +970,30 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     }
 
     update(
-        documentRef: IFirestoreDocRef,
-        data: IFirestoreDocumentData,
-        precondition?: IPrecondition,
+        documentRef: InProcessFirestoreDocRef,
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        preconditionOrValue?: any | IPrecondition,
+        ...fieldsOrPrecondition: any[]
     ): IFirestoreWriteBatch {
+        if (typeof dataOrField === "string" || dataOrField.segments) {
+            throw new Error(
+                "InProcessFirestoreWriteBatch.update with string or field path is not implemented",
+            )
+        }
+        if (preconditionOrValue && !preconditionOrValue.lastUpdateTime) {
+            throw new Error(
+                "InProcessFirestoreWriteBatch.update with 3rd arg as value is not implemented",
+            )
+        }
+        if (fieldsOrPrecondition && fieldsOrPrecondition.length > 0) {
+            throw new Error(
+                "InProcessFirestoreWriteBatch.update with 4th arg is not implemented",
+            )
+        }
+
+        const data = dataOrField as IFirestoreDocumentData
+        const precondition = preconditionOrValue as IPrecondition
+
         this.writeOperations.push(async () =>
             documentRef.update(data, precondition),
         )

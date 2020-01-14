@@ -106,7 +106,7 @@ export interface IFirestoreDocumentSnapshot {
 
 export interface IFirestoreQueryDocumentSnapshot
     extends IFirestoreDocumentSnapshot {
-    readonly createTime?: IFirestoreTimestamp
+    readonly createTime: IFirestoreTimestamp
     readonly updateTime: IFirestoreTimestamp
 }
 
@@ -177,6 +177,10 @@ export interface IFirestoreTransaction {
     get(ref: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
     get(ref: IFirestoreQuery): Promise<IFirestoreQuerySnapshot>
 
+    getAll(
+        ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
+    ): Promise<IFirestoreDocumentSnapshot[]>
+
     create(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
@@ -190,6 +194,14 @@ export interface IFirestoreTransaction {
     update(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
+        precondition?: IPrecondition,
+    ): IFirestoreTransaction
+
+    update(
+        documentRef: IFirestoreDocRef,
+        field: string | IFieldPath,
+        value: any,
+        ...fieldsOrPrecondition: any[]
     ): IFirestoreTransaction
 
     delete(documentRef: IFirestoreDocRef): IFirestoreTransaction
@@ -215,6 +227,13 @@ export interface IFirestoreWriteBatch {
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
         precondition?: IPrecondition,
+    ): IFirestoreWriteBatch
+
+    update(
+        documentRef: IFirestoreDocRef,
+        field: string | IFieldPath,
+        value: any,
+        ...fieldsOrPrecondition: any[]
     ): IFirestoreWriteBatch
 
     delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch
