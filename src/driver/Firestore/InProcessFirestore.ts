@@ -5,6 +5,7 @@ import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
     IFirebaseEventContext,
+    IReadOptions,
 } from "../.."
 import { stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
@@ -84,9 +85,7 @@ export class InProcessFirestore implements IFirestore {
     }
 
     getAll(
-        ...documentRefsOrReadOptions: Array<
-            IFirestoreDocRef | { fieldMask?: string }
-        >
+        ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
     ): Promise<IFirebaseDataSnapshot> {
         throw new Error("Not implemented")
     }

@@ -12,11 +12,13 @@ export interface IFirestore {
     settings(settings: object): void
     collectionGroup(collectionId: string): IFirestoreQuery
     getAll(
-        ...documentRefsOrReadOptions: Array<
-            IFirestoreDocRef | { fieldMask?: string }
-        >
+        ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
     ): Promise<IFirebaseDataSnapshot>
     listCollections(): Promise<IFirestoreCollectionRef[]>
+}
+
+export interface IReadOptions {
+    fieldMask?: Array<string | IFieldPath>
 }
 
 export type FirestoreWhereFilterOp =
