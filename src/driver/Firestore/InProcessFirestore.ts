@@ -620,9 +620,28 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 
     async update(
-        data: IFirestoreDocumentData,
-        precondition?: IPrecondition,
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        valueOrPrecondition?: any | IPrecondition,
+        ...moreFieldsOrPrecondition: any[]
     ): Promise<IFirestoreWriteResult> {
+        if (typeof dataOrField === "string" || dataOrField.segments) {
+            throw new Error(
+                "InProcessFirestoreDocRef.update with field path as first arg is not implemented",
+            )
+        }
+        if (valueOrPrecondition && !valueOrPrecondition.lastUpdateTime) {
+            throw new Error(
+                "InProcessFirestoreDocRef.update with value as second arg is not implemented",
+            )
+        }
+        if (moreFieldsOrPrecondition && moreFieldsOrPrecondition.length > 0) {
+            throw new Error(
+                "InProcessFirestoreDocRef.update with more than 2 args is not implemented",
+            )
+        }
+
+        const data = dataOrField as IFirestoreDocumentData
+        const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
         const newUpdateTime = makeUpdateTime()
         if (precondition && precondition.lastUpdateTime) {
@@ -635,7 +654,9 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         }
         this.firestore._setPath(
             this._dotPath(),
-            _.merge(current, data, { _meta: { updateTime: newUpdateTime } }),
+            _.merge(current, data, {
+                _meta: { updateTime: newUpdateTime },
+            }),
         )
         return makeWriteResult()
     }

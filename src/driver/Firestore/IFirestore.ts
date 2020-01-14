@@ -41,21 +41,36 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
 }
 
 export interface IFirestoreDocRef {
-    readonly path: string
     readonly id: string
-    readonly parent: IFirestoreCollectionRef
+
     readonly firestore: IFirestore
+
+    readonly parent: IFirestoreCollectionRef
+
+    readonly path: string
+
     collection(collectionPath: string): IFirestoreCollectionRef
+
     get(): Promise<IFirestoreDocumentSnapshot>
+
     create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+
     set(
         data: IFirestoreDocumentData,
         options?: { merge?: boolean },
     ): Promise<IFirestoreWriteResult>
+
     update(
         data: IFirestoreDocumentData,
         precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult>
+
+    update(
+        field: string | IFieldPath,
+        value: any,
+        ...moreFieldsOrPrecondition: any[]
+    ): Promise<IFirestoreWriteResult>
+
     delete(): Promise<IFirestoreWriteResult>
 
     listCollections(): Promise<IFirestoreCollectionRef[]>
