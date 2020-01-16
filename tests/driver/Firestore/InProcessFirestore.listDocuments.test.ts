@@ -55,4 +55,19 @@ describe("In-process Firestore collection listing documents", () => {
         expect(docs.length).toBe(1)
         expect((await docs[0].get()).data()).toEqual({ foo: "bar" })
     })
+
+    test("listDocuments with numeric id in batch", async () => {
+        // Given we add a document with a numeric id in a batch;
+        const batch = db.batch()
+        const docRef = db.collection("things").doc("123")
+        batch.create(docRef, { id: "123", foo: "bar" })
+        await batch.commit()
+
+        // When we list documents on that collection;
+        const docs = await db.collection("things").listDocuments()
+
+        // Then we should get that single doc.
+        expect(docs.length).toBe(1)
+        expect((await docs[0].get()).data()).toEqual({ id: "123", foo: "bar" })
+    })
 })
