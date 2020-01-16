@@ -1,5 +1,5 @@
 import _ from "lodash"
-import objectPath = require("object-path")
+import { objDel, objGet, objSet } from "../../util/objPath"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -74,7 +74,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
         return new InProcessFirebaseRealtimeDatabaseSnapshot(
             path.split("/").pop() || "",
             this.ref.child(path),
-            objectPath.get(this.value, dotPathFromSlashed(path), null),
+            objGet(this.value, dotPathFromSlashed(path), null),
         )
     }
 
@@ -106,7 +106,7 @@ interface IInProcessRealtimeDatabaseRefQuery {
     readonly filters: Array<(item: IKeyVal) => boolean>
     readonly transforms: Array<(value: any) => any>
     readonly keyOrdering: boolean
-    readonly childOrderingPath?: string
+    readonly childOrderingPath?: string[]
 }
 
 class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
@@ -142,10 +142,10 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
     }
 
     orderByChild(childPath: string): InProcessRealtimeDatabaseRef {
-        childPath = dotPathFromSlashed(childPath)
+        const childPathParts: string[] = dotPathFromSlashed(childPath)
         const ordering = (a: IKeyVal, b: IKeyVal): number => {
-            const childA = objectPath.get(a.val, childPath)
-            const childB = objectPath.get(b.val, childPath)
+            const childA = objGet(a.val, childPathParts)
+            const childB = objGet(b.val, childPathParts)
             return this.compare(childA, childB)
         }
         return new InProcessRealtimeDatabaseRef(
@@ -157,7 +157,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 filters: [...this.query.filters],
                 transforms: [...this.query.transforms],
                 keyOrdering: false,
-                childOrderingPath: childPath,
+                childOrderingPath: childPathParts,
             },
         )
     }
@@ -241,10 +241,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.query.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(
-                    item.val,
-                    this.query.childOrderingPath,
-                )
+                compareVal = objGet(item.val, this.query.childOrderingPath)
             }
             return this.compare(compareVal, value) >= 0
         }
@@ -271,10 +268,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.query.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(
-                    item.val,
-                    this.query.childOrderingPath,
-                )
+                compareVal = objGet(item.val, this.query.childOrderingPath)
             }
             return this.compare(compareVal, value) <= 0
         }
@@ -304,10 +298,7 @@ class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
                 compareVal = item.key
             }
             if (this.query.childOrderingPath && typeof item.val === "object") {
-                compareVal = objectPath.get(
-                    item.val,
-                    this.query.childOrderingPath,
-                )
+                compareVal = objGet(item.val, this.query.childOrderingPath)
             }
             return compareVal === value
         }
@@ -465,31 +456,31 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _getPath(path: string): any {
-        return objectPath.get(this.storage, dotPathFromSlashed(path))
+        return objGet(this.storage, dotPathFromSlashed(path))
     }
 
     _setPath(path: string, value: any): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = dotPathFromSlashed(path)
-            objectPath.set(this.storage, dotPath, value)
+            const dotPath: string[] = dotPathFromSlashed(path)
+            objSet(this.storage, dotPath, value)
         })
     }
 
     _updatePath(path: string, value: any): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = dotPathFromSlashed(path)
-            const existing = objectPath.get(this.storage, dotPath)
+            const dotPath: string[] = dotPathFromSlashed(path)
+            const existing = objGet(this.storage, dotPath)
             if (
                 existing === undefined ||
                 typeof existing !== "object" ||
                 typeof value !== "object"
             ) {
-                objectPath.set(this.storage, dotPath, value)
+                objSet(this.storage, dotPath, value)
                 return
             }
-            objectPath.set(this.storage, dotPath, {
+            objSet(this.storage, dotPath, {
                 ...(existing as object),
                 ...value,
             })
@@ -499,8 +490,8 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     _removePath(path: string): void {
         this.triggerChangeEvents(() => {
             path = _.trim(path, "/")
-            const dotPath = dotPathFromSlashed(path)
-            objectPath.del(this.storage, dotPath)
+            const dotPath: string[] = dotPathFromSlashed(path)
+            objDel(this.storage, dotPath)
         })
     }
 
@@ -616,7 +607,10 @@ export class InProcessFirebaseBuilderDatabase
     }
 }
 
-function dotPathFromSlashed(path: string): string {
-    path = path.replace(/^(\/|\/$)+/g, "")
-    return path.trim().replace(/\/+/g, ".")
+function dotPathFromSlashed(path: string): string[] {
+    return path
+        .replace(/^(\/|\/$)+/g, "")
+        .trim()
+        .replace(/\/+/g, ".")
+        .split(".")
 }

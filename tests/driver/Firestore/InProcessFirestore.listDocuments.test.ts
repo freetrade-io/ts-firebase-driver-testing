@@ -40,4 +40,19 @@ describe("In-process Firestore collection listing documents", () => {
             name: "kangaroo",
         })
     })
+
+    test("listDocuments with numeric id", async () => {
+        // Given we add a document with a numeric id;
+        await db
+            .collection("things")
+            .doc("123")
+            .create({ foo: "bar" })
+
+        // When we list documents on that collection;
+        const docs = await db.collection("things").listDocuments()
+
+        // Then we should get that single doc.
+        expect(docs.length).toBe(1)
+        expect((await docs[0].get()).data()).toEqual({ foo: "bar" })
+    })
 })
