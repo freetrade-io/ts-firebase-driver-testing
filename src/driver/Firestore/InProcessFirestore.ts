@@ -1,5 +1,4 @@
 import _ from "lodash"
-import objectPath = require("object-path")
 import {
     CloudFunction,
     IFirebaseChange,
@@ -7,6 +6,7 @@ import {
     IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
+import { objDel, objGet, objSet } from "../../util/objPath"
 import { stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -100,19 +100,19 @@ export class InProcessFirestore implements IFirestore {
         this.makeId = fireStoreLikeId
     }
 
-    _getPath(dotPath: string): any {
-        return _.cloneDeep(objectPath.get(this.storage, dotPath))
+    _getPath(dotPath: string[]): any {
+        return _.cloneDeep(objGet(this.storage, dotPath))
     }
 
-    _setPath(dotPath: string, value: any): void {
+    _setPath(dotPath: string[], value: any): void {
         this.triggerChangeEvents(() => {
-            objectPath.set(this.storage, dotPath, value)
+            objSet(this.storage, dotPath, value)
         })
     }
 
-    _deletePath(dotPath: string): void {
+    _deletePath(dotPath: string[]): void {
         this.triggerChangeEvents(() => {
-            objectPath.del(this.storage, dotPath)
+            objDel(this.storage, dotPath)
         })
     }
 
@@ -436,8 +436,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.isEqual not implemented")
     }
 
-    _dotPath(): string {
-        return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
+    _dotPath(): string[] {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }
 
     private enforceSingleFieldRangeFilter(
@@ -712,8 +712,8 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    _dotPath(): string {
-        return _.trim(this.path.replace(/[\/.]+/g, "."), ".")
+    _dotPath(): string[] {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }
 }
 
