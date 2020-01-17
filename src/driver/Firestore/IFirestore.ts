@@ -97,6 +97,12 @@ export interface IFirestoreDocumentSnapshot {
 
     readonly createTime?: IFirestoreTimestamp
 
+    readonly metadata: {
+        readonly hasPendingWrites: boolean
+        readonly fromCache: boolean
+        isEqual: (other: any) => boolean
+    }
+
     data(): IFirestoreDocumentData | undefined
 
     get(fieldPath: string | IFieldPath): any

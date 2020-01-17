@@ -1,13 +1,10 @@
-/**
- * https://firebase.google.com/docs/firestore/manage-data/transactions
- */
-import { IFirestoreDocumentSnapshot } from "../../../src/driver/Firestore/IFirestore"
-import {
-    InProcessFirestore,
-    InProcessFirestoreDocRef,
-} from "../../../src/driver/Firestore/InProcessFirestore"
+import { InProcessFirestore } from "../../../src"
 
 describe("In-process Firestore transactions", () => {
+    /**
+     * https://firebase.google.com/docs/firestore/manage-data/transactions
+     */
+
     test("documentation example transaction", async () => {
         // Given we have a in-process Firestore DB;
         const firestore = new InProcessFirestore()
