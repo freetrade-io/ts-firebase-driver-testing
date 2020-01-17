@@ -936,6 +936,8 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
 }
 
 class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
+    private committed = false
+
     private readonly writeOperations: Array<
         () => Promise<IFirestoreWriteResult>
     > = []
@@ -944,6 +946,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreWriteBatch {
+        this.errorIfAlreadyCommitted()
         this.writeOperations.push(async () => {
             if ((await documentRef.get()).exists) {
                 throw new Error(
@@ -956,6 +959,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     }
 
     delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch {
+        this.errorIfAlreadyCommitted()
         this.writeOperations.push(async () => documentRef.delete())
         return this
     }
@@ -975,6 +979,8 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
         preconditionOrValue?: any | IPrecondition,
         ...fieldsOrPrecondition: any[]
     ): IFirestoreWriteBatch {
+        this.errorIfAlreadyCommitted()
+
         if (typeof dataOrField === "string" || dataOrField.segments) {
             throw new Error(
                 "InProcessFirestoreWriteBatch.update with string or field path is not implemented",
@@ -1001,11 +1007,22 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     }
 
     async commit(): Promise<IFirestoreWriteResult[]> {
+        this.errorIfAlreadyCommitted()
+
         const results: IFirestoreWriteResult[] = []
         while (this.writeOperations.length > 0) {
             const write = this.writeOperations.pop() || (async () => undefined)
             results.push((await write()) as IFirestoreWriteResult)
         }
+        this.committed = true
         return results
+    }
+
+    private errorIfAlreadyCommitted(): void {
+        if (this.committed) {
+            throw new Error(
+                "Cannot modify a WriteBatch that has been committed.",
+            )
+        }
     }
 }

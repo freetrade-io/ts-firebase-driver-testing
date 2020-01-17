@@ -78,4 +78,31 @@ describe("In-process Firestore batched writes", () => {
         expect(losAngeles.exists).toBeFalsy()
         expect(losAngeles.data()).toEqual(undefined)
     })
+
+    test("cannot reuse committed batch", async () => {
+        // Given we have a write batch;
+        const db = new InProcessFirestore()
+        const batch = db.batch()
+
+        // And we make a change in the batch;
+        const docRef = db.collection("things").doc("thingA")
+        batch.create(docRef, { foo: "bar" })
+
+        // And we commit it;
+        await batch.commit()
+
+        // When we try to make another change in the same batch;
+        let error: Error
+        try {
+            batch.update(docRef, { foo: "bar2" })
+        } catch (err) {
+            error = err
+        }
+
+        // Then an error should be thrown.
+        // @ts-ignore
+        expect(error).not.toBeUndefined()
+        // @ts-ignore
+        expect(error).toBeInstanceOf(Error)
+    })
 })
