@@ -9,7 +9,8 @@ import {
     IPubSubTopic,
 } from "../FirebaseDriver"
 
-class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
+export class InProcessFirebaseScheduleBuilder
+    implements IFirebaseScheduleBuilder {
     onRun(handler: (context: object) => PromiseLike<any>): CloudFunction<{}> {
         const scheduledFunction = async (context: object): Promise<any> => {
             return handler(context)
@@ -23,7 +24,7 @@ class InProcessFirebaseScheduleBuilder implements IFirebaseScheduleBuilder {
     }
 }
 
-class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
+export class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     constructor(
         readonly name: string,
         private readonly pubSub: InProcessFirebaseBuilderPubSub,
