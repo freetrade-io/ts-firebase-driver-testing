@@ -723,16 +723,6 @@ class InProcessFirestoreDocumentSnapshot
     readonly updateTime: IFirestoreTimestamp
     readonly readTime: IFirestoreTimestamp
 
-    readonly metadata = {
-        hasPendingWrites: false,
-        fromCache: false,
-        isEqual: (other: any) => {
-            throw new Error(
-                "InProcessFirestoreDocumentSnapshot.metadata.isEqual not implemented",
-            )
-        },
-    }
-
     constructor(
         readonly id: string,
         readonly exists: boolean,
