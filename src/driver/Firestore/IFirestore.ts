@@ -181,8 +181,8 @@ export interface IFirestoreQuerySnapshot<T = IFirestoreDocumentData> {
 }
 
 export interface IFirestoreTransaction {
-    get(ref: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
-    get(ref: IFirestoreQuery): Promise<IFirestoreQuerySnapshot>
+    get<T>(ref: IFirestoreDocRef<T>): Promise<IFirestoreDocumentSnapshot<T>>
+    get<T>(ref: IFirestoreQuery<T>): Promise<IFirestoreQuerySnapshot<T>>
 
     getAll(
         ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
