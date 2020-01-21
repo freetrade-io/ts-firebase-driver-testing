@@ -100,6 +100,10 @@ export class InProcessFirestore implements IFirestore {
         this.makeId = fireStoreLikeId
     }
 
+    terminate(): Promise<void> {
+        throw new Error("InProcessFirestore.terminate not implemented")
+    }
+
     _getPath(dotPath: string[]): any {
         return _.cloneDeep(objGet(this.storage, dotPath))
     }

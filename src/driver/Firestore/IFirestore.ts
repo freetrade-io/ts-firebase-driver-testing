@@ -14,6 +14,7 @@ export interface IFirestore {
         ...documentRefsOrReadOptions: Array<IFirestoreDocRef | IReadOptions>
     ): Promise<IFirestoreDocumentSnapshot[]>
     listCollections(): Promise<IFirestoreCollectionRef[]>
+    terminate(): Promise<void>
 }
 
 export interface IReadOptions {
