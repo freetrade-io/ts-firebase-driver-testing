@@ -440,6 +440,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.isEqual not implemented")
     }
 
+    withConverter<U>(converter: any): IFirestoreQuery<U> {
+        throw new Error("InProcessFirestoreQuery.withConverter not implemented")
+    }
+
     _dotPath(): string[] {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }

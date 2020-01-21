@@ -158,6 +158,7 @@ export interface IFirestoreQuery<T = IFirestoreDocumentData> {
         onError?: (error: Error) => void,
     ): () => void
     isEqual(other: IFirestoreQuery): boolean
+    withConverter<U>(converter: any): IFirestoreQuery<U>
 }
 
 export interface IFirestoreQuerySnapshot {
