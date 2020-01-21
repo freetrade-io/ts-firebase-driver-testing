@@ -41,7 +41,7 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
     isEqual(other: IFirestoreCollectionRef): boolean
 }
 
-export interface IFirestoreDocRef {
+export interface IFirestoreDocRef<T = IFirestoreDocumentData> {
     readonly id: string
 
     readonly firestore: IFirestore
@@ -82,6 +82,8 @@ export interface IFirestoreDocRef {
     ): () => void
 
     isEqual(other: IFirestoreDocRef): boolean
+
+    withConverter<U>(converter: any): IFirestoreDocRef<U>
 }
 
 export interface IFirestoreDocumentSnapshot {

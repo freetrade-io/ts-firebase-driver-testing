@@ -587,7 +587,8 @@ function makeWriteResult(): IFirestoreWriteResult {
     }
 }
 
-export class InProcessFirestoreDocRef implements IFirestoreDocRef {
+export class InProcessFirestoreDocRef<T = IFirestoreDocumentData>
+    implements IFirestoreDocRef {
     readonly id: string
     readonly parent: InProcessFirestoreCollectionRef
 
@@ -618,7 +619,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
-    async create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+    async create(data: T): Promise<IFirestoreWriteResult> {
         const existing = await this.get()
         if (existing.exists) {
             throw new Error(`Cannot create existing document at ${this.path}`)
@@ -627,7 +628,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 
     async set(
-        data: IFirestoreDocumentData,
+        data: T,
         options: { merge: boolean } = { merge: false },
     ): Promise<IFirestoreWriteResult> {
         if (options && options.merge) {
@@ -708,8 +709,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    isEqual(other: InProcessFirestoreDocRef): boolean {
+    isEqual(other: InProcessFirestoreDocRef<T>): boolean {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
+    }
+
+    withConverter<U>(converter: any): InProcessFirestoreDocRef<U> {
+        throw new Error(
+            "InProcessFirestoreDocRef.withConverter not implemented",
+        )
     }
 
     _dotPath(): string[] {
