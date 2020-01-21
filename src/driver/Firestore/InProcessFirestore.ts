@@ -46,11 +46,14 @@ export class InProcessFirestore implements IFirestore {
         private storage = {},
     ) {}
 
-    collection(collectionPath: string): InProcessFirestoreCollectionRef {
-        return new InProcessFirestoreCollectionRef(this, collectionPath)
+    collection(collectionPath: string): IFirestoreCollectionRef {
+        return new InProcessFirestoreCollectionRef(
+            this,
+            collectionPath,
+        ) as IFirestoreCollectionRef
     }
 
-    doc(documentPath: string): InProcessFirestoreDocRef {
+    doc(documentPath: string): IFirestoreDocRef {
         return this.collection("").doc(documentPath)
     }
 
@@ -72,7 +75,7 @@ export class InProcessFirestore implements IFirestore {
         return result as T
     }
 
-    batch(): InProcessFirestoreWriteBatch {
+    batch(): IFirestoreWriteBatch {
         return new InProcessFirestoreWriteBatch()
     }
 
@@ -174,7 +177,7 @@ interface IQueryBuilder {
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
     constructor(
-        readonly firestore: InProcessFirestore,
+        readonly firestore: IFirestore & InProcessFirestore,
         readonly path: string,
         protected query: IQueryBuilder = {
             filters: [],
@@ -190,7 +193,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     orderBy(
         fieldPath: string | IFieldPath,
         directionStr: "desc" | "asc" = "asc",
-    ): InProcessFirestoreQuery {
+    ): IFirestoreQuery {
         if (typeof fieldPath === "object") {
             if (!isFieldPathDocumentId(fieldPath)) {
                 throw new Error(
@@ -236,11 +239,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
-    offset(offset: number): InProcessFirestoreQuery {
+    offset(offset: number): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.offset not implemented")
     }
 
-    limit(limit: number): InProcessFirestoreQuery {
+    limit(limit: number): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
         newQuery.transforms.push((collection) => {
@@ -275,7 +278,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
         value: any,
-    ): InProcessFirestoreQuery {
+    ): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
         let filter: (item: { [key: string]: any }) => boolean
         switch (opStr) {
@@ -348,19 +351,19 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
-    startAt(...fieldValues: any[]): InProcessFirestoreQuery {
+    startAt(...fieldValues: any[]): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.startAt not implemented")
     }
 
-    endBefore(...fieldValues: any[]): InProcessFirestoreQuery {
+    endBefore(...fieldValues: any[]): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.endBefore not implemented")
     }
 
-    endAt(...fieldValues: any[]): InProcessFirestoreQuery {
+    endAt(...fieldValues: any[]): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.endAt not implemented")
     }
 
-    async get(): Promise<InProcessFirestoreQuerySnapshot> {
+    async get(): Promise<IFirestoreQuerySnapshot> {
         let collection = this.firestore._getPath(this._dotPath()) || {}
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
@@ -410,7 +413,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     new InProcessFirestoreDocRef(
                         `${this._dotPath()}.${key}`,
                         this.firestore,
-                    ),
+                    ) as IFirestoreDocRef,
                     collection[key],
                 )
             },
@@ -422,7 +425,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             orderings: {},
             rangeFilterField: "",
         }
-        return new InProcessFirestoreQuerySnapshot(collection, this)
+        return (new InProcessFirestoreQuerySnapshot(
+            collection,
+            this,
+        ) as unknown) as IFirestoreQuerySnapshot
     }
 
     stream(): NodeJS.ReadableStream {
@@ -436,7 +442,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
     }
 
-    isEqual(other: InProcessFirestoreQuery): boolean {
+    isEqual(other: IFirestoreQuery): boolean {
         throw new Error("InProcessFirestoreQuery.isEqual not implemented")
     }
 
@@ -481,7 +487,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
     implements IFirestoreCollectionRef {
     readonly id: string
-    readonly parent: InProcessFirestoreDocRef | null = null
+    readonly parent: IFirestoreDocRef | null = null
 
     constructor(
         readonly firestore: InProcessFirestore,
@@ -500,22 +506,22 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
             this.parent = new InProcessFirestoreDocRef(
                 pathSplit.slice(0, -1).join("/"),
                 this.firestore,
-            )
+            ) as IFirestoreDocRef
         }
         this.id = pathSplit.pop() || ""
     }
 
-    doc(documentPath?: string): InProcessFirestoreDocRef {
+    doc(documentPath?: string): IFirestoreDocRef {
         if (!documentPath) {
             documentPath = this.firestore.makeId()
         }
         return new InProcessFirestoreDocRef(
             `${this.path}/${documentPath}`,
             this.firestore,
-        )
+        ) as IFirestoreDocRef
     }
 
-    async listDocuments(): Promise<InProcessFirestoreDocRef[]> {
+    async listDocuments(): Promise<IFirestoreDocRef[]> {
         const collection = this.firestore._getPath(this._dotPath()) || {}
         return Object.keys(collection).map(
             (key: string): InProcessFirestoreDocRef => {
@@ -524,11 +530,11 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
                     this.firestore,
                 )
             },
-        )
+        ) as IFirestoreDocRef[]
     }
 
-    async add(data: IFirestoreDocumentData): Promise<InProcessFirestoreDocRef> {
-        const doc: InProcessFirestoreDocRef = this.doc()
+    async add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef> {
+        const doc = this.doc()
         await doc.set(data)
         return doc
     }
@@ -539,7 +545,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         )
     }
 
-    withConverter(converter: any): IFirestoreCollectionRef {
+    withConverter<U>(converter: any): IFirestoreCollectionRef<U> {
         throw new Error(
             "InProcessFirestoreCollectionRef.withConverter not implemented",
         )
@@ -551,10 +557,10 @@ export class InProcessFirestoreQuerySnapshot
     readonly empty: boolean
     readonly size: number
     readonly readTime: IFirestoreTimestamp
-    readonly query: InProcessFirestoreQuery
+    readonly query: IFirestoreQuery
 
     constructor(
-        readonly docs: InProcessFirestoreDocumentSnapshot[] = [],
+        readonly docs: IFirestoreQueryDocumentSnapshot[] = [],
         query: InProcessFirestoreQuery,
     ) {
         this.query = query
@@ -563,9 +569,7 @@ export class InProcessFirestoreQuerySnapshot
         this.readTime = makeTimestamp()
     }
 
-    forEach(
-        callback: (result: InProcessFirestoreDocumentSnapshot) => void,
-    ): void {
+    forEach(callback: (result: IFirestoreQueryDocumentSnapshot) => void): void {
         this.docs.forEach((doc) => callback(doc))
     }
 
@@ -575,7 +579,7 @@ export class InProcessFirestoreQuerySnapshot
         )
     }
 
-    isEqual(other: InProcessFirestoreQuerySnapshot): boolean {
+    isEqual(other: IFirestoreQuerySnapshot): boolean {
         throw new Error(
             "InProcessFirestoreQuerySnapshot.isEqual not implemented",
         )
@@ -605,9 +609,12 @@ function makeWriteResult(): IFirestoreWriteResult {
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly id: string
-    readonly parent: InProcessFirestoreCollectionRef
+    readonly parent: IFirestoreCollectionRef
 
-    constructor(readonly path: string, readonly firestore: InProcessFirestore) {
+    constructor(
+        readonly path: string,
+        readonly firestore: IFirestore & InProcessFirestore,
+    ) {
         this.path = _.trim(this.path.replace(/[\/.]+/g, "/"), "/.")
         const pathSplit = this.path.split("/")
         this.id = pathSplit.pop() || ""
@@ -617,19 +624,19 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
-    collection(collectionPath: string): InProcessFirestoreCollectionRef {
+    collection(collectionPath: string): IFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
             this.firestore,
             `${this.path}/${collectionPath}`,
         )
     }
 
-    async get(): Promise<InProcessFirestoreDocumentSnapshot> {
+    async get(): Promise<IFirestoreDocumentSnapshot> {
         const value = this.firestore._getPath(this._dotPath())
         return new InProcessFirestoreDocumentSnapshot(
             this.id,
             value !== null && value !== undefined,
-            this,
+            this as IFirestoreDocRef,
             value,
         )
     }
@@ -718,17 +725,17 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 
     onSnapshot(
-        onNext: (snapshot: InProcessFirestoreDocumentSnapshot) => void,
+        onNext: (snapshot: IFirestoreDocumentSnapshot) => void,
         onError?: (error: Error) => void,
     ): () => void {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    isEqual(other: InProcessFirestoreDocRef): boolean {
+    isEqual(other: IFirestoreDocRef): boolean {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    withConverter(converter: any): InProcessFirestoreDocRef {
+    withConverter<U>(converter: any): IFirestoreDocRef<U> {
         throw new Error(
             "InProcessFirestoreDocRef.withConverter not implemented",
         )
@@ -748,7 +755,7 @@ class InProcessFirestoreDocumentSnapshot
     constructor(
         readonly id: string,
         readonly exists: boolean,
-        readonly ref: InProcessFirestoreDocRef,
+        readonly ref: IFirestoreDocRef,
         private readonly value: IFirestoreDocumentData | undefined,
     ) {
         const now = makeTimestamp()
@@ -765,11 +772,11 @@ class InProcessFirestoreDocumentSnapshot
         }
     }
 
-    data(): IFirestoreDocumentData | undefined {
+    data(): IFirestoreDocumentData {
         if (this.value) {
             return stripMeta(this.value)
         }
-        return undefined
+        return {}
     }
 
     get(fieldPath: string | IFieldPath): any {
@@ -786,9 +793,9 @@ class InProcessFirestoreDocumentSnapshot
 }
 
 export class InProcessFirestoreBuilder implements IFirestoreBuilder {
-    constructor(private readonly firestore: InProcessFirestore) {}
+    constructor(private readonly firestore: IFirestore & InProcessFirestore) {}
 
-    document(path: string): InProcessFirestoreDocumentBuilder {
+    document(path: string): IFirestoreDocumentBuilder {
         return new InProcessFirestoreDocumentBuilder(path, this.firestore)
     }
 }
@@ -797,7 +804,7 @@ export class InProcessFirestoreDocumentBuilder
     implements IFirestoreDocumentBuilder {
     constructor(
         private readonly path: string,
-        private readonly firestore: InProcessFirestore,
+        private readonly firestore: IFirestore & InProcessFirestore,
     ) {}
 
     onCreate(
@@ -876,7 +883,7 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
     private readonly writeOperations: Array<() => Promise<any>> = []
 
     create(
-        documentRef: InProcessFirestoreDocRef,
+        documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreTransaction {
         this.writeOperations.push(async () => {
@@ -890,18 +897,16 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
         return this
     }
 
-    delete(documentRef: InProcessFirestoreDocRef): IFirestoreTransaction {
+    delete(documentRef: IFirestoreDocRef): IFirestoreTransaction {
         this.writeOperations.push(async () => await documentRef.delete())
         return this
     }
 
-    get(ref: InProcessFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
-    get(ref: InProcessFirestoreQuery): Promise<InProcessFirestoreQuerySnapshot>
+    get(ref: IFirestoreDocRef): Promise<IFirestoreDocumentSnapshot>
+    get(ref: IFirestoreQuery): Promise<IFirestoreQuerySnapshot>
     get(
-        ref: InProcessFirestoreDocRef | InProcessFirestoreQuery,
-    ):
-        | Promise<IFirestoreDocumentSnapshot>
-        | Promise<InProcessFirestoreQuerySnapshot> {
+        ref: IFirestoreDocRef | IFirestoreQuery,
+    ): Promise<IFirestoreDocumentSnapshot> | Promise<IFirestoreQuerySnapshot> {
         if (this.writeOperations.length > 0) {
             throw new Error("Cannot read after write in Firestore transaction")
         }
@@ -915,7 +920,7 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
     }
 
     set(
-        documentRef: InProcessFirestoreDocRef,
+        documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
     ): IFirestoreTransaction {
         this.writeOperations.push(async () => await documentRef.set(data))
@@ -923,7 +928,7 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
     }
 
     update(
-        documentRef: InProcessFirestoreDocRef,
+        documentRef: IFirestoreDocRef,
         dataOrField: IFirestoreDocumentData | string | IFieldPath,
         preconditionOrValue?: any | IPrecondition,
         ...fieldsOrPrecondition: any[]
@@ -996,7 +1001,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     }
 
     update(
-        documentRef: InProcessFirestoreDocRef,
+        documentRef: IFirestoreDocRef,
         dataOrField: IFirestoreDocumentData | string | IFieldPath,
         preconditionOrValue?: any | IPrecondition,
         ...fieldsOrPrecondition: any[]

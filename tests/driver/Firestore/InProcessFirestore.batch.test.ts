@@ -76,7 +76,7 @@ describe("In-process Firestore batched writes", () => {
         })
 
         expect(losAngeles.exists).toBeFalsy()
-        expect(losAngeles.data()).toEqual(undefined)
+        expect(losAngeles.data()).toEqual({})
     })
 
     test("cannot reuse committed batch", async () => {

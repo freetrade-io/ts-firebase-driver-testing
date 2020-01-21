@@ -1,8 +1,10 @@
 import {
+    IFirestoreCollectionRef,
+    IFirestoreDocRef,
     InProcessFirestore,
     InProcessFirestoreCollectionRef,
     InProcessFirestoreDocRef,
-} from "../../../src/driver/Firestore/InProcessFirestore"
+} from "../../../src"
 
 describe("InProcessFirestore get", () => {
     const firestore = new InProcessFirestore()
@@ -103,7 +105,7 @@ describe("InProcessFirestore get", () => {
         // Then we should get the expected non-existent doc.
         expect(docSnapshot.exists).toBe(false)
         expect(docSnapshot.id).toBe("id2")
-        expect(docSnapshot.data()).toBeUndefined()
+        expect(docSnapshot.data()).toEqual({})
     })
 
     test(".collection().doc().collection()", async () => {
@@ -228,15 +230,15 @@ describe("InProcessFirestore get", () => {
         // Then we should get the expected non-existent doc.
         expect(docSnapshot.exists).toBe(false)
         expect(docSnapshot.id).toBe("freeLunch")
-        expect(docSnapshot.data()).toBeUndefined()
+        expect(docSnapshot.data()).toEqual({})
     })
 
     /**
      * Various general test cases.
      */
     test.each([
-        [{}, ["foo", "bar"], undefined],
-        [{ foo: {} }, ["foo", "bar"], undefined],
+        [{}, ["foo", "bar"], {}],
+        [{ foo: {} }, ["foo", "bar"], {}],
         [{ foo: { bar: { baz: "hello" } } }, ["foo", "bar"], { baz: "hello" }],
         [
             { foo: { bar: { baz: { someDoc: { something: 123 } } } } },
@@ -246,7 +248,7 @@ describe("InProcessFirestore get", () => {
         [
             { foo: { bar: { baz: { something: 123 } } } },
             ["foo", "bar", "baz", "boz"],
-            undefined,
+            {},
         ],
     ] as Array<[object, string[], any]>)(
         "get document",
@@ -255,7 +257,7 @@ describe("InProcessFirestore get", () => {
             firestore.reset(dataset)
 
             // When we get a doc at a path;
-            let ref: InProcessFirestoreCollectionRef | InProcessFirestoreDocRef
+            let ref: IFirestoreCollectionRef | IFirestoreDocRef
             ref = firestore.collection(path.shift() || "")
             while (path.length > 0) {
                 if (ref instanceof InProcessFirestoreCollectionRef) {

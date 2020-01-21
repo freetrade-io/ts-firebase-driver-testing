@@ -37,10 +37,10 @@ export interface IFirestoreCollectionRef<T = IFirestoreDocumentData>
     readonly path: string
     readonly parent: IFirestoreDocRef | null
     readonly firestore: IFirestore
-    doc(documentPath?: string): IFirestoreDocRef
-    listDocuments(): Promise<IFirestoreDocRef[]>
-    add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
-    isEqual(other: IFirestoreCollectionRef): boolean
+    doc(documentPath?: string): IFirestoreDocRef<T>
+    listDocuments(): Promise<Array<IFirestoreDocRef<T>>>
+    add(data: T): Promise<IFirestoreDocRef<T>>
+    isEqual(other: IFirestoreCollectionRef<T>): boolean
     withConverter<U>(converter: any): IFirestoreCollectionRef<U>
 }
 
@@ -49,20 +49,17 @@ export interface IFirestoreDocRef<T = IFirestoreDocumentData> {
 
     readonly firestore: IFirestore
 
-    readonly parent: IFirestoreCollectionRef
+    readonly parent: IFirestoreCollectionRef<T>
 
     readonly path: string
 
     collection(collectionPath: string): IFirestoreCollectionRef
 
-    get(): Promise<IFirestoreDocumentSnapshot>
+    get(): Promise<IFirestoreDocumentSnapshot<T>>
 
-    create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult>
+    create(data: T): Promise<IFirestoreWriteResult>
 
-    set(
-        data: IFirestoreDocumentData,
-        options?: { merge?: boolean },
-    ): Promise<IFirestoreWriteResult>
+    set(data: T, options?: { merge?: boolean }): Promise<IFirestoreWriteResult>
 
     update(
         data: IFirestoreDocumentData,
@@ -80,21 +77,21 @@ export interface IFirestoreDocRef<T = IFirestoreDocumentData> {
     listCollections(): Promise<IFirestoreCollectionRef[]>
 
     onSnapshot(
-        onNext: (snapshot: IFirestoreDocumentSnapshot) => void,
+        onNext: (snapshot: IFirestoreDocumentSnapshot<T>) => void,
         onError?: (error: Error) => void,
     ): () => void
 
-    isEqual(other: IFirestoreDocRef): boolean
+    isEqual(other: IFirestoreDocRef<T>): boolean
 
     withConverter<U>(converter: any): IFirestoreDocRef<U>
 }
 
-export interface IFirestoreDocumentSnapshot {
+export interface IFirestoreDocumentSnapshot<T = IFirestoreDocumentData> {
     readonly id: string
 
     readonly exists: boolean
 
-    readonly ref: IFirestoreDocRef
+    readonly ref: IFirestoreDocRef<T>
 
     readonly updateTime?: IFirestoreTimestamp
 
@@ -102,17 +99,19 @@ export interface IFirestoreDocumentSnapshot {
 
     readonly createTime?: IFirestoreTimestamp
 
-    data(): IFirestoreDocumentData | undefined
+    data(): T | undefined
 
     get(fieldPath: string | IFieldPath): any
 
-    isEqual(other: IFirestoreDocumentSnapshot): boolean
+    isEqual(other: IFirestoreDocumentSnapshot<T>): boolean
 }
 
-export interface IFirestoreQueryDocumentSnapshot
-    extends IFirestoreDocumentSnapshot {
+export interface IFirestoreQueryDocumentSnapshot<T = IFirestoreDocumentData>
+    extends IFirestoreDocumentSnapshot<T> {
     readonly createTime: IFirestoreTimestamp
     readonly updateTime: IFirestoreTimestamp
+
+    data(): T
 }
 
 export interface IFirestoreDocumentData {
@@ -161,10 +160,10 @@ export interface IFirestoreQuery<T = IFirestoreDocumentData> {
     withConverter<U>(converter: any): IFirestoreQuery<U>
 }
 
-export interface IFirestoreQuerySnapshot {
-    readonly query: IFirestoreQuery
+export interface IFirestoreQuerySnapshot<T = IFirestoreDocumentData> {
+    readonly query: IFirestoreQuery<T>
 
-    readonly docs: IFirestoreQueryDocumentSnapshot[]
+    readonly docs: Array<IFirestoreQueryDocumentSnapshot<T>>
 
     readonly empty: boolean
 
@@ -174,9 +173,11 @@ export interface IFirestoreQuerySnapshot {
 
     docChanges(): any[]
 
-    isEqual(other: IFirestoreQuerySnapshot): boolean
+    isEqual(other: IFirestoreQuerySnapshot<T>): boolean
 
-    forEach(callback: (result: IFirestoreQueryDocumentSnapshot) => void): void
+    forEach(
+        callback: (result: IFirestoreQueryDocumentSnapshot<T>) => void,
+    ): void
 }
 
 export interface IFirestoreTransaction {
