@@ -440,7 +440,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.isEqual not implemented")
     }
 
-    withConverter<U>(converter: any): IFirestoreQuery<U> {
+    withConverter(converter: any): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.withConverter not implemented")
     }
 
@@ -539,7 +539,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
         )
     }
 
-    withConverter<U>(converter: any): IFirestoreCollectionRef<U> {
+    withConverter(converter: any): IFirestoreCollectionRef {
         throw new Error(
             "InProcessFirestoreCollectionRef.withConverter not implemented",
         )
@@ -551,11 +551,13 @@ export class InProcessFirestoreQuerySnapshot
     readonly empty: boolean
     readonly size: number
     readonly readTime: IFirestoreTimestamp
+    readonly query: InProcessFirestoreQuery
 
     constructor(
         readonly docs: InProcessFirestoreDocumentSnapshot[] = [],
-        readonly query: InProcessFirestoreQuery,
+        query: InProcessFirestoreQuery,
     ) {
+        this.query = query
         this.empty = docs.length === 0
         this.size = docs.length
         this.readTime = makeTimestamp()
@@ -601,8 +603,7 @@ function makeWriteResult(): IFirestoreWriteResult {
     }
 }
 
-export class InProcessFirestoreDocRef<T = IFirestoreDocumentData>
-    implements IFirestoreDocRef {
+export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly id: string
     readonly parent: InProcessFirestoreCollectionRef
 
@@ -633,7 +634,7 @@ export class InProcessFirestoreDocRef<T = IFirestoreDocumentData>
         )
     }
 
-    async create(data: T): Promise<IFirestoreWriteResult> {
+    async create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
         const existing = await this.get()
         if (existing.exists) {
             throw new Error(`Cannot create existing document at ${this.path}`)
@@ -642,7 +643,7 @@ export class InProcessFirestoreDocRef<T = IFirestoreDocumentData>
     }
 
     async set(
-        data: T,
+        data: IFirestoreDocumentData,
         options: { merge: boolean } = { merge: false },
     ): Promise<IFirestoreWriteResult> {
         if (options && options.merge) {
@@ -723,11 +724,11 @@ export class InProcessFirestoreDocRef<T = IFirestoreDocumentData>
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    isEqual(other: InProcessFirestoreDocRef<T>): boolean {
+    isEqual(other: InProcessFirestoreDocRef): boolean {
         throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
     }
 
-    withConverter<U>(converter: any): InProcessFirestoreDocRef<U> {
+    withConverter(converter: any): InProcessFirestoreDocRef {
         throw new Error(
             "InProcessFirestoreDocRef.withConverter not implemented",
         )
