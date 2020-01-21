@@ -31,7 +31,8 @@ export type FirestoreWhereFilterOp =
     | "in"
     | "array-contains-any"
 
-export interface IFirestoreCollectionRef extends IFirestoreQuery {
+export interface IFirestoreCollectionRef<T = IFirestoreDocumentData>
+    extends IFirestoreQuery<T> {
     readonly id: string
     readonly path: string
     readonly parent: IFirestoreDocRef | null
@@ -40,10 +41,10 @@ export interface IFirestoreCollectionRef extends IFirestoreQuery {
     listDocuments(): Promise<IFirestoreDocRef[]>
     add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef>
     isEqual(other: IFirestoreCollectionRef): boolean
-    withConverter(converter: any): IFirestoreCollectionRef
+    withConverter<U>(converter: any): IFirestoreCollectionRef<U>
 }
 
-export interface IFirestoreDocRef {
+export interface IFirestoreDocRef<T = IFirestoreDocumentData> {
     readonly id: string
 
     readonly firestore: IFirestore
@@ -85,7 +86,7 @@ export interface IFirestoreDocRef {
 
     isEqual(other: IFirestoreDocRef): boolean
 
-    withConverter(converter: any): IFirestoreDocRef
+    withConverter<U>(converter: any): IFirestoreDocRef<U>
 }
 
 export interface IFirestoreDocumentSnapshot {
@@ -132,24 +133,24 @@ export interface IFirestoreTimestamp {
     isEqual(other: IFirestoreTimestamp): boolean
 }
 
-export interface IFirestoreQuery {
+export interface IFirestoreQuery<T = IFirestoreDocumentData> {
     readonly firestore: IFirestore
     orderBy(
         fieldPath: string | IFieldPath,
         directionStr?: "desc" | "asc",
-    ): IFirestoreQuery
-    offset(offset: number): IFirestoreQuery
-    limit(limit: number): IFirestoreQuery
-    startAfter(...fieldValues: any[]): IFirestoreQuery
-    endBefore(...fieldValues: any[]): IFirestoreQuery
-    endAt(...fieldValues: any[]): IFirestoreQuery
+    ): IFirestoreQuery<T>
+    offset(offset: number): IFirestoreQuery<T>
+    limit(limit: number): IFirestoreQuery<T>
+    startAfter(...fieldValues: any[]): IFirestoreQuery<T>
+    endBefore(...fieldValues: any[]): IFirestoreQuery<T>
+    endAt(...fieldValues: any[]): IFirestoreQuery<T>
     where(
         fieldPath: string,
         opStr: FirestoreWhereFilterOp,
         value: any,
-    ): IFirestoreQuery
-    select(...field: string[]): IFirestoreQuery
-    startAt(...fieldValues: any[]): IFirestoreQuery
+    ): IFirestoreQuery<T>
+    select(...field: string[]): IFirestoreQuery<T>
+    startAt(...fieldValues: any[]): IFirestoreQuery<T>
     get(): Promise<IFirestoreQuerySnapshot>
     stream(): NodeJS.ReadableStream
     onSnapshot(
@@ -157,7 +158,7 @@ export interface IFirestoreQuery {
         onError?: (error: Error) => void,
     ): () => void
     isEqual(other: IFirestoreQuery): boolean
-    withConverter(converter: any): IFirestoreQuery
+    withConverter<U>(converter: any): IFirestoreQuery<U>
 }
 
 export interface IFirestoreQuerySnapshot {
