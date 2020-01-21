@@ -534,6 +534,12 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
             "InProcessFirestoreCollectionRef.isEqual not implemented",
         )
     }
+
+    withConverter<U>(converter: any): IFirestoreCollectionRef<U> {
+        throw new Error(
+            "InProcessFirestoreCollectionRef.withConverter not implemented",
+        )
+    }
 }
 
 export class InProcessFirestoreQuerySnapshot
