@@ -11,17 +11,29 @@ describe("WrittenChangeFilter", () => {
         [
             "/foo",
             { after: { foo: "bar" } },
-            [{ parameters: {}, change: { after: "bar" } }],
+            [{ parameters: {}, change: { after: "bar" }, path: "foo" }],
         ],
         [
             "/foo",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
             { before: {}, after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
@@ -29,17 +41,29 @@ describe("WrittenChangeFilter", () => {
                 before: { hello: "yes" },
                 after: { hello: "yes", foo: { bar: "baz" } },
             },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: "baz" } }],
+            [{ parameters: {}, change: { after: "baz" }, path: "foo/bar" }],
         ],
         [
             "/{id}/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+            [
+                {
+                    parameters: { id: "foo" },
+                    change: { after: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/{id}/{key}",
@@ -48,13 +72,20 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "foo", key: "bar" },
                     change: { after: "baz" },
+                    path: "foo/bar",
                 },
             ],
         ],
         [
             "/{id}/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+            [
+                {
+                    parameters: { id: "foo" },
+                    change: { after: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/foo",
@@ -63,6 +94,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "bar", after: undefined },
+                    path: "foo",
                 },
             ],
         ],
@@ -73,6 +105,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "bar", after: undefined },
+                    path: "foo",
                 },
             ],
         ],
@@ -83,6 +116,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "bar", after: undefined },
+                    path: "foo",
                 },
             ],
         ],
@@ -93,6 +127,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "baz", after: undefined },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -106,6 +141,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "baz", after: undefined },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -116,6 +152,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "baz", after: undefined },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -126,6 +163,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: "baz", after: undefined },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -136,6 +174,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "foo" },
                     change: { before: "bar", after: undefined },
+                    path: "foo",
                 },
             ],
         ],
@@ -146,10 +185,12 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "foo1" },
                     change: { before: "bar", after: undefined },
+                    path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
                     change: { before: "yes", after: undefined },
+                    path: "foo2",
                 },
             ],
         ],
@@ -160,6 +201,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "foo2" },
                     change: { before: "yes", after: undefined },
+                    path: "foo2",
                 },
             ],
         ],
@@ -173,18 +215,22 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "foo3" },
                     change: { before: undefined, after: "bar" },
+                    path: "foo3",
                 },
                 {
                     parameters: { id: "foo4" },
                     change: { before: undefined, after: "bar" },
+                    path: "foo4",
                 },
                 {
                     parameters: { id: "foo1" },
                     change: { before: "bar", after: undefined },
+                    path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
                     change: { before: "yes", after: undefined },
+                    path: "foo2",
                 },
             ],
         ],
@@ -207,14 +253,17 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { id: "id123", key: "propA" },
                     change: { before: "foo", after: undefined },
+                    path: "things/id123/propA",
                 },
                 {
                     parameters: { id: "id123", key: "propB" },
                     change: { before: "bar", after: undefined },
+                    path: "things/id123/propB",
                 },
                 {
                     parameters: { id: "id456", key: "propB" },
                     change: { before: "goodbye", after: undefined },
+                    path: "things/id456/propB",
                 },
             ],
         ],
@@ -245,6 +294,7 @@ describe("WrittenChangeFilter", () => {
                 {
                     parameters: { animalName: "tiger", featureName: "stripey" },
                     change: { before: undefined, after: "very stripey" },
+                    path: "animals/tiger/features/stripey",
                 },
                 {
                     parameters: {
@@ -252,6 +302,7 @@ describe("WrittenChangeFilter", () => {
                         featureName: "swimming",
                     },
                     change: { before: undefined, after: "not swimming" },
+                    path: "animals/tiger/features/swimming",
                 },
                 {
                     parameters: {
@@ -259,6 +310,7 @@ describe("WrittenChangeFilter", () => {
                         featureName: "stripey",
                     },
                     change: { before: undefined, after: "not stripey" },
+                    path: "animals/dolphin/features/stripey",
                 },
                 {
                     parameters: {
@@ -266,6 +318,7 @@ describe("WrittenChangeFilter", () => {
                         featureName: "swimming",
                     },
                     change: { before: undefined, after: "much swimming" },
+                    path: "animals/dolphin/features/swimming",
                 },
             ],
         ],
@@ -308,6 +361,7 @@ describe("WrittenChangeFilter", () => {
                         before: "not swimming",
                         after: undefined,
                     },
+                    path: "animals/tiger/features/swimming",
                 },
                 {
                     parameters: {
@@ -318,6 +372,7 @@ describe("WrittenChangeFilter", () => {
                         before: "not stripey",
                         after: undefined,
                     },
+                    path: "animals/dolphin/features/stripey",
                 },
                 {
                     parameters: {
@@ -328,6 +383,7 @@ describe("WrittenChangeFilter", () => {
                         before: "much swimming",
                         after: undefined,
                     },
+                    path: "animals/dolphin/features/swimming",
                 },
             ],
         ],
@@ -377,6 +433,7 @@ describe("WrittenChangeFilter", () => {
                         before: "mistakenly stripey",
                         after: "not stripey",
                     },
+                    path: "animals/dolphin/features/stripey",
                 },
                 {
                     parameters: {
@@ -387,6 +444,7 @@ describe("WrittenChangeFilter", () => {
                         before: "mistakenly not swimming",
                         after: "much swimming",
                     },
+                    path: "animals/dolphin/features/swimming",
                 },
             ],
         ],

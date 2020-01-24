@@ -14,19 +14,30 @@ import {
     IChangeSnapshots,
     TriggerFunction,
 } from "../ChangeObserver/DatabaseChangeObserver"
+import { IFirestore, IFirestoreDocumentSnapshot } from "./IFirestore"
+import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestore"
 
 export function makeFirestoreChangeObserver(
     changeType: ChangeType,
     observedPath: string,
     handler: TriggerFunction<IFirestoreChangeSnapshot>,
+    firestore: IFirestore,
 ) {
     switch (changeType) {
         case "created":
-            return new FirestoreCreatedObserver(observedPath, handler)
+            return new FirestoreCreatedObserver(
+                observedPath,
+                handler,
+                firestore,
+            )
         case "updated":
             return new FirestoreUpdatedObserver(observedPath, handler)
         case "deleted":
-            return new FirestoreDeletedObserver(observedPath, handler)
+            return new FirestoreDeletedObserver(
+                observedPath,
+                handler,
+                firestore,
+            )
         case "written":
             return new FirestoreWrittenObserver(observedPath, handler)
     }
@@ -42,19 +53,31 @@ function prepareChangeData(data: object): object {
 }
 
 class FirestoreCreatedObserver extends DatabaseChangeObserver<
-    IFirestoreChangeSnapshot
+    IFirestoreDocumentSnapshot
 > {
+    constructor(
+        protected readonly observedPath: string,
+        protected readonly handler: TriggerFunction<IFirestoreDocumentSnapshot>,
+        private readonly firestore: IFirestore,
+    ) {
+        super(observedPath, handler)
+    }
+
     protected changeFilter(): IChangeFilter {
         return new CreatedChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots<IFirestoreChangeSnapshot> | IFirestoreChangeSnapshot {
-        return {
-            exists: !_.isNil(pc.change.after),
-            data: () => prepareChangeData(pc.change.after),
-        }
+    ):
+        | IChangeSnapshots<IFirestoreDocumentSnapshot>
+        | IFirestoreDocumentSnapshot {
+        return new InProcessFirestoreDocumentSnapshot(
+            pc.path.split("/").pop() || "",
+            !_.isNil(pc.change.after),
+            this.firestore.doc(this.observedPath),
+            prepareChangeData(pc.change.after),
+        )
     }
 }
 
@@ -82,19 +105,31 @@ class FirestoreUpdatedObserver extends DatabaseChangeObserver<
 }
 
 class FirestoreDeletedObserver extends DatabaseChangeObserver<
-    IFirestoreChangeSnapshot
+    IFirestoreDocumentSnapshot
 > {
+    constructor(
+        protected readonly observedPath: string,
+        protected readonly handler: TriggerFunction<IFirestoreDocumentSnapshot>,
+        private readonly firestore: IFirestore,
+    ) {
+        super(observedPath, handler)
+    }
+
     protected changeFilter(): IChangeFilter {
         return new DeletedChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots<IFirestoreChangeSnapshot> | IFirestoreChangeSnapshot {
-        return {
-            exists: !_.isNil(pc.change.after),
-            data: () => prepareChangeData(pc.change.after),
-        }
+    ):
+        | IChangeSnapshots<IFirestoreDocumentSnapshot>
+        | IFirestoreDocumentSnapshot {
+        return new InProcessFirestoreDocumentSnapshot(
+            pc.path.split("/").pop() || "",
+            !_.isNil(pc.change.after),
+            this.firestore.doc(this.observedPath),
+            prepareChangeData(pc.change.after),
+        )
     }
 }
 

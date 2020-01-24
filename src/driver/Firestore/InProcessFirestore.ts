@@ -129,7 +129,12 @@ export class InProcessFirestore implements IFirestore {
         handler: CloudFunction<any>,
     ): void {
         this.changeObservers.push(
-            makeFirestoreChangeObserver(changeType, observedPath, handler),
+            makeFirestoreChangeObserver(
+                changeType,
+                observedPath,
+                handler,
+                this,
+            ),
         )
     }
 
@@ -746,7 +751,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     }
 }
 
-class InProcessFirestoreDocumentSnapshot
+export class InProcessFirestoreDocumentSnapshot
     implements IFirestoreQueryDocumentSnapshot {
     readonly createTime: IFirestoreTimestamp
     readonly updateTime: IFirestoreTimestamp
@@ -758,6 +763,12 @@ class InProcessFirestoreDocumentSnapshot
         readonly ref: IFirestoreDocRef,
         private readonly value: IFirestoreDocumentData | undefined,
     ) {
+        if (!ref) {
+            throw new Error(
+                "InProcessFirestoreDocumentSnapshot created with empty ref",
+            )
+        }
+
         const now = makeTimestamp()
         this.readTime = now
 

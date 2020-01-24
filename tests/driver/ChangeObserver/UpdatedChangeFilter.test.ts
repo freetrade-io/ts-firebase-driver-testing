@@ -12,7 +12,13 @@ describe("UpdatedChangeFilter", () => {
         [
             "/foo",
             { before: { foo: "bar" }, after: { foo: "bar2" } },
-            [{ parameters: {}, change: { before: "bar", after: "bar2" } }],
+            [
+                {
+                    parameters: {},
+                    change: { before: "bar", after: "bar2" },
+                    path: "foo",
+                },
+            ],
         ],
         ["/foo", { after: { foo: { bar: "baz" } } }, []],
         ["/foo", { before: {}, after: { foo: { bar: "baz" } } }, []],
@@ -26,6 +32,7 @@ describe("UpdatedChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: { bar: "baz" }, after: { bar: "baz2" } },
+                    path: "foo",
                 },
             ],
         ],
@@ -47,13 +54,20 @@ describe("UpdatedChangeFilter", () => {
                 {
                     parameters: {},
                     change: { before: { bar: "baz1" }, after: { bar: "baz2" } },
+                    path: "foo",
                 },
             ],
         ],
         [
             "/foo/bar",
             { before: { foo: { bar: "wow" } }, after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { before: "wow", after: "baz" } }],
+            [
+                {
+                    parameters: {},
+                    change: { before: "wow", after: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         ["/{id}/bar", { after: { foo: { bar: "baz" } } }, []],
         [
@@ -66,6 +80,7 @@ describe("UpdatedChangeFilter", () => {
                 {
                     parameters: { id: "foo" },
                     change: { before: "baz1", after: "baz2" },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -88,6 +103,7 @@ describe("UpdatedChangeFilter", () => {
                         before: "baz1",
                         after: "baz2",
                     },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -110,6 +126,7 @@ describe("UpdatedChangeFilter", () => {
                 {
                     parameters: { id: "foo" },
                     change: { before: "baz1", after: "baz2" },
+                    path: "foo/bar",
                 },
             ],
         ],
@@ -159,6 +176,7 @@ describe("UpdatedChangeFilter", () => {
                         before: "mistakenly stripey",
                         after: "not stripey",
                     },
+                    path: "animals/dolphin/features/stripey",
                 },
                 {
                     parameters: {
@@ -169,6 +187,7 @@ describe("UpdatedChangeFilter", () => {
                         before: "mistakenly not swimming",
                         after: "much swimming",
                     },
+                    path: "animals/dolphin/features/swimming",
                 },
             ],
         ],

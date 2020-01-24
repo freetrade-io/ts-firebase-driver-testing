@@ -11,17 +11,29 @@ describe("CreatedChangeFilter", () => {
         [
             "/foo",
             { after: { foo: "bar" } },
-            [{ parameters: {}, change: { after: "bar" } }],
+            [{ parameters: {}, change: { after: "bar" }, path: "foo" }],
         ],
         [
             "/foo",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
             { before: {}, after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
@@ -29,17 +41,29 @@ describe("CreatedChangeFilter", () => {
                 before: { hello: "yes" },
                 after: { hello: "yes", foo: { bar: "baz" } },
             },
-            [{ parameters: {}, change: { after: { bar: "baz" } } }],
+            [
+                {
+                    parameters: {},
+                    change: { after: { bar: "baz" } },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: "baz" } }],
+            [{ parameters: {}, change: { after: "baz" }, path: "foo/bar" }],
         ],
         [
             "/{id}/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+            [
+                {
+                    parameters: { id: "foo" },
+                    change: { after: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/{id}/{key}",
@@ -48,13 +72,20 @@ describe("CreatedChangeFilter", () => {
                 {
                     parameters: { id: "foo", key: "bar" },
                     change: { after: "baz" },
+                    path: "foo/bar",
                 },
             ],
         ],
         [
             "/{id}/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: { id: "foo" }, change: { after: "baz" } }],
+            [
+                {
+                    parameters: { id: "foo" },
+                    change: { after: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/animals/{animalName}/features/{featureName}",
@@ -83,6 +114,7 @@ describe("CreatedChangeFilter", () => {
                 {
                     parameters: { animalName: "tiger", featureName: "stripey" },
                     change: { before: undefined, after: "very stripey" },
+                    path: "animals/tiger/features/stripey",
                 },
                 {
                     parameters: {
@@ -90,6 +122,7 @@ describe("CreatedChangeFilter", () => {
                         featureName: "swimming",
                     },
                     change: { before: undefined, after: "not swimming" },
+                    path: "animals/tiger/features/swimming",
                 },
                 {
                     parameters: {
@@ -97,6 +130,7 @@ describe("CreatedChangeFilter", () => {
                         featureName: "stripey",
                     },
                     change: { before: undefined, after: "not stripey" },
+                    path: "animals/dolphin/features/stripey",
                 },
                 {
                     parameters: {
@@ -104,6 +138,7 @@ describe("CreatedChangeFilter", () => {
                         featureName: "swimming",
                     },
                     change: { before: undefined, after: "much swimming" },
+                    path: "animals/dolphin/features/swimming",
                 },
             ],
         ],

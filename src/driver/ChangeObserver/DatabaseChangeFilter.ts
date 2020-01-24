@@ -8,8 +8,9 @@ export interface IChange {
 }
 
 export interface IParameterisedChange {
-    parameters: { [key: string]: string }
+    parameters: IChangeParams
     change: IChange
+    path: string
 }
 
 export interface IChangeParams {
@@ -109,6 +110,7 @@ export class CreatedChangeFilter extends ChangeFilter {
                     before: undefined,
                     after: afterAtPath,
                 },
+                path: afterPath,
             })
         }
 
@@ -145,6 +147,7 @@ export class UpdatedChangeFilter extends ChangeFilter {
                 updated.push({
                     parameters: matchPath.parameters,
                     change: { before: beforeAtPath, after: afterAtPath },
+                    path: afterPath,
                 })
             }
         }
@@ -180,6 +183,7 @@ export class DeletedChangeFilter extends ChangeFilter {
             deleted.push({
                 parameters: matchPath.parameters,
                 change: { before: beforeAtPath, after: undefined },
+                path: beforePath,
             })
         }
 

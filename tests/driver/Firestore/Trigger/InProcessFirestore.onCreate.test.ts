@@ -1,6 +1,8 @@
 import {
     IFirebaseDriver,
     InProcessFirebaseDriver,
+    InProcessFirestoreDocRef,
+    InProcessFirestoreDocumentSnapshot,
     IRealtimeDatabaseChangeSnapshot,
 } from "../../../../src"
 import { IChangeContext } from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
@@ -430,5 +432,45 @@ describe("onCreate trigger of in-process Firestore", () => {
                 .get()
         ).data()
         expect(thirdWrite).toEqual({ value: "tiger" })
+    })
+
+    test("onCreate handler receives document snapshot", async () => {
+        // Given we set up an onCreate handler on a collection;
+        const receivedSnapshots: InProcessFirestoreDocumentSnapshot[] = []
+        driver
+            .runWith()
+            .region("europe-west1")
+            .firestore.document("/animals/{animalName}")
+            .onCreate(async (snapshot, context) => {
+                receivedSnapshots.push(
+                    (snapshot as unknown) as InProcessFirestoreDocumentSnapshot,
+                )
+            })
+
+        // When a doc is created in that collection;
+        await driver
+            .firestore()
+            .collection("animals")
+            .doc("tiger")
+            .set({ colour: "orange", size: "large" })
+
+        // And Firebase finishes its jobs;
+        await driver.jobsComplete()
+
+        // Then the handler should be triggered with a document snapshot.
+        expect(receivedSnapshots).toHaveLength(1)
+        expect(receivedSnapshots[0]).toBeTruthy()
+        expect(receivedSnapshots[0]).toBeInstanceOf(
+            InProcessFirestoreDocumentSnapshot,
+        )
+        expect(receivedSnapshots[0].exists).toBeTruthy()
+        expect(receivedSnapshots[0].ref).toBeTruthy()
+        expect(receivedSnapshots[0].ref).toBeInstanceOf(
+            InProcessFirestoreDocRef,
+        )
+        expect(receivedSnapshots[0].data()).toEqual({
+            colour: "orange",
+            size: "large",
+        })
     })
 })
