@@ -75,7 +75,7 @@ class FirestoreCreatedObserver extends DatabaseChangeObserver<
         return new InProcessFirestoreDocumentSnapshot(
             pc.path.split("/").pop() || "",
             !_.isNil(pc.change.after),
-            this.firestore.doc(this.observedPath),
+            this.firestore.doc(pc.path),
             prepareChangeData(pc.change.after),
         )
     }
@@ -127,7 +127,7 @@ class FirestoreDeletedObserver extends DatabaseChangeObserver<
         return new InProcessFirestoreDocumentSnapshot(
             pc.path.split("/").pop() || "",
             !_.isNil(pc.change.after),
-            this.firestore.doc(this.observedPath),
+            this.firestore.doc(pc.path),
             prepareChangeData(pc.change.after),
         )
     }

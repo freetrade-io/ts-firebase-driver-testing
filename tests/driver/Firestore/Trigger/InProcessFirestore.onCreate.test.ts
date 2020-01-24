@@ -468,6 +468,7 @@ describe("onCreate trigger of in-process Firestore", () => {
         expect(receivedSnapshots[0].ref).toBeInstanceOf(
             InProcessFirestoreDocRef,
         )
+        expect(receivedSnapshots[0].ref.path).toEqual("animals/tiger")
         expect(receivedSnapshots[0].data()).toEqual({
             colour: "orange",
             size: "large",
