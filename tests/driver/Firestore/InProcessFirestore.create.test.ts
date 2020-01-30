@@ -1,3 +1,4 @@
+import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
 describe("InProcessFirestore create", () => {
@@ -31,7 +32,7 @@ describe("InProcessFirestore create", () => {
             .set({ description: "stripey" })
 
         // When we create the same document;
-        let error: Error
+        let error: Error | null = null
         try {
             await db
                 .collection("animals")
@@ -42,8 +43,7 @@ describe("InProcessFirestore create", () => {
         }
 
         // Then the write should fail;
-        // @ts-ignore
-        expect(error).toBeInstanceOf(Error)
+        expect(error).isFirestoreErrorWithCode(GRPCStatusCode.ALREADY_EXISTS)
 
         // And the document should not be changed.
         const snapshot = await db
