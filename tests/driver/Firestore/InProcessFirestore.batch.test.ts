@@ -1,6 +1,6 @@
+import { IFirestoreDocRef } from "../../../src"
 import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
-import { IFirestoreDocRef } from "../../../src"
 
 /**
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
