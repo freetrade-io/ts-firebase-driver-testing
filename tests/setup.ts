@@ -9,7 +9,7 @@ process.env.FIREBASE_CONFIG = "{}"
 declare global {
     namespace jest {
         // tslint:disable-next-line
-        interface Matchers<R> {
+        interface Matchers<R, T> {
             isFirestoreErrorWithCode(code: GRPCStatusCode): object
         }
     }
