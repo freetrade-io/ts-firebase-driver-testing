@@ -13,6 +13,7 @@ import {
     ChangeType,
     IDatabaseChangeObserver,
 } from "../ChangeObserver/DatabaseChangeObserver"
+import { GRPCStatusCode } from "../Common/GRPCStatusCode"
 import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
 import {
@@ -21,6 +22,7 @@ import {
     isFieldPathDocumentId,
 } from "./FieldPath"
 import { makeFirestoreChangeObserver } from "./FirestoreChangeObserver"
+import { FirestoreError } from "./FirestoreError"
 import {
     FirestoreWhereFilterOp,
     IFirestore,
@@ -649,7 +651,10 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     async create(data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
         const existing = await this.get()
         if (existing.exists) {
-            throw new Error(`Cannot create existing document at ${this.path}`)
+            throw new FirestoreError(
+                GRPCStatusCode.ALREADY_EXISTS,
+                `Document already exists: ${this.path}`,
+            )
         }
         return this.set(data)
     }
