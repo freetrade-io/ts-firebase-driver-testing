@@ -93,7 +93,7 @@ describe("In-process Firestore batched writes", () => {
         let error: Error | null = null
         try {
             const batch = db.batch()
-            batch.create(("/animals/tiger" as unknown) as IFirestoreDocRef, {
+            batch.create(db.doc("/animals/tiger"), {
                 size: "large",
             })
 
