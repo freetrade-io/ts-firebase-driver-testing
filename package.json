@@ -43,7 +43,7 @@
     ],
     "globals": {
       "ts-jest": {
-        "tsConfig": "./tests/tsconfig.json"
+        "tsConfig": "<rootDir>/tests/tsconfig.json"
       }
     },
     "setupFilesAfterEnv": [
