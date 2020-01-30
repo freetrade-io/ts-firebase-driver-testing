@@ -994,7 +994,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
             if ((await documentRef.get()).exists) {
                 throw new FirestoreError(
                     GRPCStatusCode.ALREADY_EXISTS,
-                    `Document already exists: ${documentRef}`,
+                    `Document already exists: ${documentRef.path}`,
                 )
             }
             return documentRef.set(data)

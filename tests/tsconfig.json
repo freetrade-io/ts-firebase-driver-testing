@@ -1,4 +1,7 @@
 {
-  "extends": "../tsconfig.json",
-  "include": ["./setup.ts", "./**/*.ts"]
+  "compilerOptions": {
+    "typeRoots": ["../node_modules/@types", "../tests/typings/"]
+  },
+  "include": ["**/*.ts"],
+  "extends": "../tsconfig.json"
 }
