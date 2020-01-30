@@ -1,4 +1,6 @@
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import { IFirestoreDocRef } from "../../../src"
+import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 
 /**
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
@@ -77,6 +79,39 @@ describe("In-process Firestore batched writes", () => {
 
         expect(losAngeles.exists).toBeFalsy()
         expect(losAngeles.data()).toEqual({})
+    })
+
+    test("cannot create existing document in a batch write", async () => {
+        const db = new InProcessFirestore()
+        // Given there is an existing document;
+        const initial = await db
+            .collection("animals")
+            .doc("tiger")
+            .set({ description: "stripey" })
+
+        // When we create the same document;
+        let error: Error | null = null
+        try {
+            const batch = db.batch()
+            batch.create(("/animals/tiger" as unknown) as IFirestoreDocRef, {
+                size: "large",
+            })
+
+            await batch.commit()
+        } catch (err) {
+            error = err
+        }
+
+        // Then the write should fail;
+        expect(error).isFirestoreErrorWithCode(GRPCStatusCode.ALREADY_EXISTS)
+
+        // And the document should not be changed.
+        const snapshot = await db
+            .collection("animals")
+            .doc("tiger")
+            .get()
+        expect(snapshot.exists).toBeTruthy()
+        expect(snapshot.data()).toEqual({ description: "stripey" })
     })
 
     test("cannot reuse committed batch", async () => {
