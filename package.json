@@ -29,7 +29,7 @@
     "jest": ">=24",
     "prettier": ">=1",
     "ts-jest": ">=24",
-    "tslint": ">=5",
+    "tslint": "5",
     "tslint-config-prettier": ">=1",
     "tslint-plugin-prettier": ">=2",
     "typescript": ">=3"
