@@ -5,17 +5,11 @@ import { FirestoreError } from "../src/driver/Firestore/FirestoreError"
 // Stop Firebase complaining.
 process.env.FIREBASE_CONFIG = "{}"
 
-// Extend Jest
-declare global {
-    namespace jest {
-        // tslint:disable-next-line
-        interface Matchers<R, T> {
-            isFirestoreErrorWithCode(code: GRPCStatusCode): object
-        }
-    }
-}
-
-function isFirestoreErrorWithCode(error: any, code: GRPCStatusCode) {
+function isFirestoreErrorWithCode(
+    error: any,
+    code: GRPCStatusCode,
+    matchMessage?: RegExp,
+) {
     const isFirestoreError = error instanceof FirestoreError
     if (!isFirestoreError) {
         return {
@@ -25,13 +19,16 @@ function isFirestoreErrorWithCode(error: any, code: GRPCStatusCode) {
     }
 
     const isCorrectCode = (error as FirestoreError).code === code
+    const isMessageMatched = matchMessage
+        ? matchMessage.test(error.message)
+        : true
 
     return {
         message: () =>
             `expected FirestoreError with code: ${
                 (error as FirestoreError).code
             } to be FirestoreError with code: ${code}`,
-        pass: isCorrectCode,
+        pass: isCorrectCode && isMessageMatched,
     }
 }
 

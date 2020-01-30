@@ -1,4 +1,3 @@
-import { IFirestoreDocRef } from "../../../src"
 import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
@@ -103,7 +102,10 @@ describe("In-process Firestore batched writes", () => {
         }
 
         // Then the write should fail;
-        expect(error).isFirestoreErrorWithCode(GRPCStatusCode.ALREADY_EXISTS)
+        expect(error).isFirestoreErrorWithCode(
+            GRPCStatusCode.ALREADY_EXISTS,
+            new RegExp("animals/tiger"),
+        )
 
         // And the document should not be changed.
         const snapshot = await db

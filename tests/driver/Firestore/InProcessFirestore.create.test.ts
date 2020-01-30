@@ -43,7 +43,10 @@ describe("InProcessFirestore create", () => {
         }
 
         // Then the write should fail;
-        expect(error).isFirestoreErrorWithCode(GRPCStatusCode.ALREADY_EXISTS)
+        expect(error).isFirestoreErrorWithCode(
+            GRPCStatusCode.ALREADY_EXISTS,
+            new RegExp("animals/tiger"),
+        )
 
         // And the document should not be changed.
         const snapshot = await db
