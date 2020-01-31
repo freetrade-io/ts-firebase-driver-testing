@@ -1,7 +1,7 @@
 import { GRPCStatusCode } from "../Common/GRPCStatusCode"
 
 const getErrorMessage = (code: GRPCStatusCode, message: string = "") => {
-    return `${code} ${GRPCStatusCode[code]}${message}`
+    return `${code} ${GRPCStatusCode[code]} ${message}`.trim()
 }
 
 export class FirestoreError extends Error {
