@@ -20,7 +20,7 @@ function isFirestoreErrorWithCode(
 
     const isCorrectCode = (error as FirestoreError).code === code
     const isMessageMatched = matchMessage
-        ? matchMessage.test(error.message)
+        ? matchMessage.test(error.message) && matchMessage.test(error.details)
         : true
 
     return {
