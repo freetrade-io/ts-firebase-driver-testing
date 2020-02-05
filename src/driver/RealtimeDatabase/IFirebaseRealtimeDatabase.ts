@@ -76,3 +76,10 @@ export interface IFirebaseEventContext {
     eventType: string
     params: { [option: string]: any }
 }
+
+export interface IPubSubMessage {
+    readonly data: string
+    readonly attributes: { [key: string]: string }
+    readonly json: any
+    toJSON(): any
+}

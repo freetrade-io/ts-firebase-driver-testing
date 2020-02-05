@@ -5,6 +5,7 @@ import {
     IFirebaseDataSnapshot,
     IFirebaseEventContext,
     IFirebaseRealtimeDatabase,
+    IPubSubMessage,
 } from "./RealtimeDatabase/IFirebaseRealtimeDatabase"
 
 export interface IFirebaseDriver {
@@ -53,8 +54,11 @@ export interface IFirebaseScheduleBuilder {
 
 export interface IFirebaseTopicBuilder {
     onPublish(
-        handler: (message: object, context: object) => any,
-    ): CloudFunction<any>
+        handler: (
+            message: IPubSubMessage,
+            context: IFirebaseEventContext,
+        ) => PromiseLike<any> | any,
+    ): CloudFunction<IPubSubMessage>
 }
 
 export interface IFirebaseRefBuilder {

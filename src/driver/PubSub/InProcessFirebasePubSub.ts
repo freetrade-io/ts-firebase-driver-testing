@@ -8,6 +8,10 @@ import {
     IPubSubPublisher,
     IPubSubTopic,
 } from "../FirebaseDriver"
+import {
+    IFirebaseEventContext,
+    IPubSubMessage,
+} from "../RealtimeDatabase/IFirebaseRealtimeDatabase"
 
 export class InProcessFirebaseScheduleBuilder
     implements IFirebaseScheduleBuilder {
@@ -31,11 +35,14 @@ export class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     ) {}
 
     onPublish(
-        handler: (message: object, context: object) => any,
-    ): CloudFunction<any> {
+        handler: (
+            message: IPubSubMessage,
+            context: IFirebaseEventContext,
+        ) => PromiseLike<any> | any,
+    ): CloudFunction<IPubSubMessage> {
         const topicFunction = async (
-            message: { json?: object },
-            context: object,
+            message: IPubSubMessage,
+            context: IFirebaseEventContext,
         ): Promise<any> => {
             return handler(message, context)
         }
