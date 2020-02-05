@@ -81,5 +81,6 @@ export interface IPubSubMessage {
     readonly data: string
     readonly attributes: { [key: string]: string }
     readonly json: any
+    _json: any
     toJSON(): any
 }
