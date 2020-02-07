@@ -109,11 +109,11 @@ export class InProcessFirestore implements IFirestore {
         throw new Error("InProcessFirestore.terminate not implemented")
     }
 
-    _getPath(dotPath: string[]): any {
+    _getPath(dotPath: string[]): { _meta: IChildMeta } | any {
         return _.cloneDeep(objGet(this.storage, dotPath))
     }
 
-    _setPath(dotPath: string[], value: any): void {
+    _setPath(dotPath: string[], value: { _meta: IChildMeta } | any): void {
         this.triggerChangeEvents(() => {
             objSet(this.storage, dotPath, value)
         })
@@ -371,7 +371,9 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     async get(): Promise<IFirestoreQuerySnapshot> {
-        let collection = this.firestore._getPath(this._dotPath()) || {}
+        let collection = stripMeta(
+            this.firestore._getPath(this._dotPath()) || {},
+        )
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -433,7 +435,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             rangeFilterField: "",
         }
         return (new InProcessFirestoreQuerySnapshot(
-            collection,
+            collection as IFirestoreQueryDocumentSnapshot[],
             this,
         ) as unknown) as IFirestoreQuerySnapshot
     }
@@ -530,14 +532,24 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
 
     async listDocuments(): Promise<IFirestoreDocRef[]> {
         const collection = this.firestore._getPath(this._dotPath()) || {}
-        return Object.keys(collection).map(
-            (key: string): InProcessFirestoreDocRef => {
-                return new InProcessFirestoreDocRef(
-                    `${this.path}/${key}`,
-                    this.firestore,
+        return Object.keys(collection)
+            .map((key: string): string[] => `${this.path}/${key}`.split("/"))
+            .filter((path: string[]): boolean => {
+                const valueAt = this.firestore._getPath(path)
+                return (
+                    typeof valueAt === "object" &&
+                    valueAt._meta &&
+                    valueAt._meta.type === ChildType.DOC
                 )
-            },
-        ) as IFirestoreDocRef[]
+            })
+            .map(
+                (path: string[]): InProcessFirestoreDocRef => {
+                    return new InProcessFirestoreDocRef(
+                        path.join("/"),
+                        this.firestore,
+                    )
+                },
+            ) as IFirestoreDocRef[]
     }
 
     async add(data: IFirestoreDocumentData): Promise<IFirestoreDocRef> {
@@ -614,6 +626,17 @@ function makeWriteResult(): IFirestoreWriteResult {
     }
 }
 
+enum ChildType {
+    DOC = "DOC",
+    COLLECTION = "COLLECTION",
+}
+
+interface IChildMeta {
+    type: ChildType
+    createTime: IFirestoreTimestamp
+    updateTime: IFirestoreTimestamp
+}
+
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     readonly id: string
     readonly parent: IFirestoreCollectionRef
@@ -668,12 +691,17 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         }
         const createTime = makeTimestamp()
         const updateTime = makeTimestamp()
+        const type = ChildType.DOC
         this.firestore._setPath(
             this._dotPath(),
             _.merge(
                 _.cloneDeep(data),
-                _.cloneDeep({ _meta: { createTime, updateTime } }),
+                _.cloneDeep({ _meta: { createTime, updateTime, type } }),
             ),
+        )
+        this.firestore._setPath(
+            [...this._dotPath().slice(0, -1), "_meta", "type"],
+            ChildType.COLLECTION,
         )
         return makeWriteResult()
     }
@@ -703,6 +731,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
         const newUpdateTime = makeTimestamp()
+        const type = ChildType.DOC
         if (precondition && precondition.lastUpdateTime) {
             if (
                 current._meta.updateTime &&
@@ -712,7 +741,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             }
         }
         const newValue = _.merge(
-            _.cloneDeep({ _meta: { createTime: newUpdateTime } }),
+            _.cloneDeep({ _meta: { createTime: newUpdateTime, type } }),
             _.cloneDeep(current),
             _.cloneDeep(data),
             _.cloneDeep({
@@ -720,6 +749,10 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             }),
         )
         this.firestore._setPath(this._dotPath(), newValue)
+        this.firestore._setPath(
+            [...this._dotPath().slice(0, -1), "_meta", "type"],
+            ChildType.COLLECTION,
+        )
         return makeWriteResult()
     }
 
@@ -728,10 +761,26 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         return makeWriteResult()
     }
 
-    listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
-        throw new Error(
-            "InProcessFirestoreDocRef.listCollections not implemented",
-        )
+    async listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
+        const collection = this.firestore._getPath(this._dotPath()) || {}
+        return Object.keys(collection)
+            .map((key: string): string[] => `${this.path}/${key}`.split("/"))
+            .filter((path: string[]): boolean => {
+                const valueAt = this.firestore._getPath(path)
+                return (
+                    typeof valueAt === "object" &&
+                    valueAt._meta &&
+                    valueAt._meta.type !== ChildType.DOC
+                )
+            })
+            .map(
+                (path: string[]): InProcessFirestoreCollectionRef => {
+                    return new InProcessFirestoreCollectionRef(
+                        this.firestore,
+                        path.join("/"),
+                    )
+                },
+            ) as InProcessFirestoreCollectionRef[]
     }
 
     onSnapshot(

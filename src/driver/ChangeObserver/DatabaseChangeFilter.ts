@@ -1,6 +1,7 @@
 import _ from "lodash"
 import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
+import { stripMeta } from "../../util/stripMeta"
 
 export interface IChange {
     before: any
@@ -51,10 +52,12 @@ abstract class ChangeFilter implements IChangeFilter {
             .split("/")
             .map((p) => p.trim())
             .filter((p) => p.length)
+            .filter((p) => p !== "_meta")
         const otherPathParts = otherPath
             .split("/")
             .map((p) => p.trim())
             .filter((p) => p.length)
+            .filter((p) => p !== "_meta")
         if (pathParts.length !== otherPathParts.length) {
             return {
                 match: false,
