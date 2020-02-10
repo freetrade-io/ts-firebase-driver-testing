@@ -288,30 +288,33 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     ): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
         let filter: (item: { [key: string]: any }) => boolean
+        const fieldObjPath = fieldPath.split(/\.+/)
         switch (opStr) {
             case "<":
                 this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
-                filter = (item) => item[fieldPath] < value
+                filter = (item) => objGet(item, fieldObjPath) < value
                 break
             case "<=":
                 this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
-                filter = (item) => item[fieldPath] <= value
+                filter = (item) => objGet(item, fieldObjPath) <= value
                 break
             case "==":
-                filter = (item) => String(item[fieldPath]) === String(value)
+                filter = (item) => {
+                    return String(objGet(item, fieldObjPath)) === String(value)
+                }
                 break
             case ">=":
                 this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
-                filter = (item) => item[fieldPath] >= value
+                filter = (item) => objGet(item, fieldObjPath) >= value
                 break
             case ">":
                 this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
-                filter = (item) => item[fieldPath] > value
+                filter = (item) => objGet(item, fieldObjPath) > value
                 break
             case "array-contains":
                 filter = (item) => {
-                    if (_.isArray(item[fieldPath])) {
-                        return item[fieldPath].includes(value)
+                    if (_.isArray(objGet(item, fieldObjPath))) {
+                        return objGet(item, fieldObjPath).includes(value)
                     }
                     return false
                 }
@@ -320,7 +323,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 if (!_.isArray(value)) {
                     throw new Error("Value must be an array for in operator.")
                 }
-                filter = (item) => value.includes(item[fieldPath])
+                filter = (item) => value.includes(objGet(item, fieldObjPath))
                 break
             case "array-contains-any":
                 if (!_.isArray(value)) {
@@ -329,8 +332,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     )
                 }
                 filter = (item) => {
-                    if (_.isArray(item[fieldPath])) {
-                        return item[fieldPath].some((el: any) =>
+                    if (_.isArray(objGet(item, fieldObjPath))) {
+                        return objGet(item, fieldObjPath).some((el: any) =>
                             value.includes(el),
                         )
                     }
