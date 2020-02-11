@@ -1,4 +1,8 @@
-import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import {
+    InProcessFirestore,
+    InProcessFirestoreCollectionRef,
+    InProcessFirestoreDocRef,
+} from "../../../src/driver/Firestore/InProcessFirestore"
 
 describe("In-process Firestore collection listing documents", () => {
     const db = new InProcessFirestore()
@@ -69,5 +73,27 @@ describe("In-process Firestore collection listing documents", () => {
         // Then we should get that single doc.
         expect(docs.length).toBe(1)
         expect((await docs[0].get()).data()).toEqual({ id: "123", foo: "bar" })
+    })
+
+    test("listDocuments on nested path", async () => {
+        // Given a document is added to a collection via a nested path;
+        await db.doc("queues/queue0/item0").set({ processed: false })
+
+        // When we list documents in the collection;
+        const docRefs = await db.collection("queues").listDocuments()
+
+        // Then we should get that doc.
+        expect(docRefs).toHaveLength(1)
+
+        const docRef = docRefs[0]
+        expect(docRef).toBeInstanceOf(InProcessFirestoreDocRef)
+        expect(docRef.path).toBe("queues/queue0")
+
+        const collectionRefs = await docRef.listCollections()
+        expect(collectionRefs).toHaveLength(1)
+
+        const collectionRef = collectionRefs[0]
+        expect(collectionRef).toBeInstanceOf(InProcessFirestoreCollectionRef)
+        expect(collectionRef.path).toBe("queues/queue0/item0")
     })
 })

@@ -45,7 +45,7 @@ export class InProcessFirestore implements IFirestore {
     constructor(
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
-        private storage = {},
+        public storage = {},
     ) {}
 
     collection(collectionPath: string): IFirestoreCollectionRef {
@@ -694,18 +694,21 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         }
         const createTime = makeTimestamp()
         const updateTime = makeTimestamp()
-        const type = ChildType.DOC
+        const dotPath: string[] = this._dotPath()
         this.firestore._setPath(
-            this._dotPath(),
+            dotPath,
             _.merge(
                 _.cloneDeep(data),
-                _.cloneDeep({ _meta: { createTime, updateTime, type } }),
+                _.cloneDeep({ _meta: { createTime, updateTime } }),
             ),
         )
-        this.firestore._setPath(
-            [...this._dotPath().slice(0, -1), "_meta", "type"],
-            ChildType.COLLECTION,
-        )
+        // Ensure metas are set at each level.
+        for (let i = 1; i <= dotPath.length; i++) {
+            const typeAtPath =
+                i % 2 === 0 ? ChildType.DOC : ChildType.COLLECTION
+            const metaPath = [...dotPath.slice(0, i), "_meta", "type"]
+            objSet(this.firestore.storage, metaPath, typeAtPath)
+        }
         return makeWriteResult()
     }
 
