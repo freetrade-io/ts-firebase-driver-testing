@@ -45,7 +45,7 @@ export class InProcessFirestore implements IFirestore {
     constructor(
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
-        private storage = {},
+        public storage = {},
     ) {}
 
     collection(collectionPath: string): IFirestoreCollectionRef {
@@ -707,7 +707,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             const typeAtPath =
                 i % 2 === 0 ? ChildType.DOC : ChildType.COLLECTION
             const metaPath = [...dotPath.slice(0, i), "_meta", "type"]
-            this.firestore._setPath(metaPath, typeAtPath)
+            objSet(this.firestore.storage, metaPath, typeAtPath)
         }
         return makeWriteResult()
     }
