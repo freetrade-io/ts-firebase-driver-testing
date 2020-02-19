@@ -8,7 +8,7 @@ describe("In-process Firestore collection listing documents", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("list documents empty collection", async () => {

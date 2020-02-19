@@ -4,7 +4,7 @@ describe("InProcessFirestore set", () => {
     const firestore = new InProcessFirestore()
 
     beforeEach(() => {
-        firestore.reset()
+        firestore.resetStorage()
     })
 
     test(".doc().set() new", async () => {
@@ -31,7 +31,7 @@ describe("InProcessFirestore set", () => {
 
     test(".doc().set() existing", async () => {
         // Given there is a doc;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field: "value 1" },
             },
@@ -54,7 +54,7 @@ describe("InProcessFirestore set", () => {
 
     test(".doc().set() merge", async () => {
         // Given there is a doc;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field1: "value 1", field2: "value 2" },
             },
@@ -85,7 +85,7 @@ describe("InProcessFirestore set", () => {
 
     test(".doc().update()", async () => {
         // Given there is a doc;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field1: "value 1", field2: "value 2" },
             },

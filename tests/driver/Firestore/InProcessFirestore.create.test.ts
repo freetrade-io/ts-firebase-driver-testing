@@ -5,7 +5,7 @@ describe("InProcessFirestore create", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("create new document", async () => {

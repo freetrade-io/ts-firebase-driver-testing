@@ -10,12 +10,12 @@ describe("InProcessFirestore get", () => {
     const firestore = new InProcessFirestore()
 
     beforeEach(() => {
-        firestore.reset()
+        firestore.resetStorage()
     })
 
     test(".collection()", async () => {
         // Given there is a collection;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field: "value 1" },
                 id2: { field: "value 2" },
@@ -48,7 +48,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection() non-existent", async () => {
         // Given there is a collection;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field: "value 1" },
                 id2: { field: "value 2" },
@@ -70,7 +70,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc()", async () => {
         // Given there is a collection with a doc;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field: "value 1" },
             },
@@ -90,7 +90,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc() non-existent", async () => {
         // Given there is a collection with a doc;
-        firestore.reset({
+        firestore.resetStorage({
             myCollection: {
                 id1: { field: "value 1" },
             },
@@ -110,7 +110,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc().collection()", async () => {
         // Given there is a collection with a doc and nested collection;
-        firestore.reset({
+        firestore.resetStorage({
             topCollection: {
                 id1: {
                     field: "value 1",
@@ -150,7 +150,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc().collection() non-existent", async () => {
         // Given there is a collection with a doc and nested collection;
-        firestore.reset({
+        firestore.resetStorage({
             topCollection: {
                 id1: {
                     field: "value 1",
@@ -179,7 +179,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc().collection().doc()", async () => {
         // Given there is a nested collection and doc;
-        firestore.reset({
+        firestore.resetStorage({
             topCollection: {
                 id1: {
                     subCollection: {
@@ -207,7 +207,7 @@ describe("InProcessFirestore get", () => {
 
     test(".collection().doc().collection().doc() non-existent", async () => {
         // Given there is a nested collection and doc;
-        firestore.reset({
+        firestore.resetStorage({
             topCollection: {
                 id1: {
                     subCollection: {
@@ -254,7 +254,7 @@ describe("InProcessFirestore get", () => {
         "get document",
         async (dataset: object, path: string[], expectedValue: any) => {
             // Given an in-process Firestore database with a dataset;
-            firestore.reset(dataset)
+            firestore.resetStorage(dataset)
 
             // When we get a doc at a path;
             let ref: IFirestoreCollectionRef | IFirestoreDocRef
