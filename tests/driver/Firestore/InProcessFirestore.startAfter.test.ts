@@ -4,7 +4,7 @@ describe("In-process Firestore start after query", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("startAfter including all", async () => {

@@ -9,7 +9,7 @@ describe("InProcessFirestore queries behave as in documentation", () => {
 
     beforeEach(async () => {
         // https://firebase.google.com/docs/firestore/query-data/queries#example_data
-        db.reset()
+        db.resetStorage()
 
         const citiesRef = db.collection("cities")
 

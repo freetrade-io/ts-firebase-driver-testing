@@ -4,12 +4,12 @@ describe("InProcessFirestore querying with where", () => {
     const firestore = new InProcessFirestore()
 
     beforeEach(() => {
-        firestore.reset()
+        firestore.resetStorage()
     })
 
     test("where == true", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -49,7 +49,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where == false", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -87,7 +87,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where == string", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -125,7 +125,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where == number", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -163,7 +163,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where < number", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -201,7 +201,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where <= number", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -244,7 +244,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where >= number", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -287,7 +287,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where > number", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -325,7 +325,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where < string", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -363,7 +363,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where <= string", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -406,7 +406,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where >= string", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -444,7 +444,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where > string", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -487,7 +487,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where array-contains", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -525,7 +525,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where in", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -563,7 +563,7 @@ describe("InProcessFirestore querying with where", () => {
 
     test("where array-contains-any", async () => {
         // Given a collection of docs with differing values in a field;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",

@@ -5,7 +5,7 @@ describe("In-process Firestore update precondition", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("update skipped if last update time has changed", async () => {

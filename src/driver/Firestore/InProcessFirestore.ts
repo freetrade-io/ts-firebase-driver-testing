@@ -99,10 +99,15 @@ export class InProcessFirestore implements IFirestore {
         throw new Error("Not implemented")
     }
 
-    reset(dataset: object = {}): void {
+    resetStorage(dataset: object = {}): void {
         this.storage = dataset
-        this.changeObservers = []
-        this.makeId = fireStoreLikeId
+    }
+
+    /**
+     * @deprecated use resetStorage
+     */
+    reset(dataset: object = {}): void {
+        this.resetStorage(dataset)
     }
 
     terminate(): Promise<void> {

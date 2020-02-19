@@ -4,12 +4,12 @@ describe("InProcessFirestore compound querying with where", () => {
     const firestore = new InProcessFirestore()
 
     beforeEach(() => {
-        firestore.reset()
+        firestore.resetStorage()
     })
 
     test("a == string and b == string", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -53,7 +53,7 @@ describe("InProcessFirestore compound querying with where", () => {
 
     test("a == string and b < number", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             animals: {
                 tiger: {
                     name: "tiger",
@@ -97,7 +97,7 @@ describe("InProcessFirestore compound querying with where", () => {
 
     test("a == string and b <= string", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             drinks: {
                 aperolSpritz: {
                     name: "aperol spritz",
@@ -159,7 +159,7 @@ describe("InProcessFirestore compound querying with where", () => {
 
     test("a == string and b > number", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             drinks: {
                 aperolSpritz: {
                     name: "aperol spritz",
@@ -212,7 +212,7 @@ describe("InProcessFirestore compound querying with where", () => {
 
     test("cannot have range filters on different fields", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             drinks: {
                 aperolSpritz: {
                     name: "aperol spritz",
@@ -261,7 +261,7 @@ describe("InProcessFirestore compound querying with where", () => {
 
     test("a > number and a < number", async () => {
         // Given a collection of docs with differing values in two fields;
-        firestore.reset({
+        firestore.resetStorage({
             drinks: {
                 aperolSpritz: {
                     name: "aperol spritz",

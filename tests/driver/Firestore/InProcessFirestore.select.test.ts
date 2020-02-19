@@ -4,7 +4,7 @@ describe("In-process Firestore select query", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("select single field", async () => {

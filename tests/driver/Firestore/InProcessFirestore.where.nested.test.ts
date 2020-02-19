@@ -4,12 +4,12 @@ describe("InProcessFirestore nested path querying with where", () => {
     const firestore = new InProcessFirestore()
 
     beforeEach(() => {
-        firestore.reset()
+        firestore.resetStorage()
     })
 
     test("single nested where path", async () => {
         // Given a collection with nested paths;
-        firestore.reset({
+        firestore.resetStorage({
             viewsThings: {
                 thing1: {
                     createdAt: "2020-02-10T17:23:42.260Z",
@@ -56,7 +56,7 @@ describe("InProcessFirestore nested path querying with where", () => {
 
     test("multiple nested where paths", async () => {
         // Given a collection with nested paths;
-        firestore.reset({
+        firestore.resetStorage({
             viewsThings: {
                 thing1: {
                     createdAt: "2020-02-10T17:23:42.260Z",
@@ -110,7 +110,7 @@ describe("InProcessFirestore nested path querying with where", () => {
 
     test("multiple nested range paths", async () => {
         // Given a collection with nested paths;
-        firestore.reset({
+        firestore.resetStorage({
             viewsThings: {
                 thing1: {
                     view: {

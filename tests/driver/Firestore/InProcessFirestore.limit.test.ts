@@ -4,7 +4,7 @@ describe("In-process Firestore limit queries", () => {
     const db = new InProcessFirestore()
 
     beforeEach(() => {
-        db.reset()
+        db.resetStorage()
     })
 
     test("limit less than total size", async () => {
