@@ -12,6 +12,13 @@ export function objGet<T>(
     return objectPath.get(object, normalisePath(path), defaultValue)
 }
 
+export function objHas<T>(
+    object: { [key: string]: T },
+    path: string[],
+): boolean {
+    return objectPath.has(object, normalisePath(path))
+}
+
 export function objSet<T>(
     object: { [key: string]: T },
     path: string[],
