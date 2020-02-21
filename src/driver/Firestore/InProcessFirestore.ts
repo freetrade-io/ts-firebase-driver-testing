@@ -6,7 +6,7 @@ import {
     IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
-import { objDel, objGet, objSet } from "../../util/objPath"
+import { objDel, objGet, objHas, objSet } from "../../util/objPath"
 import { stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -214,12 +214,15 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             }
             fieldPath = FIELD_PATH_DOCUMENT_ID
         }
+        const pathParts = String(fieldPath).split(/\.+/)
 
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
         if (fieldPath !== FIELD_PATH_DOCUMENT_ID) {
             // An orderBy() clause also filters for existence of the given field.
-            newQuery.filters.push((item) => fieldPath in item)
+            newQuery.filters.push((item) => {
+                return objHas(item, pathParts)
+            })
         }
 
         if (directionStr === "asc") {
@@ -227,11 +230,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 const compareOfA =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? a.id
-                        : a.item[String(fieldPath)]
+                        : objGet(a.item, pathParts)
                 const compareOfB =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
-                        : b.item[String(fieldPath)]
+                        : objGet(b.item, pathParts)
                 return this.compare(compareOfA, compareOfB)
             }
         } else {
@@ -239,11 +242,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 const compareOfA =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? a.id
-                        : a.item[String(fieldPath)]
+                        : objGet(a.item, pathParts)
                 const compareOfB =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
-                        : b.item[String(fieldPath)]
+                        : objGet(b.item, pathParts)
                 return this.compare(compareOfB, compareOfA)
             }
         }
@@ -491,10 +494,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     private normalise(val: any): string {
-        if (typeof val.toISOString === "function") {
+        if (val && typeof val.toISOString === "function") {
             val = val.toISOString()
         }
-        if (typeof val.toString === "function") {
+        if (val && typeof val.toString === "function") {
             val = val.toString()
         }
         return String(val)
