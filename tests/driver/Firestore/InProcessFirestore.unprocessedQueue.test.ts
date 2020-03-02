@@ -141,4 +141,53 @@ describe("filtering unprocessed queue messages in Firestore", () => {
         expect(snapshot.docs).toHaveLength(0)
         expect(snapshot.size).toBe(0)
     })
+
+    test("querying processed messages older than 2 weeks", async () => {
+        // Given a queue collection with an old processed message, a new
+        // processed message, and an unprocessed message, with the process field
+        // being a nested date;
+        firestore.resetStorage({
+            "queues-foobar": {
+                f2c765d2: {
+                    attributes: {
+                        created: "2019-02-21T12:38:49.816Z",
+                        processed: "2019-02-21T12:38:50.816Z",
+                    },
+                    processed: true,
+                },
+                f0a8a5bf: {
+                    attributes: {
+                        created: "2020-02-21T12:39:25.606Z",
+                        processed: "2020-02-21T12:40:25.606Z",
+                    },
+                    processed: true,
+                },
+                ac1b7fcf: {
+                    attributes: {
+                        created: "2020-02-21T12:39:17.099Z",
+                    },
+                    processed: false,
+                },
+            },
+        })
+
+        // When we query for processed queue messages older than a date;
+        const snapshot = await firestore
+            .collection("queues-foobar")
+            .where("processed", "==", true)
+            .where("attributes.processed", "<", "2020-01-01T12:00:00.000Z")
+            .limit(450)
+            .get()
+
+        // Then we should get the old processed messages.
+        expect(snapshot.docs).toHaveLength(1)
+        expect(snapshot.size).toBe(1)
+        expect(snapshot.docs[0].data()).toEqual({
+            attributes: {
+                created: "2019-02-21T12:38:49.816Z",
+                processed: "2019-02-21T12:38:50.816Z",
+            },
+            processed: true,
+        })
+    })
 })
