@@ -153,17 +153,20 @@ describe("filtering unprocessed queue messages in Firestore", () => {
                         created: "2019-02-21T12:38:49.816Z",
                         processed: "2019-02-21T12:38:50.816Z",
                     },
+                    processed: true,
                 },
                 f0a8a5bf: {
                     attributes: {
                         created: "2020-02-21T12:39:25.606Z",
                         processed: "2020-02-21T12:40:25.606Z",
                     },
+                    processed: true,
                 },
                 ac1b7fcf: {
                     attributes: {
                         created: "2020-02-21T12:39:17.099Z",
                     },
+                    processed: false,
                 },
             },
         })
@@ -171,7 +174,7 @@ describe("filtering unprocessed queue messages in Firestore", () => {
         // When we query for processed queue messages older than a date;
         const snapshot = await firestore
             .collection("queues-foobar")
-            .orderBy("attributes.created", "asc")
+            .where("processed", "==", true)
             .where("attributes.processed", "<", "2020-01-01T12:00:00.000Z")
             .limit(450)
             .get()
@@ -184,6 +187,7 @@ describe("filtering unprocessed queue messages in Firestore", () => {
                 created: "2019-02-21T12:38:49.816Z",
                 processed: "2019-02-21T12:38:50.816Z",
             },
+            processed: true,
         })
     })
 })
