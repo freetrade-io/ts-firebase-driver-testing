@@ -5,7 +5,7 @@ import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFires
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
  */
 describe("In-process Firestore batched writes", () => {
-    test.only("documentation example batch", async () => {
+    test("documentation example batch", async () => {
         // Given we have a in-process Firestore DB;
         const db = new InProcessFirestore()
 
