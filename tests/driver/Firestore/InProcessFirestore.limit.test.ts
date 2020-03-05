@@ -53,7 +53,7 @@ describe("In-process Firestore limit queries", () => {
         )
     })
 
-    test.only("limit more than total size", async () => {
+    test("limit more than total size", async () => {
         // Given some data in a collection;
         await db.collection("animals").add({ name: "tiger" })
         await db.collection("animals").add({ name: "elephant" })
