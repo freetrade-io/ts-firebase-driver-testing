@@ -7,7 +7,11 @@ import {
     IReadOptions,
 } from "../.."
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
-import { pickSubMeta, stripMeta } from "../../util/stripMeta"
+import {
+    pickSubMeta,
+    stripFirestoreMeta,
+    stripMeta,
+} from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -120,7 +124,10 @@ export class InProcessFirestore implements IFirestore {
     _setPath(dotPath: string[], value: { _meta: IChildMeta } | any): void {
         this.triggerChangeEvents(() => {
             const extraMeta = pickSubMeta(objGet<any>(this.storage, dotPath))
-            objSet(this.storage, dotPath, { ...value, ...extraMeta })
+            if (extraMeta) {
+                return objSet(this.storage, dotPath, { ...value, ...extraMeta })
+            }
+            return objSet(this.storage, dotPath, value)
         })
     }
 
@@ -385,6 +392,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         let collection = stripMeta(
             this.firestore._getPath(this._dotPath()) || {},
         )
+        const keys = Object.keys(collection).filter((key) => key !== "_meta")
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -853,7 +861,7 @@ export class InProcessFirestoreDocumentSnapshot
 
     data(): IFirestoreDocumentData {
         if (this.value) {
-            return stripMeta(this.value)
+            return stripFirestoreMeta(this.value)
         }
         return {}
     }
