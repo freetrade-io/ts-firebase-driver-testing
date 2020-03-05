@@ -5,7 +5,7 @@ import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFires
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
  */
 describe("In-process Firestore batched writes", () => {
-    test("documentation example batch", async () => {
+    test.only("documentation example batch", async () => {
         // Given we have a in-process Firestore DB;
         const db = new InProcessFirestore()
 
@@ -42,6 +42,18 @@ describe("In-process Firestore batched writes", () => {
         const sfRef = db.collection("cities").doc("SF")
         batch.update(sfRef, { population: 1000000 })
 
+        // Add downtown district to SF
+        const nycDistrictsRef = db
+            .collection("cities")
+            .doc("NYC")
+            .collection("districts")
+            .doc("downtown")
+
+        batch.set(nycDistrictsRef, { density: 200 })
+
+        // Add more details changed during batch
+        batch.set(nycRef, { name: "New York City", population: 4000000 })
+
         // And delete the city 'LA';
         const laRef = db.collection("cities").doc("LA")
         batch.delete(laRef)
@@ -54,6 +66,13 @@ describe("In-process Firestore batched writes", () => {
             .collection("cities")
             .doc("NYC")
             .get()
+        const newYorkDistricts = await db
+            .collection("cities")
+            .doc("NYC")
+            .collection("districts")
+            .doc("downtown")
+            .get()
+
         const sanFrancisco = await db
             .collection("cities")
             .doc("SF")
@@ -65,7 +84,13 @@ describe("In-process Firestore batched writes", () => {
 
         // Then the data should have been updated correctly.
         expect(newYork.exists).toBeTruthy()
-        expect(newYork.data()).toEqual({ name: "New York City" })
+        expect(newYork.data()).toEqual({
+            name: "New York City",
+            population: 4000000,
+        })
+
+        expect(newYorkDistricts.exists).toBeTruthy()
+        expect(newYorkDistricts.data()).toEqual({ density: 200 })
 
         expect(sanFrancisco.exists).toBeTruthy()
         expect(sanFrancisco.data()).toEqual({

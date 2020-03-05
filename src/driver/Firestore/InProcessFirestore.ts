@@ -1035,7 +1035,8 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
 
     async commit(): Promise<void> {
         while (this.writeOperations.length > 0) {
-            const write = this.writeOperations.pop() || (async () => undefined)
+            const write =
+                this.writeOperations.shift() || (async () => undefined)
             await write()
         }
     }
@@ -1118,7 +1119,8 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
 
         const results: IFirestoreWriteResult[] = []
         while (this.writeOperations.length > 0) {
-            const write = this.writeOperations.pop() || (async () => undefined)
+            const write =
+                this.writeOperations.shift() || (async () => undefined)
             results.push((await write()) as IFirestoreWriteResult)
         }
         this.committed = true
