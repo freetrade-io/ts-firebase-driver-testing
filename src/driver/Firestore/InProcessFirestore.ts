@@ -7,7 +7,7 @@ import {
     IReadOptions,
 } from "../.."
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
-import { stripMeta } from "../../util/stripMeta"
+import { pickSubMeta, stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -38,7 +38,6 @@ import {
     IFirestoreWriteResult,
     IPrecondition,
 } from "./IFirestore"
-
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
 
@@ -120,7 +119,8 @@ export class InProcessFirestore implements IFirestore {
 
     _setPath(dotPath: string[], value: { _meta: IChildMeta } | any): void {
         this.triggerChangeEvents(() => {
-            objSet(this.storage, dotPath, value)
+            const extraMeta = pickSubMeta(objGet<any>(this.storage, dotPath))
+            objSet(this.storage, dotPath, { ...value, ...extraMeta })
         })
     }
 
