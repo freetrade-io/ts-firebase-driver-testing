@@ -109,7 +109,8 @@ interface IInProcessRealtimeDatabaseRefQuery {
     readonly childOrderingPath?: string[]
 }
 
-class InProcessRealtimeDatabaseRef implements IFirebaseRealtimeDatabaseRef {
+export class InProcessRealtimeDatabaseRef
+    implements IFirebaseRealtimeDatabaseRef {
     constructor(
         readonly path: string,
         private readonly db: InProcessRealtimeDatabase,
@@ -535,7 +536,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 }
 
-class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
+export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
     constructor(
         readonly path: string,
         private readonly database: InProcessRealtimeDatabase,
