@@ -23,10 +23,9 @@ describe("In-process Firestore limit queries", () => {
         expect(result.size).toBe(2)
         expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(2)
-        expect(result.docs.map((doc) => doc.data())).toEqual([
-            { name: "tiger" },
-            { name: "elephant" },
-        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual(
+            expect.arrayContaining([{ name: "tiger" }, { name: "elephant" }]),
+        )
     })
 
     test("limit equal to total size", async () => {
@@ -45,11 +44,13 @@ describe("In-process Firestore limit queries", () => {
         expect(result.size).toBe(3)
         expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
-        expect(result.docs.map((doc) => doc.data())).toEqual([
-            { name: "tiger" },
-            { name: "elephant" },
-            { name: "kangaroo" },
-        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual(
+            expect.arrayContaining([
+                { name: "tiger" },
+                { name: "elephant" },
+                { name: "kangaroo" },
+            ]),
+        )
     })
 
     test("limit more than total size", async () => {
@@ -68,10 +69,12 @@ describe("In-process Firestore limit queries", () => {
         expect(result.size).toBe(3)
         expect(result.empty).toBeFalsy()
         expect(result.docs).toHaveLength(3)
-        expect(result.docs.map((doc) => doc.data())).toEqual([
-            { name: "tiger" },
-            { name: "elephant" },
-            { name: "kangaroo" },
-        ])
+        expect(result.docs.map((doc) => doc.data())).toEqual(
+            expect.arrayContaining([
+                { name: "tiger" },
+                { name: "elephant" },
+                { name: "kangaroo" },
+            ]),
+        )
     })
 })

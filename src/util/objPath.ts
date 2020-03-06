@@ -1,3 +1,4 @@
+import _ from "lodash"
 import * as objectPath from "object-path"
 
 function normalisePath(path: string[]): string[] {

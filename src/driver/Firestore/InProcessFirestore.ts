@@ -7,7 +7,11 @@ import {
     IReadOptions,
 } from "../.."
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
-import { stripMeta } from "../../util/stripMeta"
+import {
+    pickSubMeta,
+    stripFirestoreMeta,
+    stripMeta,
+} from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -38,7 +42,6 @@ import {
     IFirestoreWriteResult,
     IPrecondition,
 } from "./IFirestore"
-
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
 
@@ -120,7 +123,11 @@ export class InProcessFirestore implements IFirestore {
 
     _setPath(dotPath: string[], value: { _meta: IChildMeta } | any): void {
         this.triggerChangeEvents(() => {
-            objSet(this.storage, dotPath, value)
+            const extraMeta = pickSubMeta(objGet<any>(this.storage, dotPath))
+            if (extraMeta) {
+                return objSet(this.storage, dotPath, { ...value, ...extraMeta })
+            }
+            return objSet(this.storage, dotPath, value)
         })
     }
 
@@ -385,6 +392,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         let collection = stripMeta(
             this.firestore._getPath(this._dotPath()) || {},
         )
+        const keys = Object.keys(collection).filter((key) => key !== "_meta")
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -853,7 +861,7 @@ export class InProcessFirestoreDocumentSnapshot
 
     data(): IFirestoreDocumentData {
         if (this.value) {
-            return stripMeta(this.value)
+            return stripFirestoreMeta(this.value)
         }
         return {}
     }
@@ -1035,7 +1043,8 @@ class InProcessFirestoreTransaction implements IFirestoreTransaction {
 
     async commit(): Promise<void> {
         while (this.writeOperations.length > 0) {
-            const write = this.writeOperations.pop() || (async () => undefined)
+            const write =
+                this.writeOperations.shift() || (async () => undefined)
             await write()
         }
     }
@@ -1118,7 +1127,8 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
 
         const results: IFirestoreWriteResult[] = []
         while (this.writeOperations.length > 0) {
-            const write = this.writeOperations.pop() || (async () => undefined)
+            const write =
+                this.writeOperations.shift() || (async () => undefined)
             results.push((await write()) as IFirestoreWriteResult)
         }
         this.committed = true
