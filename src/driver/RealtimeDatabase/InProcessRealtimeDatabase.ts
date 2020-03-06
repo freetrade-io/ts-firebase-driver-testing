@@ -535,7 +535,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 }
 
-class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
+export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
     constructor(
         readonly path: string,
         private readonly database: InProcessRealtimeDatabase,
