@@ -75,6 +75,7 @@ export class InProcessFirestore implements IFirestore {
             await transaction.commit()
         } catch (err) {
             this.storage = initialState
+            throw err
         }
 
         return result as T

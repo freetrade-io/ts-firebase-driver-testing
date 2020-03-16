@@ -50,4 +50,52 @@ describe("In-process Firestore transactions", () => {
             population: 860001,
         })
     })
+
+    test("throws errors from the inner transaction", async () => {
+        // Given we have a in-process Firestore DB;
+        const firestore = new InProcessFirestore()
+
+        // And there is some initial data;
+        const cityRef = firestore.collection("cities").doc("SF")
+        await cityRef.set({
+            name: "San Francisco",
+            state: "CA",
+            country: "USA",
+            capital: false,
+            population: 860000,
+        })
+
+        const error = new Error("SomeError")
+
+        // When we run a Firestore transaction on the data;
+        let transactionError
+        await firestore
+            .runTransaction((t) => {
+                return t.get(cityRef).then((doc) => {
+                    const data = doc.data() as { population: number }
+                    const newPopulation = data.population + 1
+                    t.update(cityRef, { population: newPopulation })
+                    throw error
+                })
+            })
+            .then((result) => {
+                expect(result).toBeUndefined()
+            })
+            .catch((err: Error) => {
+                transactionError = err
+            })
+
+        // We get returned the error
+        expect(transactionError).toEqual(error)
+
+        // And the data should equal the initial state
+        const updatedDoc = await cityRef.get()
+        expect(updatedDoc.data()).toEqual({
+            name: "San Francisco",
+            state: "CA",
+            country: "USA",
+            capital: false,
+            population: 860000,
+        })
+    })
 })
