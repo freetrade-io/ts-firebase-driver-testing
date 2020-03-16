@@ -70,7 +70,7 @@ describe("In-process Firestore transactions", () => {
         // When we run a Firestore transaction on the data;
         let transactionError
         await firestore
-            .runTransaction<boolean>((t) => {
+            .runTransaction((t) => {
                 return t.get(cityRef).then((doc) => {
                     const data = doc.data() as { population: number }
                     const newPopulation = data.population + 1
