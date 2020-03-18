@@ -166,45 +166,6 @@ describe("onCreate trigger of in-process Firestore", () => {
         expect(receivedContexts).toHaveLength(0)
     })
 
-    test("onCreate handler triggered on creation via update method", async () => {
-        // Given we set up an onCreate handler on a doc;
-        const receivedSnapshots: IFirestoreChangeSnapshot[] = []
-        const receivedContexts: IChangeContext[] = []
-        driver
-            .runWith()
-            .region("europe-west1")
-            .firestore.document("/animals/{animalName}")
-            .onCreate(async (snapshot, context) => {
-                receivedSnapshots.push(snapshot)
-                receivedContexts.push(context)
-            })
-
-        // When that path is created via an update call;
-        await driver
-            .firestore()
-            .collection("animals")
-            .doc("tiger")
-            .update({ colour: "orange", size: "large" })
-
-        // And Firebase finishes its jobs;
-        await driver.jobsComplete()
-
-        // Then the handler should be triggered with the change and context.
-        expect(receivedSnapshots).toHaveLength(1)
-        expect(receivedSnapshots[0]).toBeTruthy()
-        expect(receivedSnapshots[0].exists).toBeTruthy()
-        expect(receivedSnapshots[0].data()).toEqual({
-            colour: "orange",
-            size: "large",
-        })
-
-        expect(receivedContexts).toHaveLength(1)
-        expect(receivedContexts[0]).toBeTruthy()
-        expect(receivedContexts[0]).toEqual({
-            params: { animalName: "tiger" },
-        })
-    })
-
     test("onCreate trigger with multiple path parameters", async () => {
         // Given we set up an onCreate handler with multiple path parameters;
         const receivedSnapshots: IFirestoreChangeSnapshot[] = []

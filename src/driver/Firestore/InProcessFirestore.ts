@@ -706,7 +706,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         data: IFirestoreDocumentData,
         options: { merge: boolean } = { merge: false },
     ): Promise<IFirestoreWriteResult> {
-        if (options && options.merge) {
+        // We only need to do a merge if something exists at the path
+        // Due to how update is implemented, this will throw if it does
+        // not already exist
+        const current = this.firestore._getPath(this._dotPath())
+        if (options && options.merge && current) {
             return this.update(data)
         }
         const createTime = makeTimestamp()
@@ -753,6 +757,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const data = dataOrField as IFirestoreDocumentData
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
+
+        if (!current) {
+            throw new FirestoreError(
+                GRPCStatusCode.NOT_FOUND,
+                `No document to update: ${this.path}`,
+            )
+        }
+
         const newUpdateTime = makeTimestamp()
         const type = ChildType.DOC
         if (precondition && precondition.lastUpdateTime) {
