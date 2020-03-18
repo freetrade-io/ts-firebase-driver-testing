@@ -706,7 +706,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         data: IFirestoreDocumentData,
         options: { merge: boolean } = { merge: false },
     ): Promise<IFirestoreWriteResult> {
-        if (options && options.merge) {
+        // We only need to do a merge if something exists at the path
+        // Due to how update is implemented, this will throw if it does
+        // not already exist
+        const current = this.firestore._getPath(this._dotPath())
+        if (options && options.merge && current) {
             return this.update(data)
         }
         const createTime = makeTimestamp()

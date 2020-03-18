@@ -105,6 +105,26 @@ describe("In-process Firestore batched writes", () => {
         expect(losAngeles.data()).toEqual({})
     })
 
+    test.each([true, false])(
+        "can set in batch on a document that doesn't exist, with merge %s",
+        async (merge) => {
+            // Given we have a in-process Firestore DB;
+            const db = new InProcessFirestore()
+
+            // When we get a new write batch;
+            const batch = db.batch()
+
+            batch.set(db.doc("test/1"), { something: 1 }, { merge })
+
+            await batch.commit()
+
+            const result = await db.doc("test/1").get()
+
+            expect(result.exists).toBeTruthy()
+            expect(result.data()).toEqual({ something: 1 })
+        },
+    )
+
     test("cannot create existing document in a batch write", async () => {
         const db = new InProcessFirestore()
         // Given there is an existing document;
