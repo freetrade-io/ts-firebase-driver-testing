@@ -753,6 +753,14 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const data = dataOrField as IFirestoreDocumentData
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
+
+        if (!current) {
+            throw new FirestoreError(
+                GRPCStatusCode.NOT_FOUND,
+                `No document to update: ${this.path}`,
+            )
+        }
+
         const newUpdateTime = makeTimestamp()
         const type = ChildType.DOC
         if (precondition && precondition.lastUpdateTime) {

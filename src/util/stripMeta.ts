@@ -7,7 +7,8 @@ const isNotMeta = (input: any, key: string) => {
     return !(isMeta || hasMeta)
 }
 
-const isSubMeta = (input: any, key: string) => Boolean(input._meta)
+export const hasSubMeta = (input: any, key: string) =>
+    _.isObject(input) && Boolean((input as any)._meta)
 
 export function stripMeta<T extends { [key: string]: any }>(
     obj: T,
@@ -33,5 +34,5 @@ export function pickSubMeta<T extends { [key: string]: any }>(
     if (!_.isObject(obj)) {
         return obj
     }
-    return _.pickBy(obj, isSubMeta) as Omit<any, "_meta">
+    return _.pickBy(obj, hasSubMeta) as Omit<any, "_meta">
 }
