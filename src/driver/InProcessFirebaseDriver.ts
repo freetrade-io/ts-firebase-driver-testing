@@ -102,14 +102,30 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
         return this.builderPubSub
     }
 
+    pushJobs(jobs: Array<Promise<any>>): void {
+        this.jobs.push(...jobs)
+    }
+
     pushJob(job: Promise<any>): void {
         this.jobs.push(job)
     }
 
     async jobsComplete(): Promise<void> {
-        // More jobs might be added by each job, so we can't just await Promise.all() here.
         while (this.jobs.length > 0) {
-            await this.jobs.pop()
+            const itemsToResolve = this.jobs.map((value, index) => {
+                return {
+                    promise: value,
+                    index,
+                }
+            })
+
+            await Promise.all(itemsToResolve.map((x) => x.promise))
+
+            // Assumption is that the items are at the start
+            this.jobs.splice(
+                0,
+                Math.max(...itemsToResolve.map((x) => x.index)) + 1,
+            )
         }
     }
 }

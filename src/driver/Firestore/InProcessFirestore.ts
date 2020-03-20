@@ -162,15 +162,18 @@ export class InProcessFirestore implements IFirestore {
         const before = _.cloneDeep(this.storage)
         makeChange()
         const after = _.cloneDeep(this.storage)
+        makeChange()
 
-        for (const observer of this.changeObservers) {
-            const job = new Promise((resolve) => {
-                setTimeout(async () => {
-                    resolve(observer.onChange({ before, after }))
-                }, 1)
-            })
-            this.jobs.pushJob(job)
-        }
+        const jobs = this.changeObservers.map(
+            async (observer) =>
+                new Promise((resolve) => {
+                    setTimeout(async () => {
+                        resolve(observer.onChange({ before, after }))
+                    }, 1)
+                }),
+        )
+
+        this.jobs.pushJobs(jobs)
     }
 }
 
