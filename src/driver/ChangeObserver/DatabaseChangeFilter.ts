@@ -1,3 +1,4 @@
+import { flatten } from "flat"
 import _ from "lodash"
 import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
@@ -20,74 +21,123 @@ export interface IChangeParams {
 
 export interface IChangeFilter {
     readonly observedPath: string
-    changeEvents(change: IChange): IParameterisedChange[]
+    readonly observedPathRegex: RegExp
+    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[]
 }
 
+const normalisePath = (path: string) => _.trim(path.trim(), "/")
+
 abstract class ChangeFilter implements IChangeFilter {
+    readonly observedPathRegex: RegExp
+    readonly positionMatched: Array<{
+        pattern: string
+        name?: string
+        index?: number
+    }>
+    readonly namedPositionMatched: Array<{
+        pattern: string
+        name: string
+        index: number
+    }>
     constructor(readonly observedPath: string) {
-        this.observedPath = _.trim(this.observedPath.trim(), "/")
+        this.observedPath = normalisePath(observedPath)
+        const pathParts = this.observedPath.split("/")
+        let startIndex = 1
+        this.positionMatched = pathParts.map((part, index) => {
+            const matched = /^{(\S+)}$/.exec(part)
+            if (matched) {
+                return {
+                    pattern: `([^/]+)`,
+                    name: matched[1],
+                    index: startIndex++,
+                }
+            }
+            return { pattern: part }
+        })
+        this.namedPositionMatched = this.positionMatched.filter(
+            (x) => x.index,
+        ) as Array<{
+            pattern: string
+            name: string
+            index: number
+        }>
+
+        this.observedPathRegex = new RegExp(
+            `^${this.positionMatched.map((m) => m.pattern).join("/")}$`,
+        )
     }
 
-    abstract changeEvents(change: IChange): IParameterisedChange[]
+    abstract changeEvents(
+        change: IChange,
+        dotPath?: string[],
+    ): IParameterisedChange[]
 
     protected changePaths(
         change: IChange,
+        dotPath?: string[],
     ): { beforePaths: string[]; afterPaths: string[] } {
         let beforePaths: string[] = []
+        const startingPath = (dotPath && dotPath.join("/")) || ""
         if (typeof change.before === "object") {
-            beforePaths = enumeratePaths(change.before)
+            beforePaths = [
+                ...(dotPath
+                    ? Object.keys(flatten(change.before)).map(
+                          (path) =>
+                              `${startingPath}/${path.split(".").join("/")}`,
+                      )
+                    : enumeratePaths(change.before)),
+                startingPath,
+            ]
         }
         let afterPaths: string[] = []
         if (typeof change.after === "object") {
-            afterPaths = enumeratePaths(change.after)
+            afterPaths = [
+                ...(dotPath
+                    ? Object.keys(flatten(change.after)).map(
+                          (path) =>
+                              `${startingPath}/${path.split(".").join("/")}`,
+                      )
+                    : enumeratePaths(change.after)),
+                startingPath,
+            ]
         }
 
-        return { beforePaths, afterPaths }
+        return {
+            beforePaths: beforePaths.filter((x) => !x.includes("_meta")),
+            afterPaths: afterPaths.filter((x) => !x.includes("_meta")),
+        }
     }
 
     protected matchPath(
         otherPath: string,
     ): { match: boolean; parameters: { [key: string]: string } } {
-        const pathParts = this.observedPath
-            .split("/")
-            .map((p) => p.trim())
-            .filter((p) => p.length)
-            .filter((p) => p !== "_meta")
         const otherPathParts = otherPath
             .split("/")
             .map((p) => p.trim())
             .filter((p) => p.length)
             .filter((p) => p !== "_meta")
-        if (pathParts.length !== otherPathParts.length) {
-            return {
-                match: false,
-                parameters: {},
-            }
-        }
+
         const parameters: { [key: string]: string } = {}
-        for (let i = 0; i < pathParts.length; i++) {
-            if (pathParts[i].match(/{[a-zA-Z0-9_-]+}/)) {
-                parameters[_.trim(pathParts[i], "{}")] = otherPathParts[i]
-                continue
-            }
-            if (pathParts[i] === otherPathParts[i]) {
-                continue
-            }
+        const result = this.observedPathRegex.exec(otherPath)
+        if (result) {
+            this.namedPositionMatched.forEach((param) => {
+                parameters[param.name] = result[param.index]
+            })
             return {
-                match: false,
-                parameters: {},
+                match: true,
+                parameters,
             }
         }
         return {
-            match: true,
-            parameters,
+            match: false,
+            parameters: {},
         }
     }
 }
 
 export class CreatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IParameterisedChange[] {
-        const paths = this.changePaths(change)
+    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
+        const paths = this.changePaths(change, dotPath)
 
         const created: IParameterisedChange[] = []
         for (const afterPath of paths.afterPaths) {
@@ -102,7 +152,11 @@ export class CreatedChangeFilter extends ChangeFilter {
             }
             const afterAtPath = objectPath.get(
                 change.after,
-                afterPath.replace(/\//g, "."),
+                dotPath
+                    ? afterPath
+                          .replace(new RegExp("^" + dotPath.join("/")), "")
+                          .replace(/\//g, ".")
+                    : afterPath.replace(/\//g, "."),
             )
             if (afterAtPath === undefined || afterAtPath === null) {
                 continue
@@ -122,8 +176,8 @@ export class CreatedChangeFilter extends ChangeFilter {
 }
 
 export class UpdatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IParameterisedChange[] {
-        const paths = this.changePaths(change)
+    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
+        const paths = this.changePaths(change, dotPath)
 
         const updated: IParameterisedChange[] = []
         for (const afterPath of paths.afterPaths) {
@@ -134,14 +188,22 @@ export class UpdatedChangeFilter extends ChangeFilter {
             }
             const afterAtPath = objectPath.get(
                 change.after,
-                afterPath.replace(/\//g, "."),
+                dotPath
+                    ? afterPath
+                          .replace(new RegExp("^" + dotPath.join("/")), "")
+                          .replace(/\//g, ".")
+                    : afterPath.replace(/\//g, "."),
             )
             if (afterAtPath === undefined || afterAtPath === null) {
                 continue
             }
             const beforeAtPath = objectPath.get(
                 change.before,
-                afterPath.replace(/\//g, "."),
+                dotPath
+                    ? afterPath
+                          .replace(new RegExp("^" + dotPath.join("/")), "")
+                          .replace(/\//g, ".")
+                    : afterPath.replace(/\//g, "."),
             )
             if (beforeAtPath === undefined || beforeAtPath === null) {
                 continue
@@ -160,8 +222,8 @@ export class UpdatedChangeFilter extends ChangeFilter {
 }
 
 export class DeletedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IParameterisedChange[] {
-        const paths = this.changePaths(change)
+    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
+        const paths = this.changePaths(change, dotPath)
 
         const deleted: IParameterisedChange[] = []
         for (const beforePath of paths.beforePaths) {
@@ -173,7 +235,11 @@ export class DeletedChangeFilter extends ChangeFilter {
             if (paths.afterPaths.includes(beforePath)) {
                 const afterAtPath = objectPath.get(
                     change.after,
-                    beforePath.replace(/\//g, "."),
+                    dotPath
+                        ? beforePath
+                              .replace(new RegExp("^" + dotPath.join("/")), "")
+                              .replace(/\//g, ".")
+                        : beforePath.replace(/\//g, "."),
                 )
                 if (afterAtPath !== undefined && afterAtPath !== null) {
                     continue
@@ -181,7 +247,11 @@ export class DeletedChangeFilter extends ChangeFilter {
             }
             const beforeAtPath = objectPath.get(
                 change.before,
-                beforePath.replace(/\//g, "."),
+                dotPath
+                    ? beforePath
+                          .replace(new RegExp("^" + dotPath.join("/")), "")
+                          .replace(/\//g, ".")
+                    : beforePath.replace(/\//g, "."),
             )
             deleted.push({
                 parameters: matchPath.parameters,
@@ -195,11 +265,20 @@ export class DeletedChangeFilter extends ChangeFilter {
 }
 
 export class WrittenChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange): IParameterisedChange[] {
+    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
         return [
-            ...new CreatedChangeFilter(this.observedPath).changeEvents(change),
-            ...new UpdatedChangeFilter(this.observedPath).changeEvents(change),
-            ...new DeletedChangeFilter(this.observedPath).changeEvents(change),
+            ...new CreatedChangeFilter(this.observedPath).changeEvents(
+                change,
+                dotPath,
+            ),
+            ...new UpdatedChangeFilter(this.observedPath).changeEvents(
+                change,
+                dotPath,
+            ),
+            ...new DeletedChangeFilter(this.observedPath).changeEvents(
+                change,
+                dotPath,
+            ),
         ]
     }
 }

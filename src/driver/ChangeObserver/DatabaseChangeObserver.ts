@@ -6,7 +6,7 @@ import {
 } from "./DatabaseChangeFilter"
 
 export interface IDatabaseChangeObserver {
-    onChange(change: IChange): Promise<void>
+    onChange(change: IChange, dotPath?: string[]): Promise<void>
 }
 
 export type ChangeType = "created" | "updated" | "deleted" | "written"
@@ -32,8 +32,11 @@ export abstract class DatabaseChangeObserver<T>
         protected readonly handler: TriggerFunction<T>,
     ) {}
 
-    async onChange(change: IChange): Promise<void> {
-        const relevantChanges = this.changeFilter().changeEvents(change)
+    async onChange(change: IChange, dotPath?: string[]): Promise<void> {
+        const relevantChanges = this.changeFilter().changeEvents(
+            change,
+            dotPath,
+        )
         await Promise.all(
             relevantChanges.map((pc: IParameterisedChange) => {
                 return this.handler(this.makeChangeObject(pc), {

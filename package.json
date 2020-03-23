@@ -16,12 +16,14 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
+    "flat": "^5.0.0",
     "lodash": ">=4",
     "object-path": "^0",
     "object.entries": "^1",
     "object.values": "^1"
   },
   "devDependencies": {
+    "@types/flat": "^5.0.0",
     "@types/jest": "^25.1.0",
     "@types/lodash": "^4",
     "@types/node": "^13.1.4",
