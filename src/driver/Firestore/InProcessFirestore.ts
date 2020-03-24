@@ -123,7 +123,7 @@ export class InProcessFirestore implements IFirestore {
     }
 
     _setPath(dotPath: string[], value: { _meta: IChildMeta } | any): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(dotPath, () => {
             const extraMeta = pickSubMeta(objGet<any>(this.storage, dotPath))
             if (extraMeta) {
                 return objSet(this.storage, dotPath, { ...value, ...extraMeta })
@@ -133,7 +133,7 @@ export class InProcessFirestore implements IFirestore {
     }
 
     _deletePath(dotPath: string[]): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(dotPath, () => {
             objDel(this.storage, dotPath)
         })
     }
@@ -153,24 +153,30 @@ export class InProcessFirestore implements IFirestore {
         )
     }
 
-    private triggerChangeEvents(makeChange: () => any): void {
+    private triggerChangeEvents(
+        dotPath: string[],
+        makeChange: () => any,
+    ): void {
         if (!this.jobs) {
             makeChange()
             return
         }
 
-        const before = _.cloneDeep(this.storage)
+        const before = this._getPath(dotPath)
         makeChange()
-        const after = _.cloneDeep(this.storage)
+        const after = this._getPath(dotPath)
+        makeChange()
 
-        for (const observer of this.changeObservers) {
-            const job = new Promise((resolve) => {
-                setTimeout(async () => {
-                    resolve(observer.onChange({ before, after }))
-                }, 1)
-            })
-            this.jobs.pushJob(job)
-        }
+        const jobs = this.changeObservers.map(
+            async (observer) =>
+                new Promise((resolve) => {
+                    setTimeout(async () => {
+                        resolve(observer.onChange({ before, after }, dotPath))
+                    }, 1)
+                }),
+        )
+
+        this.jobs.pushJobs(jobs)
     }
 }
 
