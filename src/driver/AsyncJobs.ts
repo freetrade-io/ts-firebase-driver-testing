@@ -7,8 +7,12 @@ export interface IAsyncJobs {
 export class AsyncJobs implements IAsyncJobs {
     private jobs: Array<Promise<any>> = []
 
+    // To prevent trying to resolve 100s or possibly 1000s of promises at once
+    // maxConcurrentJobs was added
+    constructor(private maxConcurrentJobs: number = 20) {}
+
     pushJobs(jobs: Array<Promise<any>>): void {
-        this.jobs.concat(jobs)
+        this.jobs = this.jobs.concat(jobs)
     }
 
     pushJob(job: Promise<any>): void {
@@ -16,21 +20,14 @@ export class AsyncJobs implements IAsyncJobs {
     }
 
     async jobsComplete(): Promise<void> {
+        // More jobs might be added by each job, so we can't just await Promise.all() here
         while (this.jobs.length > 0) {
-            const itemsToResolve = this.jobs.map((value, index) => {
-                return {
-                    promise: value,
-                    index,
-                }
-            })
+            const itemsToResolve = this.jobs.slice(0, this.maxConcurrentJobs)
 
-            await Promise.all(itemsToResolve.map((x) => x.promise))
+            await Promise.all(itemsToResolve)
 
-            // Assumption is that the items are at the start
-            this.jobs.splice(
-                0,
-                Math.max(...itemsToResolve.map((x) => x.index)) + 1,
-            )
+            // Remove the items we just processed from the front of the job queue
+            this.jobs.splice(0, itemsToResolve.length)
         }
     }
 }

@@ -1,4 +1,4 @@
-import { IAsyncJobs } from "./AsyncJobs"
+import { AsyncJobs, IAsyncJobs } from "./AsyncJobs"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
 import {
     IFirebaseFunctionBuilder,
@@ -36,12 +36,16 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
 export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private rtDb: InProcessRealtimeDatabase | undefined
     private firestoreDb: InProcessFirestore | undefined
-    private jobs: Array<Promise<any>> = []
+    private asyncJobs: IAsyncJobs
 
     private builderDatabase: InProcessFirebaseBuilderDatabase | undefined
     private builderFirestore: InProcessFirestoreBuilder | undefined
     private builderPubSub: InProcessFirebaseBuilderPubSub | undefined
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
+
+    constructor() {
+        this.asyncJobs = new AsyncJobs()
+    }
 
     realTimeDatabase(
         idGenerator: IdGenerator = firebaseLikeId,
@@ -103,29 +107,14 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     }
 
     pushJobs(jobs: Array<Promise<any>>): void {
-        this.jobs.push(...jobs)
+        this.asyncJobs.pushJobs(jobs)
     }
 
     pushJob(job: Promise<any>): void {
-        this.jobs.push(job)
+        this.asyncJobs.pushJob(job)
     }
 
     async jobsComplete(): Promise<void> {
-        while (this.jobs.length > 0) {
-            const itemsToResolve = this.jobs.map((value, index) => {
-                return {
-                    promise: value,
-                    index,
-                }
-            })
-
-            await Promise.all(itemsToResolve.map((x) => x.promise))
-
-            // Assumption is that the items are at the start
-            this.jobs.splice(
-                0,
-                Math.max(...itemsToResolve.map((x) => x.index)) + 1,
-            )
-        }
+        await this.asyncJobs.jobsComplete()
     }
 }
