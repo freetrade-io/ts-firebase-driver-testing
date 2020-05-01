@@ -1,10 +1,10 @@
 import { hasSubMeta } from "../../src/util/stripMeta"
 
-describe("isSubMeta", () => {
+describe("hasSubMeta", () => {
     test.each([true, false, null, "string", 1000])(
         "handles $s type",
         (input) => {
-            expect(hasSubMeta(input, "someKey")).toEqual(false)
+            expect(hasSubMeta(input)).toEqual(false)
         },
     )
 })
