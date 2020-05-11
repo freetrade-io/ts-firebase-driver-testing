@@ -7,11 +7,7 @@ import {
     IReadOptions,
 } from "../.."
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
-import {
-    pickSubMeta,
-    stripFirestoreMeta,
-    stripMeta,
-} from "../../util/stripMeta"
+import { pickSubMeta, stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
@@ -42,6 +38,9 @@ import {
     IFirestoreWriteResult,
     IPrecondition,
 } from "./IFirestore"
+import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
+import { makeTimestamp } from "./makeTimestamp"
+
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
 
@@ -398,7 +397,6 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         let collection = stripMeta(
             this.firestore._getPath(this._dotPath()) || {},
         )
-        const keys = Object.keys(collection).filter((key) => key !== "_meta")
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
                 .filter((key) => filter(collection[key]))
@@ -630,19 +628,6 @@ export class InProcessFirestoreQuerySnapshot
     }
 }
 
-function makeTimestamp(): IFirestoreTimestamp {
-    const date = new Date()
-    const milliseconds: number = date.getTime()
-    const seconds: number = milliseconds / 1000
-    return {
-        seconds,
-        nanoseconds: milliseconds * 1000000,
-        toDate: () => date,
-        toMillis: (): number => milliseconds,
-        isEqual: (other): boolean => other.toMillis() === milliseconds,
-    }
-}
-
 function makeWriteResult(): IFirestoreWriteResult {
     const updateTime = makeTimestamp()
     return {
@@ -842,58 +827,6 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
     _dotPath(): string[] {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
-    }
-}
-
-export class InProcessFirestoreDocumentSnapshot
-    implements IFirestoreQueryDocumentSnapshot {
-    readonly createTime: IFirestoreTimestamp
-    readonly updateTime: IFirestoreTimestamp
-    readonly readTime: IFirestoreTimestamp
-
-    constructor(
-        readonly id: string,
-        readonly exists: boolean,
-        readonly ref: IFirestoreDocRef,
-        private readonly value: IFirestoreDocumentData | undefined,
-    ) {
-        if (!ref) {
-            throw new Error(
-                "InProcessFirestoreDocumentSnapshot created with empty ref",
-            )
-        }
-
-        const now = makeTimestamp()
-        this.readTime = now
-
-        this.createTime = now
-        if (value && value._meta && value._meta.createTime) {
-            this.createTime = value._meta.createTime
-        }
-
-        this.updateTime = now
-        if (value && value._meta && value._meta.updateTime) {
-            this.updateTime = value._meta.updateTime
-        }
-    }
-
-    data(): IFirestoreDocumentData {
-        if (this.value) {
-            return stripFirestoreMeta(this.value)
-        }
-        return {}
-    }
-
-    get(fieldPath: string | IFieldPath): any {
-        throw new Error(
-            "InProcessFirestoreDocumentSnapshot.get not implemented",
-        )
-    }
-
-    isEqual(other: IFirestoreDocumentSnapshot): boolean {
-        throw new Error(
-            "InProcessFirestoreDocumentSnapshot.isEqual not implemented",
-        )
     }
 }
 
