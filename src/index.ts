@@ -33,3 +33,5 @@ export { IFirestoreDocumentBuilder } from "./driver/FirebaseDriver"
 
 export * from "./driver/Firestore/IFirestore"
 export * from "./driver/Firestore/InProcessFirestore"
+export { InProcessFirestoreDocumentSnapshot } from "./driver/Firestore/InProcessFirestoreDocumentSnapshot"
+export { makeTimestamp } from "./driver/Firestore/makeTimestamp"

@@ -15,7 +15,7 @@ import {
     TriggerFunction,
 } from "../ChangeObserver/DatabaseChangeObserver"
 import { IFirestore, IFirestoreDocumentSnapshot } from "./IFirestore"
-import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestore"
+import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 
 export function makeFirestoreChangeObserver(
     changeType: ChangeType,
