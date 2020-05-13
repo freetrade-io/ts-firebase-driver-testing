@@ -77,6 +77,10 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
         return this.functionBuilder
     }
 
+    initializeApp() {
+        // This is no-op in in-process Firebase driver.
+    }
+
     pubSubCl(): IPubSub {
         return new InProcessFirebasePubSubCl(this.inProcessBuilderPubSub())
     }

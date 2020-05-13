@@ -16,6 +16,17 @@ export interface IFirebaseDriver {
         memory: MemoryOption
         timeoutSeconds: number
     }): IFirebaseFunctionBuilder
+    initializeApp(
+        options?: {
+            credential?: {
+                getAccessToken: () => Promise<{
+                    access_token: string
+                    expires_in: number
+                }>
+            }
+        },
+        name?: string,
+    ): void
 }
 
 export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB"
