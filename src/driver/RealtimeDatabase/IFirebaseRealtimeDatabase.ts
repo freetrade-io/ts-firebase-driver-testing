@@ -65,19 +65,12 @@ export interface IFirebaseRealtimeDatabaseRef
     }>
 }
 
-export type IFirebaseChange<T> =
-    | {
-          before: T
-          after: T
-          data?: T
-          delta?: T
-      }
-    | {
-          before?: T
-          after?: T
-          data: T
-          delta: T
-      }
+export interface IFirebaseChange<T> {
+    before: T | undefined
+    after: T | undefined
+    data: T | undefined
+    delta: T | undefined
+}
 
 export interface IFirebaseEventContext {
     eventId: string
