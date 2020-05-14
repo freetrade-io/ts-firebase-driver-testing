@@ -1,11 +1,5 @@
-import {
-    InProcessFirebaseDriver,
-    IRealtimeDatabaseChangeSnapshot,
-} from "../../../../src"
-import {
-    IChangeContext,
-    IChangeSnapshots,
-} from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
+import { InProcessFirebaseDriver } from "../../../../src"
+import { IChangeContext } from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
 
 describe("onUpdate trigger of in-process realtime database", () => {
     let driver: InProcessFirebaseDriver
@@ -26,9 +20,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange:
-            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
-            | undefined
+        let receivedChange: any
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -61,6 +53,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
         expect(receivedContext!).toBeTruthy()
         expect(receivedContext!).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -76,9 +69,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange:
-            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
-            | undefined
+        let receivedChange: any
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -119,6 +110,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
         expect(receivedContext!).toBeTruthy()
         expect(receivedContext!).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -134,9 +126,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange:
-            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
-            | undefined
+        let receivedChange: any
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -166,9 +156,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
 
     test("onUpdate handler is not triggered on create", async () => {
         // Given we set up an onUpdate handler on a path;
-        let receivedChange:
-            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
-            | undefined
+        let receivedChange: any
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -208,9 +196,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
             })
 
         // And we set up an onUpdate handler on that path;
-        let receivedChange:
-            | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
-            | undefined
+        let receivedChange: any
         let receivedContext: IChangeContext | undefined
         driver
             .runWith()
@@ -258,7 +244,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
                 await driver
                     .realTimeDatabase()
                     .ref(`/animal_sounds/${context.params.animalName}`)
-                    .set(change.after.val())
+                    .set(change.after!.val())
             })
 
         // And there is also an onUpdate handler for the second path, which
@@ -269,7 +255,7 @@ describe("onUpdate trigger of in-process realtime database", () => {
             .onUpdate(async (change, context) => {
                 await driver
                     .realTimeDatabase()
-                    .ref(`/sound_to_animal/${change.after.val()}`)
+                    .ref(`/sound_to_animal/${change.after!.val()}`)
                     .set(context.params.animalName)
             })
 
