@@ -1,3 +1,4 @@
+import { JsonValue } from "../../util/json"
 import {
     IChange,
     IChangeFilter,
@@ -14,10 +15,13 @@ export type ChangeType = "created" | "updated" | "deleted" | "written"
 export interface IChangeSnapshots<T> {
     before: T
     after: T
+    data: JsonValue | undefined
+    delta: JsonValue | undefined
 }
 
 export interface IChangeContext {
     params: IChangeParams
+    timestamp: string
 }
 
 export type TriggerFunction<T> = (
@@ -41,6 +45,7 @@ export abstract class DatabaseChangeObserver<T>
             relevantChanges.map((pc: IParameterisedChange) => {
                 return this.handler(this.makeChangeObject(pc), {
                     params: pc.parameters,
+                    timestamp: new Date().toISOString(),
                 })
             }),
         )

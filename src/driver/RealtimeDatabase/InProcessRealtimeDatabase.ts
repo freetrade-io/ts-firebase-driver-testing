@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objSet } from "../../util/objPath"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -524,11 +525,13 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         const before = _.cloneDeep(this.storage)
         makeChange()
         const after = _.cloneDeep(this.storage)
+        const data = before
+        const delta = makeDelta(before, after)
 
         for (const observer of this.changeObservers) {
             const job = new Promise((resolve) => {
                 setTimeout(async () => {
-                    resolve(observer.onChange({ before, after }))
+                    resolve(observer.onChange({ before, after, data, delta }))
                 }, 1)
             })
             this.jobs.pushJob(job)

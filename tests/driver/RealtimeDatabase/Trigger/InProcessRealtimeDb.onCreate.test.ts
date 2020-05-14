@@ -46,6 +46,7 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts[0]).toBeTruthy()
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -89,6 +90,7 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts[0]).toBeTruthy()
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -196,6 +198,7 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts[0]).toBeTruthy()
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -241,6 +244,7 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts[0]).toBeTruthy()
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -277,6 +281,7 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts[0]).toBeTruthy()
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "tiger", featureName: "colour" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -323,12 +328,15 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts).toHaveLength(3)
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "cat" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[1]).toEqual({
             params: { animalName: "dog" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[2]).toEqual({
             params: { animalName: "pig" },
+            timestamp: expect.any(String),
         })
     })
 
@@ -378,21 +386,27 @@ describe("onCreate trigger of in-process realtime database", () => {
         expect(receivedContexts).toHaveLength(6)
         expect(receivedContexts[0]).toEqual({
             params: { animalName: "cat", featureName: "likes" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[1]).toEqual({
             params: { animalName: "cat", featureName: "sound" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[2]).toEqual({
             params: { animalName: "dog", featureName: "likes" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[3]).toEqual({
             params: { animalName: "dog", featureName: "sound" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[4]).toEqual({
             params: { animalName: "pig", featureName: "likes" },
+            timestamp: expect.any(String),
         })
         expect(receivedContexts[5]).toEqual({
             params: { animalName: "pig", featureName: "sound" },
+            timestamp: expect.any(String),
         })
     })
 

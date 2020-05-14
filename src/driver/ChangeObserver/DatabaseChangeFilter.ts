@@ -10,19 +10,12 @@ import { makeDelta } from "../../util/makeDelta"
  * data/delta. Offering both here for convenience working between the
  * two setups.
  */
-export type IChange =
-    | {
-          before: JsonValue | undefined
-          after: JsonValue | undefined
-          data?: JsonValue | undefined
-          delta?: JsonValue | undefined
-      }
-    | {
-          data: JsonValue | undefined
-          delta: JsonValue | undefined
-          before?: JsonValue | undefined
-          after?: JsonValue | undefined
-      }
+export interface IChange {
+    before?: JsonValue | undefined
+    after?: JsonValue | undefined
+    data?: JsonValue | undefined
+    delta?: JsonValue | undefined
+}
 
 export interface IParameterisedChange {
     parameters: IChangeParams

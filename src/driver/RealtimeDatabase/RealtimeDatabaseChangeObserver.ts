@@ -49,6 +49,8 @@ class RealtimeDatabaseCreatedObserver extends DatabaseChangeObserver<
         | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
         | IRealtimeDatabaseChangeSnapshot {
         return {
+            data: pc.change.data,
+            delta: pc.change.delta,
             val: () => pc.change.after,
             exists: () => !_.isNil(pc.change.after),
         }
@@ -67,6 +69,8 @@ class RealtimeDatabaseUpdatedObserver extends DatabaseChangeObserver<
         | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
         | IRealtimeDatabaseChangeSnapshot {
         return {
+            data: pc.change.data,
+            delta: pc.change.delta,
             before: {
                 val: () => pc.change.before,
                 exists: () => !_.isNil(pc.change.before),
@@ -91,6 +95,8 @@ class RealtimeDatabaseDeletedObserver extends DatabaseChangeObserver<
         | IChangeSnapshots<IRealtimeDatabaseChangeSnapshot>
         | IRealtimeDatabaseChangeSnapshot {
         return {
+            data: pc.change.data,
+            delta: pc.change.delta,
             val: () => pc.change.after,
             exists: () => !_.isNil(pc.change.after),
         }
@@ -117,6 +123,8 @@ class RealtimeDatabaseWrittenObserver extends DatabaseChangeObserver<
                 val: () => pc.change.after,
                 exists: () => !_.isNil(pc.change.after),
             },
+            data: pc.change.data,
+            delta: pc.change.delta,
         }
     }
 }

@@ -6,6 +6,7 @@ import {
     IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
+import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
 import { pickSubMeta, stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
@@ -164,12 +165,19 @@ export class InProcessFirestore implements IFirestore {
         const before = this._getPath(dotPath)
         makeChange()
         const after = this._getPath(dotPath)
+        const data = before
+        const delta = makeDelta(before, after)
 
         const jobs = this.changeObservers.map(
             async (observer) =>
                 new Promise((resolve) => {
                     setTimeout(async () => {
-                        resolve(observer.onChange({ before, after }, dotPath))
+                        resolve(
+                            observer.onChange(
+                                { before, after, data, delta },
+                                dotPath,
+                            ),
+                        )
                     }, 1)
                 }),
         )
