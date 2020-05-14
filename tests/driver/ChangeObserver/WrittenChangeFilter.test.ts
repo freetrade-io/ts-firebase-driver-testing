@@ -11,7 +11,13 @@ describe("WrittenChangeFilter", () => {
         [
             "/foo",
             { after: { foo: "bar" } },
-            [{ parameters: {}, change: { after: "bar" }, path: "foo" }],
+            [
+                {
+                    parameters: {},
+                    change: { after: "bar", delta: "bar" },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
@@ -19,7 +25,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -30,7 +36,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -44,7 +50,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -52,7 +58,13 @@ describe("WrittenChangeFilter", () => {
         [
             "/foo/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: "baz" }, path: "foo/bar" }],
+            [
+                {
+                    parameters: {},
+                    change: { after: "baz", delta: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/{id}/bar",
@@ -60,7 +72,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -71,7 +83,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo", key: "bar" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -82,7 +94,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -93,7 +105,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -104,7 +116,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -115,7 +127,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -126,7 +138,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -140,7 +152,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -151,7 +163,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -162,7 +174,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -173,7 +185,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -184,12 +196,12 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo1" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -200,7 +212,7 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -214,22 +226,22 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo3" },
-                    change: { before: undefined, after: "bar" },
+                    change: { before: undefined, after: "bar", delta: "bar" },
                     path: "foo3",
                 },
                 {
                     parameters: { id: "foo4" },
-                    change: { before: undefined, after: "bar" },
+                    change: { before: undefined, after: "bar", delta: "bar" },
                     path: "foo4",
                 },
                 {
                     parameters: { id: "foo1" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -252,17 +264,21 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { id: "id123", key: "propA" },
-                    change: { before: "foo", after: undefined },
+                    change: { before: "foo", after: undefined, data: "foo" },
                     path: "things/id123/propA",
                 },
                 {
                     parameters: { id: "id123", key: "propB" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "things/id123/propB",
                 },
                 {
                     parameters: { id: "id456", key: "propB" },
-                    change: { before: "goodbye", after: undefined },
+                    change: {
+                        before: "goodbye",
+                        after: undefined,
+                        data: "goodbye",
+                    },
                     path: "things/id456/propB",
                 },
             ],
@@ -293,7 +309,11 @@ describe("WrittenChangeFilter", () => {
             [
                 {
                     parameters: { animalName: "tiger", featureName: "stripey" },
-                    change: { before: undefined, after: "very stripey" },
+                    change: {
+                        before: undefined,
+                        after: "very stripey",
+                        delta: "very stripey",
+                    },
                     path: "animals/tiger/features/stripey",
                 },
                 {
@@ -301,7 +321,11 @@ describe("WrittenChangeFilter", () => {
                         animalName: "tiger",
                         featureName: "swimming",
                     },
-                    change: { before: undefined, after: "not swimming" },
+                    change: {
+                        before: undefined,
+                        after: "not swimming",
+                        delta: "not swimming",
+                    },
                     path: "animals/tiger/features/swimming",
                 },
                 {
@@ -309,7 +333,11 @@ describe("WrittenChangeFilter", () => {
                         animalName: "dolphin",
                         featureName: "stripey",
                     },
-                    change: { before: undefined, after: "not stripey" },
+                    change: {
+                        before: undefined,
+                        after: "not stripey",
+                        delta: "not stripey",
+                    },
                     path: "animals/dolphin/features/stripey",
                 },
                 {
@@ -317,7 +345,11 @@ describe("WrittenChangeFilter", () => {
                         animalName: "dolphin",
                         featureName: "swimming",
                     },
-                    change: { before: undefined, after: "much swimming" },
+                    change: {
+                        before: undefined,
+                        after: "much swimming",
+                        delta: "much swimming",
+                    },
                     path: "animals/dolphin/features/swimming",
                 },
             ],
@@ -360,6 +392,7 @@ describe("WrittenChangeFilter", () => {
                     change: {
                         before: "not swimming",
                         after: undefined,
+                        data: "not swimming",
                     },
                     path: "animals/tiger/features/swimming",
                 },
@@ -371,6 +404,7 @@ describe("WrittenChangeFilter", () => {
                     change: {
                         before: "not stripey",
                         after: undefined,
+                        data: "not stripey",
                     },
                     path: "animals/dolphin/features/stripey",
                 },
@@ -382,6 +416,7 @@ describe("WrittenChangeFilter", () => {
                     change: {
                         before: "much swimming",
                         after: undefined,
+                        data: "much swimming",
                     },
                     path: "animals/dolphin/features/swimming",
                 },
@@ -432,6 +467,8 @@ describe("WrittenChangeFilter", () => {
                     change: {
                         before: "mistakenly stripey",
                         after: "not stripey",
+                        data: "mistakenly stripey",
+                        delta: "not stripey",
                     },
                     path: "animals/dolphin/features/stripey",
                 },
@@ -443,13 +480,15 @@ describe("WrittenChangeFilter", () => {
                     change: {
                         before: "mistakenly not swimming",
                         after: "much swimming",
+                        data: "mistakenly not swimming",
+                        delta: "much swimming",
                     },
                     path: "animals/dolphin/features/swimming",
                 },
             ],
         ],
     ] as Array<[string, IChange, IParameterisedChange[]]>)(
-        "changeEvents cases",
+        "changeEvents cases %s",
         (
             observedPath: string,
             change: IChange,

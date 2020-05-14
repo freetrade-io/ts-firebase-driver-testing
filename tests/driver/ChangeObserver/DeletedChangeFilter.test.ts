@@ -16,7 +16,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -27,7 +27,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -38,7 +38,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -49,7 +49,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -63,7 +63,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -74,7 +74,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -85,7 +85,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "baz", after: undefined },
+                    change: { before: "baz", after: undefined, data: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -96,7 +96,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo",
                 },
             ],
@@ -107,12 +107,12 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo1" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -123,7 +123,7 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -137,12 +137,12 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo1" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "foo1",
                 },
                 {
                     parameters: { id: "foo2" },
-                    change: { before: "yes", after: undefined },
+                    change: { before: "yes", after: undefined, data: "yes" },
                     path: "foo2",
                 },
             ],
@@ -165,17 +165,21 @@ describe("DeletedChangeFilter", () => {
             [
                 {
                     parameters: { id: "id123", key: "propA" },
-                    change: { before: "foo", after: undefined },
+                    change: { before: "foo", after: undefined, data: "foo" },
                     path: "things/id123/propA",
                 },
                 {
                     parameters: { id: "id123", key: "propB" },
-                    change: { before: "bar", after: undefined },
+                    change: { before: "bar", after: undefined, data: "bar" },
                     path: "things/id123/propB",
                 },
                 {
                     parameters: { id: "id456", key: "propB" },
-                    change: { before: "goodbye", after: undefined },
+                    change: {
+                        before: "goodbye",
+                        after: undefined,
+                        data: "goodbye",
+                    },
                     path: "things/id456/propB",
                 },
             ],
@@ -218,6 +222,7 @@ describe("DeletedChangeFilter", () => {
                     change: {
                         before: "not swimming",
                         after: undefined,
+                        data: "not swimming",
                     },
                     path: "animals/tiger/features/swimming",
                 },
@@ -229,6 +234,7 @@ describe("DeletedChangeFilter", () => {
                     change: {
                         before: "not stripey",
                         after: undefined,
+                        data: "not stripey",
                     },
                     path: "animals/dolphin/features/stripey",
                 },
@@ -240,6 +246,7 @@ describe("DeletedChangeFilter", () => {
                     change: {
                         before: "much swimming",
                         after: undefined,
+                        data: "much swimming",
                     },
                     path: "animals/dolphin/features/swimming",
                 },
