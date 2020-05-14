@@ -114,6 +114,8 @@ class FirestoreUpdatedObserver extends DatabaseChangeObserver<
                 exists: !_.isNil(pc.change.after),
                 data: () => prepareChangeData(pc.change.after),
             },
+            data: pc.change.data,
+            delta: pc.change.delta,
         }
     }
 }
@@ -166,6 +168,8 @@ class FirestoreWrittenObserver extends DatabaseChangeObserver<
                 exists: !_.isNil(pc.change.after),
                 data: () => prepareChangeData(pc.change.after),
             },
+            data: pc.change.data,
+            delta: pc.change.delta,
         }
     }
 }
