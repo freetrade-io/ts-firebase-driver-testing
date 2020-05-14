@@ -2,12 +2,27 @@ import { flatten } from "flat"
 import _ from "lodash"
 import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
-import { stripMeta } from "../../util/stripMeta"
+import { JsonValue } from "../../util/json"
+import { makeDelta } from "../../util/makeDelta"
 
-export interface IChange {
-    before: any
-    after: any
-}
+/**
+ * Firebase triggers get before/after, GCP cloud function triggers get
+ * data/delta. Offering both here for convenience working between the
+ * two setups.
+ */
+export type IChange =
+    | {
+          before: JsonValue | undefined
+          after: JsonValue | undefined
+          data?: JsonValue | undefined
+          delta?: JsonValue | undefined
+      }
+    | {
+          data: JsonValue | undefined
+          delta: JsonValue | undefined
+          before?: JsonValue | undefined
+          after?: JsonValue | undefined
+      }
 
 export interface IParameterisedChange {
     parameters: IChangeParams
@@ -43,7 +58,7 @@ abstract class ChangeFilter implements IChangeFilter {
         this.observedPath = normalisePath(observedPath)
         const pathParts = this.observedPath.split("/")
         let startIndex = 1
-        this.positionMatched = pathParts.map((part, index) => {
+        this.positionMatched = pathParts.map((part) => {
             const matched = /^{(\S+)}$/.exec(part)
             if (matched) {
                 return {
@@ -111,12 +126,6 @@ abstract class ChangeFilter implements IChangeFilter {
     protected matchPath(
         otherPath: string,
     ): { match: boolean; parameters: { [key: string]: string } } {
-        const otherPathParts = otherPath
-            .split("/")
-            .map((p) => p.trim())
-            .filter((p) => p.length)
-            .filter((p) => p !== "_meta")
-
         const parameters: { [key: string]: string } = {}
         const result = this.observedPathRegex.exec(otherPath)
         if (result) {
@@ -151,7 +160,7 @@ export class CreatedChangeFilter extends ChangeFilter {
                 continue
             }
             const afterAtPath = objectPath.get(
-                change.after,
+                change.after as object,
                 dotPath
                     ? afterPath
                           .replace(new RegExp("^" + dotPath.join("/")), "")
@@ -166,6 +175,8 @@ export class CreatedChangeFilter extends ChangeFilter {
                 change: {
                     before: undefined,
                     after: afterAtPath,
+                    data: undefined,
+                    delta: afterAtPath,
                 },
                 path: afterPath,
             })
@@ -187,7 +198,7 @@ export class UpdatedChangeFilter extends ChangeFilter {
                 continue
             }
             const afterAtPath = objectPath.get(
-                change.after,
+                change.after as object,
                 dotPath
                     ? afterPath
                           .replace(new RegExp("^" + dotPath.join("/")), "")
@@ -198,7 +209,7 @@ export class UpdatedChangeFilter extends ChangeFilter {
                 continue
             }
             const beforeAtPath = objectPath.get(
-                change.before,
+                change.before as object,
                 dotPath
                     ? afterPath
                           .replace(new RegExp("^" + dotPath.join("/")), "")
@@ -211,7 +222,12 @@ export class UpdatedChangeFilter extends ChangeFilter {
             if (!_.isEqual(afterAtPath, beforeAtPath)) {
                 updated.push({
                     parameters: matchPath.parameters,
-                    change: { before: beforeAtPath, after: afterAtPath },
+                    change: {
+                        before: beforeAtPath,
+                        after: afterAtPath,
+                        data: beforeAtPath,
+                        delta: makeDelta(beforeAtPath, afterAtPath),
+                    },
                     path: afterPath,
                 })
             }
@@ -234,7 +250,7 @@ export class DeletedChangeFilter extends ChangeFilter {
             }
             if (paths.afterPaths.includes(beforePath)) {
                 const afterAtPath = objectPath.get(
-                    change.after,
+                    change.after as { [key: string]: JsonValue },
                     dotPath
                         ? beforePath
                               .replace(new RegExp("^" + dotPath.join("/")), "")
@@ -246,7 +262,7 @@ export class DeletedChangeFilter extends ChangeFilter {
                 }
             }
             const beforeAtPath = objectPath.get(
-                change.before,
+                change.before as { [key: string]: JsonValue },
                 dotPath
                     ? beforePath
                           .replace(new RegExp("^" + dotPath.join("/")), "")
@@ -255,7 +271,12 @@ export class DeletedChangeFilter extends ChangeFilter {
             )
             deleted.push({
                 parameters: matchPath.parameters,
-                change: { before: beforeAtPath, after: undefined },
+                change: {
+                    before: beforeAtPath,
+                    after: undefined,
+                    data: beforeAtPath,
+                    delta: undefined,
+                },
                 path: beforePath,
             })
         }

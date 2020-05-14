@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
     CreatedChangeFilter,
@@ -14,7 +15,11 @@ import {
     IChangeSnapshots,
     TriggerFunction,
 } from "../ChangeObserver/DatabaseChangeObserver"
-import { IFirestore, IFirestoreDocumentSnapshot } from "./IFirestore"
+import {
+    IFirestore,
+    IFirestoreDocumentData,
+    IFirestoreDocumentSnapshot,
+} from "./IFirestore"
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 
 export function makeFirestoreChangeObserver(
@@ -48,8 +53,17 @@ export interface IFirestoreChangeSnapshot {
     data(): any
 }
 
-function prepareChangeData(data: object): object {
-    return _.cloneDeep(stripMeta(data))
+function isObject(potentialObject: any): potentialObject is object {
+    return _.isObject(potentialObject)
+}
+
+function prepareChangeData(
+    data: JsonValue | undefined,
+): IFirestoreDocumentData | undefined {
+    if (isObject(data)) {
+        return _.cloneDeep(stripMeta(data))
+    }
+    return undefined
 }
 
 class FirestoreCreatedObserver extends DatabaseChangeObserver<

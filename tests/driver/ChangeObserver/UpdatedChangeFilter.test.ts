@@ -15,7 +15,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "bar", after: "bar2" },
+                    change: {
+                        before: "bar",
+                        after: "bar2",
+                        data: "bar",
+                        delta: "bar2",
+                    },
                     path: "foo",
                 },
             ],
@@ -31,7 +36,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: { bar: "baz" }, after: { bar: "baz2" } },
+                    change: {
+                        before: { bar: "baz" },
+                        after: { bar: "baz2" },
+                        data: { bar: "baz" },
+                        delta: { bar: "baz2" },
+                    },
                     path: "foo",
                 },
             ],
@@ -53,7 +63,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: { bar: "baz1" }, after: { bar: "baz2" } },
+                    change: {
+                        before: { bar: "baz1" },
+                        after: { bar: "baz2" },
+                        data: { bar: "baz1" },
+                        delta: { bar: "baz2" },
+                    },
                     path: "foo",
                 },
             ],
@@ -64,7 +79,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { before: "wow", after: "baz" },
+                    change: {
+                        before: "wow",
+                        after: "baz",
+                        data: "wow",
+                        delta: "baz",
+                    },
                     path: "foo/bar",
                 },
             ],
@@ -79,7 +99,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { before: "baz1", after: "baz2" },
+                    change: {
+                        before: "baz1",
+                        after: "baz2",
+                        data: "baz1",
+                        delta: "baz2",
+                    },
                     path: "foo/bar",
                 },
             ],
@@ -102,6 +127,8 @@ describe("UpdatedChangeFilter", () => {
                     change: {
                         before: "baz1",
                         after: "baz2",
+                        data: "baz1",
+                        delta: "baz2",
                     },
                     path: "foo/bar",
                 },
@@ -125,7 +152,12 @@ describe("UpdatedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { before: "baz1", after: "baz2" },
+                    change: {
+                        before: "baz1",
+                        after: "baz2",
+                        data: "baz1",
+                        delta: "baz2",
+                    },
                     path: "foo/bar",
                 },
             ],
@@ -175,6 +207,8 @@ describe("UpdatedChangeFilter", () => {
                     change: {
                         before: "mistakenly stripey",
                         after: "not stripey",
+                        data: "mistakenly stripey",
+                        delta: "not stripey",
                     },
                     path: "animals/dolphin/features/stripey",
                 },
@@ -186,13 +220,15 @@ describe("UpdatedChangeFilter", () => {
                     change: {
                         before: "mistakenly not swimming",
                         after: "much swimming",
+                        data: "mistakenly not swimming",
+                        delta: "much swimming",
                     },
                     path: "animals/dolphin/features/swimming",
                 },
             ],
         ],
     ] as Array<[string, IChange, IParameterisedChange[]]>)(
-        "changeEvents cases",
+        "changeEvents cases %s",
         (
             observedPath: string,
             change: IChange,

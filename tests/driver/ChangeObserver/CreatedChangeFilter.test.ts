@@ -11,7 +11,13 @@ describe("CreatedChangeFilter", () => {
         [
             "/foo",
             { after: { foo: "bar" } },
-            [{ parameters: {}, change: { after: "bar" }, path: "foo" }],
+            [
+                {
+                    parameters: {},
+                    change: { after: "bar", delta: "bar" },
+                    path: "foo",
+                },
+            ],
         ],
         [
             "/foo",
@@ -19,7 +25,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -30,7 +36,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -44,7 +50,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: {},
-                    change: { after: { bar: "baz" } },
+                    change: { after: { bar: "baz" }, delta: { bar: "baz" } },
                     path: "foo",
                 },
             ],
@@ -52,7 +58,13 @@ describe("CreatedChangeFilter", () => {
         [
             "/foo/bar",
             { after: { foo: { bar: "baz" } } },
-            [{ parameters: {}, change: { after: "baz" }, path: "foo/bar" }],
+            [
+                {
+                    parameters: {},
+                    change: { after: "baz", delta: "baz" },
+                    path: "foo/bar",
+                },
+            ],
         ],
         [
             "/{id}/bar",
@@ -60,7 +72,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -71,7 +83,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo", key: "bar" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -82,7 +94,7 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: { id: "foo" },
-                    change: { after: "baz" },
+                    change: { after: "baz", delta: "baz" },
                     path: "foo/bar",
                 },
             ],
@@ -113,7 +125,11 @@ describe("CreatedChangeFilter", () => {
             [
                 {
                     parameters: { animalName: "tiger", featureName: "stripey" },
-                    change: { before: undefined, after: "very stripey" },
+                    change: {
+                        before: undefined,
+                        after: "very stripey",
+                        delta: "very stripey",
+                    },
                     path: "animals/tiger/features/stripey",
                 },
                 {
@@ -121,7 +137,11 @@ describe("CreatedChangeFilter", () => {
                         animalName: "tiger",
                         featureName: "swimming",
                     },
-                    change: { before: undefined, after: "not swimming" },
+                    change: {
+                        before: undefined,
+                        after: "not swimming",
+                        delta: "not swimming",
+                    },
                     path: "animals/tiger/features/swimming",
                 },
                 {
@@ -129,7 +149,11 @@ describe("CreatedChangeFilter", () => {
                         animalName: "dolphin",
                         featureName: "stripey",
                     },
-                    change: { before: undefined, after: "not stripey" },
+                    change: {
+                        before: undefined,
+                        after: "not stripey",
+                        delta: "not stripey",
+                    },
                     path: "animals/dolphin/features/stripey",
                 },
                 {
@@ -137,7 +161,11 @@ describe("CreatedChangeFilter", () => {
                         animalName: "dolphin",
                         featureName: "swimming",
                     },
-                    change: { before: undefined, after: "much swimming" },
+                    change: {
+                        before: undefined,
+                        after: "much swimming",
+                        delta: "much swimming",
+                    },
                     path: "animals/dolphin/features/swimming",
                 },
             ],
