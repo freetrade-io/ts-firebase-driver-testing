@@ -11,10 +11,10 @@ import { makeDelta } from "../../util/makeDelta"
  * two setups.
  */
 export interface IChange {
-    before: JsonValue | undefined
-    after: JsonValue | undefined
-    data: JsonValue | undefined
-    delta: JsonValue | undefined
+    before?: JsonValue | undefined
+    after?: JsonValue | undefined
+    data?: JsonValue | undefined
+    delta?: JsonValue | undefined
 }
 
 export interface IParameterisedChange {
