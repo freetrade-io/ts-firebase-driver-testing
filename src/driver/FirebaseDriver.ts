@@ -1,3 +1,4 @@
+import { IFirebaseAuth } from "./Auth/FirebaseAuth"
 import { IFirebaseFunctionBuilder } from "./FirebaseFunctionBuilder"
 import { IFirestore, IFirestoreDocumentSnapshot } from "./Firestore/IFirestore"
 import {
@@ -27,6 +28,7 @@ export interface IFirebaseDriver {
         },
         name?: string,
     ): void
+    auth(): IFirebaseAuth
 }
 
 export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB"
