@@ -23,7 +23,7 @@ describe("In-process mock Firebase auth", () => {
         // Then the token should not be verified.
         expect(error).toBeDefined()
         expect(error).toBeInstanceOf(Error)
-        expect(error!.message).toContain("User not found for id token")
+        expect(error!.message).toContain("User not found")
     })
 
     test("In-process auth verify token for created user", async () => {

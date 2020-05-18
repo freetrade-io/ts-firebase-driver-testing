@@ -56,12 +56,21 @@ export class InProcessFirebaseAuth implements IFirebaseAuth {
         if (tokenParts.length !== 3) {
             throw new Error("Invalid JWT token structure")
         }
-        const payload: { [key: string]: string } = JSON.parse(
-            Buffer.from(String(tokenParts[1]), "base64").toString(),
-        )
-        const uid = payload.sub
-        if (!this.users[uid]) {
-            throw new Error(`User not found for id token ${idToken}`)
+        let payload: { [key: string]: string } = {}
+        try {
+            payload = JSON.parse(
+                Buffer.from(String(tokenParts[1]), "base64").toString(),
+            )
+        } catch (err) {
+            throw new Error(
+                `Failed to parse idToken ${idToken}: ${err.message}`,
+            )
+        }
+        const uid = String(payload.sub || "")
+        if (!uid || !this.users[uid]) {
+            throw new Error(
+                `User not found for uid ${uid}, id token ${idToken}`,
+            )
         }
         return { uid }
     }
