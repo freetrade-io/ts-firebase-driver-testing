@@ -1,5 +1,5 @@
 import { AsyncJobs, IAsyncJobs } from "./AsyncJobs"
-import { IFirebaseAuth, InProcessFirebaseAuth } from "./Auth/FirebaseAuth"
+import { InProcessFirebaseAuth } from "./Auth/FirebaseAuth"
 import { IFirebaseDriver, IPubSub, MemoryOption } from "./FirebaseDriver"
 import {
     IFirebaseFunctionBuilder,
@@ -19,16 +19,13 @@ import {
     InProcessFirebaseBuilderDatabase,
     InProcessRealtimeDatabase,
 } from "./RealtimeDatabase/InProcessRealtimeDatabase"
-import { throwIfEnvironmentLooksLikeProd } from "./throwIfEnvironmentLooksLikeProd"
 
 class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
     constructor(
         readonly pubsub: InProcessFirebaseBuilderPubSub,
         readonly database: InProcessFirebaseBuilderDatabase,
         readonly firestore: InProcessFirestoreBuilder,
-    ) {
-        throwIfEnvironmentLooksLikeProd()
-    }
+    ) {}
 
     region(
         ...regions: Array<typeof SUPPORTED_REGIONS[number]>
@@ -46,10 +43,9 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private builderFirestore: InProcessFirestoreBuilder | undefined
     private builderPubSub: InProcessFirebaseBuilderPubSub | undefined
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
-    private firebaseAuth: IFirebaseAuth | undefined
+    private firebaseAuth: InProcessFirebaseAuth | undefined
 
     constructor() {
-        throwIfEnvironmentLooksLikeProd()
         this.asyncJobs = new AsyncJobs()
     }
 
@@ -87,7 +83,7 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
         // This is no-op in in-process Firebase driver.
     }
 
-    auth(): IFirebaseAuth {
+    auth(): InProcessFirebaseAuth {
         if (!this.firebaseAuth) {
             this.firebaseAuth = new InProcessFirebaseAuth()
         }

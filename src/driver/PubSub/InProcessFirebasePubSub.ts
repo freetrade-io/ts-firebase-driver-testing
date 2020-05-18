@@ -12,14 +12,9 @@ import {
     IFirebaseEventContext,
     IPubSubMessage,
 } from "../RealtimeDatabase/IFirebaseRealtimeDatabase"
-import { throwIfEnvironmentLooksLikeProd } from "../throwIfEnvironmentLooksLikeProd"
 
 export class InProcessFirebaseScheduleBuilder
     implements IFirebaseScheduleBuilder {
-    constructor() {
-        throwIfEnvironmentLooksLikeProd()
-    }
-
     onRun(handler: (context: object) => PromiseLike<any>): CloudFunction<{}> {
         const scheduledFunction = async (context: object): Promise<any> => {
             return handler(context)

@@ -12,7 +12,6 @@ import {
     IFirebaseRefBuilder,
 } from "../FirebaseDriver"
 import { firebaseLikeId } from "../identifiers"
-import { throwIfEnvironmentLooksLikeProd } from "../throwIfEnvironmentLooksLikeProd"
 import {
     IFirebaseChange,
     IFirebaseDataSnapshot,
@@ -448,9 +447,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     constructor(
         private readonly jobs?: IAsyncJobs,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
-    ) {
-        throwIfEnvironmentLooksLikeProd()
-    }
+    ) {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
         return new InProcessRealtimeDatabaseRef(

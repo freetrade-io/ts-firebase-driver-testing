@@ -17,7 +17,6 @@ import {
 import { GRPCStatusCode } from "../Common/GRPCStatusCode"
 import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
-import { throwIfEnvironmentLooksLikeProd } from "../throwIfEnvironmentLooksLikeProd"
 import {
     FIELD_PATH_DOCUMENT_ID,
     IFieldPath,
@@ -50,9 +49,7 @@ export class InProcessFirestore implements IFirestore {
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
         public storage = {},
-    ) {
-        throwIfEnvironmentLooksLikeProd()
-    }
+    ) {}
 
     collection(collectionPath: string): IFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
