@@ -53,8 +53,11 @@ export class InProcessFirebaseAuth implements IFirebaseAuth {
     async verifyIdToken(idToken: string): Promise<IDecodedIdToken> {
         throwIfEnvironmentLooksLikeProd()
         const tokenParts = String(idToken).split(".")
+        if (tokenParts.length !== 3) {
+            throw new Error("Invalid JWT token structure")
+        }
         const payload: { [key: string]: string } = JSON.parse(
-            Buffer.from(tokenParts[1], "base64").toString(),
+            Buffer.from(String(tokenParts[1]), "base64").toString(),
         )
         const uid = payload.sub
         if (!this.users[uid]) {
