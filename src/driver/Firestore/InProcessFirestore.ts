@@ -6,6 +6,7 @@ import {
     IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
+import { expandDotPaths } from "../../util/expandDotPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
 import { pickSubMeta, stripMeta } from "../../util/stripMeta"
@@ -208,6 +209,36 @@ interface IQueryBuilder {
 }
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
+    private static compare(a: any, b: any): number {
+        return InProcessFirestoreQuery.normalise(a).localeCompare(
+            InProcessFirestoreQuery.normalise(b),
+        )
+    }
+
+    private static normalise(val: any): string {
+        if (val && typeof val.toISOString === "function") {
+            val = val.toISOString()
+        }
+        if (val && typeof val.toString === "function") {
+            val = val.toString()
+        }
+        return String(val)
+    }
+
+    private static enforceSingleFieldRangeFilter(
+        query: IQueryBuilder,
+        fieldPath: string,
+    ): void {
+        if (query.rangeFilterField && fieldPath !== query.rangeFilterField) {
+            throw new Error(
+                "Firestore cannot have range filters on different fields, " +
+                    `tried to add range filter on '${fieldPath}' with ` +
+                    `existing range filter on '${query.rangeFilterField}', ` +
+                    "see https://firebase.google.com/docs/firestore/query-data/queries",
+            )
+        }
+        query.rangeFilterField = fieldPath
+    }
     constructor(
         readonly firestore: IFirestore & InProcessFirestore,
         readonly path: string,
@@ -255,7 +286,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
                         : objGet(b.item, pathParts)
-                return this.compare(compareOfA, compareOfB)
+                return InProcessFirestoreQuery.compare(compareOfA, compareOfB)
             }
         } else {
             newQuery.orderings[fieldPath] = (a, b) => {
@@ -267,7 +298,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? b.id
                         : objGet(b.item, pathParts)
-                return this.compare(compareOfB, compareOfA)
+                return InProcessFirestoreQuery.compare(compareOfB, compareOfA)
             }
         }
 
@@ -302,7 +333,12 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         fieldValues.forEach((fieldValue: any, i: number) => {
             const fieldPath = Object.keys(this.query.orderings)[i]
             newQuery.filters.push((item: IItem): boolean => {
-                return this.compare(item[fieldPath], fieldValue) > 0
+                return (
+                    InProcessFirestoreQuery.compare(
+                        item[fieldPath],
+                        fieldValue,
+                    ) > 0
+                )
             })
         })
 
@@ -319,11 +355,17 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         const fieldObjPath = fieldPath.split(/\.+/)
         switch (opStr) {
             case "<":
-                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
+                InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
+                    newQuery,
+                    fieldPath,
+                )
                 filter = (item) => objGet(item, fieldObjPath) < value
                 break
             case "<=":
-                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
+                InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
+                    newQuery,
+                    fieldPath,
+                )
                 filter = (item) => objGet(item, fieldObjPath) <= value
                 break
             case "==":
@@ -332,11 +374,17 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 }
                 break
             case ">=":
-                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
+                InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
+                    newQuery,
+                    fieldPath,
+                )
                 filter = (item) => objGet(item, fieldObjPath) >= value
                 break
             case ">":
-                this.enforceSingleFieldRangeFilter(newQuery, fieldPath)
+                InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
+                    newQuery,
+                    fieldPath,
+                )
                 filter = (item) => objGet(item, fieldObjPath) > value
                 break
             case "array-contains":
@@ -492,35 +540,6 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
     _dotPath(): string[] {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
-    }
-
-    private enforceSingleFieldRangeFilter(
-        query: IQueryBuilder,
-        fieldPath: string,
-    ): void {
-        if (query.rangeFilterField && fieldPath !== query.rangeFilterField) {
-            throw new Error(
-                "Firestore cannot have range filters on different fields, " +
-                    `tried to add range filter on '${fieldPath}' with ` +
-                    `existing range filter on '${query.rangeFilterField}', ` +
-                    "see https://firebase.google.com/docs/firestore/query-data/queries",
-            )
-        }
-        query.rangeFilterField = fieldPath
-    }
-
-    private compare(a: any, b: any): number {
-        return this.normalise(a).localeCompare(this.normalise(b))
-    }
-
-    private normalise(val: any): string {
-        if (val && typeof val.toISOString === "function") {
-            val = val.toISOString()
-        }
-        if (val && typeof val.toString === "function") {
-            val = val.toString()
-        }
-        return String(val)
     }
 }
 
@@ -752,7 +771,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             )
         }
 
-        const data = dataOrField as IFirestoreDocumentData
+        const data = expandDotPaths(dataOrField) as IFirestoreDocumentData
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
 
