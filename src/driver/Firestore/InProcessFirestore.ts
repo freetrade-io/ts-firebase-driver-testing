@@ -771,7 +771,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             )
         }
 
-        const data = expandDotPaths(dataOrField) as IFirestoreDocumentData
+        const updateDelta = dataOrField as IFirestoreDocumentData
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
 
@@ -795,11 +795,17 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         const newValue = _.merge(
             _.cloneDeep({ _meta: { createTime: newUpdateTime, type } }),
             _.cloneDeep(current),
-            _.cloneDeep(data),
             _.cloneDeep({
                 _meta: { updateTime: newUpdateTime },
             }),
         )
+        for (const path of Object.keys(updateDelta)) {
+            if (path.includes(".")) {
+                objSet(newValue, path.split("."), updateDelta[path])
+            } else {
+                objSet(newValue, [path], updateDelta[path])
+            }
+        }
         this.firestore._setPath(this._dotPath(), newValue)
         this.firestore._setPath(
             [...this._dotPath().slice(0, -1), "_meta", "type"],
