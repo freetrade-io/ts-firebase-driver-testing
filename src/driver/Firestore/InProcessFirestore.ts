@@ -505,10 +505,37 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     private compare(a: any, b: any): number {
-        return this.normalise(a).localeCompare(this.normalise(b))
+        const aNormalised = this.normalise(a)
+        const bNormalised = this.normalise(b)
+
+        // Both values are nil
+        if (_.isNil(aNormalised) && _.isNil(bNormalised)) {
+            return 0
+        }
+
+        if (_.isNil(aNormalised)) {
+            return -1
+        }
+
+        if (_.isNil(bNormalised)) {
+            return 1
+        }
+
+        // Both are numbers we can actually compare them
+        if (_.isNumber(aNormalised) && _.isNumber(bNormalised)) {
+            return aNormalised - bNormalised
+        }
+
+        // Else String compare
+        return String(aNormalised).localeCompare(String(bNormalised))
     }
 
-    private normalise(val: any): string {
+    // tslint:disable-next-line ban-types
+    private normalise(val: any): String | Number | Boolean | null {
+        if (_.isNumber(val)) {
+            return val
+        }
+
         if (val && typeof val.toISOString === "function") {
             val = val.toISOString()
         }
