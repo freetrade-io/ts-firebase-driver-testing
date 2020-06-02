@@ -94,6 +94,86 @@ describe("InProcessFirestore orderBy", () => {
         ])
     })
 
+    test("orderBy number desc, with null values", async () => {
+        // Given there is a collection of with a number field;
+        await db.collection("ratings").add({ id: 11 })
+        await db.collection("ratings").add({ id: 10 })
+        await db.collection("ratings").add({ id: 9 })
+        await db.collection("ratings").add({ id: 8 })
+        await db.collection("ratings").add({ id: 7 })
+        await db.collection("ratings").add({ id: 6 })
+        await db.collection("ratings").add({ id: null })
+        await db.collection("ratings").add({ id: 2 })
+        await db.collection("ratings").add({ id: null })
+        await db.collection("ratings").add({ id: 4 })
+        await db.collection("ratings").add({ id: 5 })
+
+        // When we order the collection by that field;
+        const result = await db
+            .collection("ratings")
+            .orderBy("id", "desc")
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        const docs: Array<{
+            id: number
+        }> = result.docs.map((doc) => doc.data() as any)
+
+        expect(docs).toStrictEqual([
+            { id: null },
+            { id: null },
+            { id: 11 },
+            { id: 10 },
+            { id: 9 },
+            { id: 8 },
+            { id: 7 },
+            { id: 6 },
+            { id: 5 },
+            { id: 4 },
+            { id: 2 },
+        ])
+    })
+
+    test("orderBy number asc, with null values", async () => {
+        // Given there is a collection of with a number field;
+        await db.collection("ratings").add({ id: 11 })
+        await db.collection("ratings").add({ id: 10 })
+        await db.collection("ratings").add({ id: 9 })
+        await db.collection("ratings").add({ id: 8 })
+        await db.collection("ratings").add({ id: 7 })
+        await db.collection("ratings").add({ id: 6 })
+        await db.collection("ratings").add({ id: null })
+        await db.collection("ratings").add({ id: 2 })
+        await db.collection("ratings").add({ id: null })
+        await db.collection("ratings").add({ id: 4 })
+        await db.collection("ratings").add({ id: 5 })
+
+        // When we order the collection by that field;
+        const result = await db
+            .collection("ratings")
+            .orderBy("id")
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        const docs: Array<{
+            id: number
+        }> = result.docs.map((doc) => doc.data() as any)
+
+        expect(docs).toStrictEqual([
+            { id: 2 },
+            { id: 4 },
+            { id: 5 },
+            { id: 6 },
+            { id: 7 },
+            { id: 8 },
+            { id: 9 },
+            { id: 10 },
+            { id: 11 },
+            { id: null },
+            { id: null },
+        ])
+    })
+
     test("orderBy number asc, more than 10", async () => {
         // Given there is a collection of with a number field;
         await db.collection("ratings").add({ id: 11 })
