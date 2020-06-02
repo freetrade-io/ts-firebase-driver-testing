@@ -1,6 +1,6 @@
 {
   "name": "ts-firebase-driver-testing",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "Swap out Firebase as a driver for in-process testing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,7 @@
     "@types/node": "^13.1.4",
     "@types/object-path": "^0",
     "jest": "^25.1.0",
-    "prettier": "~1",
+    "prettier": "^1",
     "ts-jest": "^25.1.0",
     "tslint": "^5",
     "tslint-config-prettier": ">=1",
