@@ -210,12 +210,37 @@ interface IQueryBuilder {
 
 export class InProcessFirestoreQuery implements IFirestoreQuery {
     private static compare(a: any, b: any): number {
-        return InProcessFirestoreQuery.normalise(a).localeCompare(
-            InProcessFirestoreQuery.normalise(b),
-        )
+        const aNormalised = InProcessFirestoreQuery.normalise(a)
+        const bNormalised = InProcessFirestoreQuery.normalise(b)
+
+        // Both values are nil
+        if (_.isNil(aNormalised) && _.isNil(bNormalised)) {
+            return 0
+        }
+
+        if (_.isNil(aNormalised)) {
+            return -1
+        }
+
+        if (_.isNil(bNormalised)) {
+            return 1
+        }
+
+        // Both are numbers we can actually compare them
+        if (_.isNumber(aNormalised) && _.isNumber(bNormalised)) {
+            return aNormalised - bNormalised
+        }
+
+        // Else String compare
+        return String(aNormalised).localeCompare(String(bNormalised))
     }
 
-    private static normalise(val: any): string {
+    // tslint:disable-next-line ban-types
+    private static normalise(val: any): String | Number | Boolean | null {
+        if (_.isNumber(val)) {
+            return val
+        }
+
         if (val && typeof val.toISOString === "function") {
             val = val.toISOString()
         }
