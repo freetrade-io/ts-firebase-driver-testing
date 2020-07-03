@@ -700,6 +700,25 @@ interface IChildMeta {
 }
 
 export class InProcessFirestoreDocRef implements IFirestoreDocRef {
+    static validateNoUndefinedFields(
+        updateDelta: IFirestoreDocumentData,
+    ): void {
+        const undefinedFields = InProcessFirestoreDocRef.extractUndefinedFields(
+            updateDelta,
+        )
+        if (undefinedFields.length > 0) {
+            throw new Error(`Undefined fields cannot be stored in firestore`)
+        }
+    }
+
+    private static extractUndefinedFields(
+        updateDelta: IFirestoreDocumentData,
+    ): string[] {
+        return Object.keys(updateDelta).filter(
+            (path) => updateDelta[path] === undefined,
+        )
+    }
+
     readonly id: string
     readonly parent: IFirestoreCollectionRef
 
@@ -741,6 +760,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
                 `Document already exists: ${this.path}`,
             )
         }
+        InProcessFirestoreDocRef.validateNoUndefinedFields(data)
         return this.set(data)
     }
 
@@ -751,6 +771,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         // We only need to do a merge if something exists at the path
         // Due to how update is implemented, this will throw if it does
         // not already exist
+        InProcessFirestoreDocRef.validateNoUndefinedFields(data)
         const current = this.firestore._getPath(this._dotPath())
         if (options && options.merge && current) {
             return this.update(data)
@@ -797,6 +818,8 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         }
 
         const updateDelta = dataOrField as IFirestoreDocumentData
+        InProcessFirestoreDocRef.validateNoUndefinedFields(updateDelta)
+
         const precondition = valueOrPrecondition as IPrecondition
         const current = this.firestore._getPath(this._dotPath())
 

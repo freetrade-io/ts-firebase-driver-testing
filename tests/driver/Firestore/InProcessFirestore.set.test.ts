@@ -7,107 +7,164 @@ describe("InProcessFirestore set", () => {
         firestore.resetStorage()
     })
 
-    test(".doc().set() new", async () => {
-        // When we set a new document in a collection;
-        await firestore
-            .collection("myCollection")
-            .doc("thing")
-            .set({
+    describe(".doc().set()", () => {
+        test("new", async () => {
+            // When we set a new document in a collection;
+            await firestore
+                .collection("myCollection")
+                .doc("thing")
+                .set({
+                    name: "thing",
+                    good: true,
+                })
+
+            // Then the data should be stored correctly;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("thing")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({
                 name: "thing",
                 good: true,
             })
+        })
 
-        // Then the data should be stored correctly;
-        const stored = await firestore
-            .collection("myCollection")
-            .doc("thing")
-            .get()
-        expect(stored.exists).toBe(true)
-        expect(stored.data()).toEqual({
-            name: "thing",
-            good: true,
+        test("existing", async () => {
+            // Given there is a doc;
+            firestore.resetStorage({
+                myCollection: {
+                    id1: { field: "value 1" },
+                },
+            })
+
+            // When we set the doc with a different value;
+            await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .set({ foo: "bar", amount: 123 })
+
+            // Then the data should be stored correctly;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({ foo: "bar", amount: 123 })
+        })
+
+        test("merge", async () => {
+            // Given there is a doc;
+            firestore.resetStorage({
+                myCollection: {
+                    id1: { field1: "value 1", field2: "value 2" },
+                },
+            })
+
+            // When we set the doc with a different value, using merge;
+            await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .set(
+                    { field2: "new value 2", foo: "bar", amount: 123 },
+                    { merge: true },
+                )
+
+            // Then the data should be stored correctly;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({
+                field1: "value 1",
+                field2: "new value 2",
+                foo: "bar",
+                amount: 123,
+            })
+        })
+
+        test("throws with an undefined field", async () => {
+            // When we set a new document in a collection, it throws;
+            await expect(
+                firestore
+                    .collection("myCollection")
+                    .doc("thing")
+                    .set({
+                        name: "thing",
+                        good: undefined,
+                    }),
+            ).rejects.toThrow()
+
+            // Then the data should not be stored;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("thing")
+                .get()
+            expect(stored.exists).toBe(false)
+            expect(stored.data()).toEqual({})
         })
     })
 
-    test(".doc().set() existing", async () => {
-        // Given there is a doc;
-        firestore.resetStorage({
-            myCollection: {
-                id1: { field: "value 1" },
-            },
+    describe(".doc().update()", () => {
+        test("update", async () => {
+            // Given there is a doc;
+            firestore.resetStorage({
+                myCollection: {
+                    id1: { field1: "value 1", field2: "value 2" },
+                },
+            })
+
+            // When we update the doc with a different value;
+            await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .update({ field2: "new value 2", foo: "bar", amount: 123 })
+
+            // Then the data should be stored correctly;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({
+                field1: "value 1",
+                field2: "new value 2",
+                foo: "bar",
+                amount: 123,
+            })
         })
 
-        // When we set the doc with a different value;
-        await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .set({ foo: "bar", amount: 123 })
+        test("throws with an undefined field", async () => {
+            // Given there is a doc;
+            firestore.resetStorage({
+                myCollection: {
+                    id1: { field1: "value 1", field2: "value 2" },
+                },
+            })
 
-        // Then the data should be stored correctly;
-        const stored = await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .get()
-        expect(stored.exists).toBe(true)
-        expect(stored.data()).toEqual({ foo: "bar", amount: 123 })
-    })
+            // When we update the doc with a different value, it throws;
+            await expect(
+                firestore
+                    .collection("myCollection")
+                    .doc("id1")
+                    .update({
+                        field2: "new value 2",
+                        foo: undefined,
+                        amount: 123,
+                    }),
+            ).rejects.toThrow()
 
-    test(".doc().set() merge", async () => {
-        // Given there is a doc;
-        firestore.resetStorage({
-            myCollection: {
-                id1: { field1: "value 1", field2: "value 2" },
-            },
-        })
-
-        // When we set the doc with a different value, using merge;
-        await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .set(
-                { field2: "new value 2", foo: "bar", amount: 123 },
-                { merge: true },
-            )
-
-        // Then the data should be stored correctly;
-        const stored = await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .get()
-        expect(stored.exists).toBe(true)
-        expect(stored.data()).toEqual({
-            field1: "value 1",
-            field2: "new value 2",
-            foo: "bar",
-            amount: 123,
-        })
-    })
-
-    test(".doc().update()", async () => {
-        // Given there is a doc;
-        firestore.resetStorage({
-            myCollection: {
-                id1: { field1: "value 1", field2: "value 2" },
-            },
-        })
-
-        // When we update the doc with a different value;
-        await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .update({ field2: "new value 2", foo: "bar", amount: 123 })
-
-        // Then the data should be stored correctly;
-        const stored = await firestore
-            .collection("myCollection")
-            .doc("id1")
-            .get()
-        expect(stored.exists).toBe(true)
-        expect(stored.data()).toEqual({
-            field1: "value 1",
-            field2: "new value 2",
-            foo: "bar",
-            amount: 123,
+            // And the data should be not be updated;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({
+                field1: "value 1",
+                field2: "value 2",
+            })
         })
     })
 
