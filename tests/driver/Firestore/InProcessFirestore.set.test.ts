@@ -194,6 +194,27 @@ describe("InProcessFirestore set", () => {
         expect(storedDoc.data()).toEqual({ foo: "bar", amount: 123 })
     })
 
+    test(".collection().add() throws with an undefined field", async () => {
+        // Given Firestore can auto-generate ids;
+        firestore.makeId = () => "foobar-id-123"
+
+        // When we add a new doc to a collection, it should throw;
+        await expect(
+            firestore
+                .collection("myCollection")
+                .add({ foo: "bar", amount: undefined }),
+        ).rejects.toThrow()
+
+        // And the data should be not be stores.
+        const storedDoc = await firestore
+            .collection("myCollection")
+            .doc("foobar-id-123")
+            .get()
+
+        expect(storedDoc.exists).toBe(false)
+        expect(storedDoc.data()).toEqual({})
+    })
+
     test(".collection().doc().set() auto-id", async () => {
         // Given Firestore can auto-generate ids;
         firestore.makeId = () => "foobar-id-123"
