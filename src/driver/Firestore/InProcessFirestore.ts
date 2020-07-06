@@ -707,7 +707,9 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             updateDelta,
         )
         if (undefinedFields.length > 0) {
-            throw new Error(`Undefined fields cannot be stored in firestore`)
+            throw new Error(
+                `Undefined fields cannot be stored in firestore - Undefined fields: ${undefinedFields}`,
+            )
         }
     }
 
