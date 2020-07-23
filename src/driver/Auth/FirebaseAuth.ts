@@ -1,6 +1,6 @@
 export interface IFirebaseAuth {
     createUser(properties: ICreateUserRequest): Promise<IUserRecord>
-    verifyIdToken(idToken: string): Promise<IDecodedIdToken>
+    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<IDecodedIdToken>
 }
 
 interface ICreateUserRequest {
@@ -44,7 +44,7 @@ export class InProcessFirebaseAuth implements IFirebaseAuth {
      * No verification is done.
      * Simulates https://firebase.google.com/docs/auth/admin/verify-id-tokens
      */
-    async verifyIdToken(idToken: string): Promise<IDecodedIdToken> {
+    async verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<IDecodedIdToken> {
         const tokenParts = String(idToken).split(".")
         if (tokenParts.length !== 3) {
             throw new Error("Invalid JWT token structure")
