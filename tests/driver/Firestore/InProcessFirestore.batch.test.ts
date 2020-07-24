@@ -1,6 +1,6 @@
 import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
-import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 import { FirestoreError } from "../../../src/driver/Firestore/FirestoreError"
+import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
 /**
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
