@@ -1,5 +1,6 @@
 import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
+import { FirestoreError } from "../../../src/driver/Firestore/FirestoreError"
 
 /**
  * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
@@ -186,5 +187,21 @@ describe("In-process Firestore batched writes", () => {
         expect(error).not.toBeUndefined()
         // @ts-ignore
         expect(error).toBeInstanceOf(Error)
+    })
+
+    test("throws if an undefined field is written in a batch", async () => {
+        // Given we have a write batch;
+        const db = new InProcessFirestore()
+        const batch = db.batch()
+
+        // And we make a change in the batch;
+        const docRef = db.collection("things").doc("thingA")
+        batch.create(docRef, { foo: "bar", bar: undefined })
+
+        // The commit should throw
+        await expect(batch.commit()).rejects.toThrowError(FirestoreError)
+
+        // And the db should be empty
+        expect(db.storage).toEqual({})
     })
 })

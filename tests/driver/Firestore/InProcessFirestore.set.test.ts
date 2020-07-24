@@ -1,3 +1,4 @@
+import { FirestoreError } from "../../../src/driver/Firestore/FirestoreError"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
 describe("InProcessFirestore set", () => {
@@ -94,7 +95,7 @@ describe("InProcessFirestore set", () => {
                         name: "thing",
                         good: undefined,
                     }),
-            ).rejects.toThrow()
+            ).rejects.toThrowError(FirestoreError)
 
             // Then the data should not be stored;
             const stored = await firestore
@@ -153,7 +154,7 @@ describe("InProcessFirestore set", () => {
                         foo: undefined,
                         amount: 123,
                     }),
-            ).rejects.toThrow()
+            ).rejects.toThrowError(FirestoreError)
 
             // And the data should be not be updated;
             const stored = await firestore
@@ -203,7 +204,7 @@ describe("InProcessFirestore set", () => {
             firestore
                 .collection("myCollection")
                 .add({ foo: "bar", amount: undefined }),
-        ).rejects.toThrow()
+        ).rejects.toThrowError(FirestoreError)
 
         // And the data should be not be stores.
         const storedDoc = await firestore
