@@ -358,12 +358,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         fieldValues.forEach((fieldValue: any, i: number) => {
             const fieldPath = Object.keys(this.query.orderings)[i]
             newQuery.filters.push((item: IItem): boolean => {
-                return (
-                    InProcessFirestoreQuery.compare(
-                        item[fieldPath],
-                        fieldValue,
-                    ) > 0
-                )
+                const left = objGet(item, fieldPath.split("."))
+                return InProcessFirestoreQuery.compare(left, fieldValue) > 0
             })
         })
 
