@@ -138,6 +138,20 @@ describe("InProcessRealtimeDatabaseRef get set", () => {
                 },
             },
         ],
+        [
+            {
+                animals: {
+                    tiger: { description: "stripey", colour: "orange" },
+                },
+            },
+            "animals/tiger",
+            { description: null },
+            {
+                animals: {
+                    tiger: { description: null, colour: "orange" },
+                },
+            },
+        ],
     ] as Array<[object, string, any, object]>)(
         "update value",
         async (
