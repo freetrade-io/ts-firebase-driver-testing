@@ -77,4 +77,28 @@ describe("In-process Firestore start after query", () => {
         expect(result.docs).toHaveLength(0)
         expect(result.docs.map((doc) => doc.data())).toStrictEqual([])
     })
+
+    test("startAfter nested document", async () => {
+        // Given some data in a collection;
+        await db.collection("animals").add({ view: { name: "aardvark" } })
+        await db.collection("animals").add({ view: { name: "donkey" } })
+        await db.collection("animals").add({ view: { name: "camel" } })
+        await db.collection("animals").add({ view: { name: "badger" } })
+
+        // When we get the items starting after half of them;
+        const result = await db
+            .collection("animals")
+            .orderBy("view.name")
+            .startAfter("badger")
+            .get()
+
+        // Then we should get the second half of the items.
+        expect(result.size).toBe(2)
+        expect(result.empty).toBeFalsy()
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.data())).toStrictEqual([
+            { view: { name: "camel" } },
+            { view: { name: "donkey" } },
+        ])
+    })
 })
