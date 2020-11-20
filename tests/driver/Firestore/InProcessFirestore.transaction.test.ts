@@ -1,4 +1,5 @@
-import { InProcessFirestore } from "../../../src"
+import { IFirestoreTransaction, InProcessFirestore } from "../../../src"
+import { sleep } from "../../../src/util/sleep"
 
 describe("In-process Firestore transactions", () => {
     /**
@@ -192,5 +193,65 @@ describe("In-process Firestore transactions", () => {
         expect(
             await firestore.runTransaction((t) => Promise.resolve("done")),
         ).toEqual("done")
+    })
+
+    test("concurrent transactions when one fails", async () => {
+        // Given we have a in-process Firestore DB;
+        const firestore = new InProcessFirestore()
+
+        // And there is some initial data;
+        const cityRef = firestore.collection("cities").doc("SF")
+        await cityRef.set({
+            name: "San Francisco",
+            state: "CA",
+            country: "USA",
+            capital: false,
+            population: 860000,
+        })
+
+        // And the failing function completes after the successful one (note the unfortunate sleep)
+        const error = new Error("SomeError")
+        const failingFunction = async (t: IFirestoreTransaction) => {
+            const doc = await t.get(cityRef)
+            const data = doc.data() as { population: number }
+            const newPopulation = data.population + 1
+            t.update(cityRef, { population: newPopulation })
+            await sleep(10)
+            throw error
+        }
+
+        const failingFunctionWrapper = async () => {
+            try {
+                await firestore.runTransaction(failingFunction)
+            } catch (e) {
+                transactionError = e
+            }
+            return Promise.resolve()
+        }
+
+        const successfulFunction = async (t: IFirestoreTransaction) => {
+            const doc = await t.get(cityRef)
+            const data = doc.data() as { population: number }
+            const newPopulation = data.population + 10
+            t.update(cityRef, { population: newPopulation })
+        }
+
+        // When we run the two transactions on the data
+        let transactionError
+        await Promise.all([
+            failingFunctionWrapper(),
+            firestore.runTransaction(successfulFunction),
+        ])
+        expect(transactionError).toEqual(error)
+
+        // Then the successful function has modified the data
+        const updatedDoc = await cityRef.get()
+        expect(updatedDoc.data() as { population: number }).toEqual({
+            name: "San Francisco",
+            state: "CA",
+            country: "USA",
+            capital: false,
+            population: 860010,
+        })
     })
 })
