@@ -150,4 +150,47 @@ describe("In-process Firestore transactions", () => {
             population: 860000,
         })
     })
+
+    test("a successful transaction should reset the mutex", async () => {
+        // Given we have a in-process Firestore DB;
+        const firestore = new InProcessFirestore()
+
+        // When we run a Firestore transaction which does not throw
+        const result = await firestore.runTransaction((t) =>
+            Promise.resolve("done"),
+        )
+        expect(result).toEqual("done")
+
+        // Then another transaction is not blocked from running
+        expect(
+            await firestore.runTransaction((t) =>
+                Promise.resolve("done again"),
+            ),
+        ).toEqual("done again")
+    })
+
+    test("throwing a error should reset the mutex", async () => {
+        // Given we have a in-process Firestore DB;
+        const firestore = new InProcessFirestore()
+
+        // When we run a Firestore transaction which throws
+        const error = new Error("SomeError")
+        let transactionError
+        await firestore
+            .runTransaction((t) => {
+                throw error
+            })
+            .then((result) => {
+                expect(result).toBeUndefined()
+            })
+            .catch((err: Error) => {
+                transactionError = err
+            })
+        expect(transactionError).toEqual(error)
+
+        // Then another transaction is not blocked from running
+        expect(
+            await firestore.runTransaction((t) => Promise.resolve("done")),
+        ).toEqual("done")
+    })
 })
