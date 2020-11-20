@@ -9,6 +9,7 @@ import {
 import { expandDotPaths } from "../../util/expandDotPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
+import { sleep } from "../../util/sleep"
 import { pickSubMeta, stripMeta } from "../../util/stripMeta"
 import { IAsyncJobs } from "../AsyncJobs"
 import {
@@ -46,6 +47,8 @@ import { makeTimestamp } from "./makeTimestamp"
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
 
+    private mutex = false
+
     constructor(
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
@@ -67,16 +70,26 @@ export class InProcessFirestore implements IFirestore {
         updateFunction: (transaction: IFirestoreTransaction) => Promise<T>,
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T> {
-        const initialState = _.cloneDeep(this.storage)
-        const transaction = new InProcessFirestoreTransaction()
+        while (this.mutex) {
+            await sleep(0)
+        }
 
         let result
         try {
-            result = await updateFunction(transaction)
-            await transaction.commit()
-        } catch (err) {
-            this.storage = initialState
-            throw err
+            this.mutex = true
+
+            const initialState = _.cloneDeep(this.storage)
+            const transaction = new InProcessFirestoreTransaction()
+
+            try {
+                result = await updateFunction(transaction)
+                await transaction.commit()
+            } catch (err) {
+                this.storage = initialState
+                throw err
+            }
+        } finally {
+            this.mutex = false
         }
 
         return result as T
