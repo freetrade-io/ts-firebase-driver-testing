@@ -71,7 +71,7 @@ export class InProcessFirestore implements IFirestore {
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T> {
         while (this.mutex) {
-            await sleep(1)
+            await sleep(0)
         }
 
         let result
