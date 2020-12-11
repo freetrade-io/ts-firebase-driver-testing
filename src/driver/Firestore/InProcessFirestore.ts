@@ -533,7 +533,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     key,
                     true,
                     new InProcessFirestoreDocRef(
-                        `${this._dotPath()}.${key}`,
+                        `${this._dotPath().join(".")}.${key}`,
                         this.firestore,
                     ) as IFirestoreDocRef,
                     collection[key],
