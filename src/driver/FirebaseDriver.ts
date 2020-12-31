@@ -31,7 +31,7 @@ export interface IFirebaseDriver {
     auth(): IFirebaseAuth
 }
 
-export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB"
+export type MemoryOption = "128MB" | "256MB" | "512MB" | "1GB" | "2GB" | "4GB"
 
 export interface IPubSub {
     topic(name: string): IPubSubTopic
