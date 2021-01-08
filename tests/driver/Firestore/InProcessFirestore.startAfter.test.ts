@@ -103,7 +103,7 @@ describe("In-process Firestore start after query", () => {
         ])
     })
 
-    test.only("startAfter document id", async () => {
+    test("startAfter document id", async () => {
         // Given there is a collection of documents with ids;
         await db.doc("animals/22da618d").set({ name: "aardvark" })
         await db.doc("animals/00a3382").set({ name: "badger" })
