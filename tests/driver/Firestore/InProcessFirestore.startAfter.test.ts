@@ -1,3 +1,4 @@
+import { FieldPath } from "../../../src/driver/Firestore/FieldPath"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
 describe("In-process Firestore start after query", () => {
@@ -100,5 +101,25 @@ describe("In-process Firestore start after query", () => {
             { view: { name: "camel" } },
             { view: { name: "donkey" } },
         ])
+    })
+
+    test("startAfter document id", async () => {
+        // Given there is a collection of documents with ids;
+        await db.doc("animals/22da618d").set({ name: "aardvark" })
+        await db.doc("animals/00a3382").set({ name: "badger" })
+        await db.doc("animals/11cbe6b5").set({ name: "camel" })
+
+        // When we order the collection by the document id;
+        const result = await db
+            .collection("animals")
+            .orderBy(FieldPath.documentId())
+            .startAfter("11cbe6b5")
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        expect(result.size).toEqual(1)
+        expect(
+            result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
+        ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
     })
 })
