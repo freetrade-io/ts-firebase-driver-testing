@@ -122,4 +122,25 @@ describe("In-process Firestore start after query", () => {
             result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
         ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
     })
+
+    test("startAfter document id with step-built query", async () => {
+        // Given there is a collection of documents with ids;
+        await db.doc("animals/22da618d").set({ name: "aardvark" })
+        await db.doc("animals/00a3382").set({ name: "badger" })
+        await db.doc("animals/11cbe6b5").set({ name: "camel" })
+
+        // When we order the collection by the document id;
+        const query = db.collection("animals")
+
+        query.orderBy(FieldPath.documentId())
+        query.startAfter("11cbe6b5")
+
+        const result = await query.get()
+
+        // Then we should get the collection ordered by that field.
+        expect(result.size).toEqual(1)
+        expect(
+            result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
+        ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
+    })
 })
