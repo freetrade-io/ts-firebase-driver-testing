@@ -117,17 +117,9 @@ describe("In-process Firestore start after query", () => {
             .get()
 
         // Then we should get the collection ordered by that field.
-        const docs: Array<{
-            id: number
-            name: string
-        }> = result.docs.map((doc) => doc.data() as any)
-
-        expect(docs.map((doc) => doc.name)).not.toStrictEqual([
-            "aardvark",
-            "badger",
-            "camel",
-        ])
-        expect(docs.map((doc) => doc.name)).toStrictEqual(["aardvark"])
-        expect(docs).toStrictEqual([{ name: "aardvark" }])
+        expect(result.size).toEqual(1)
+        expect(
+            result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
+        ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
     })
 })
