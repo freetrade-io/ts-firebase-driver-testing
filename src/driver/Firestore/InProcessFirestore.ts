@@ -21,6 +21,7 @@ import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
 import {
     FIELD_PATH_DOCUMENT_ID,
+    FieldPath,
     IFieldPath,
     isFieldPathDocumentId,
 } from "./FieldPath"
@@ -215,7 +216,7 @@ interface IIdItem {
 
 interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
-    filters: Array<(item: IItem) => boolean>
+    filters: Array<(idItem: IIdItem) => boolean>
     orderings: { [fieldPath: string]: (a: IIdItem, b: IIdItem) => number }
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
@@ -309,8 +310,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
         if (fieldPath !== FIELD_PATH_DOCUMENT_ID) {
             // An orderBy() clause also filters for existence of the given field.
-            newQuery.filters.push((item) => {
-                return objHas(item, pathParts)
+            newQuery.filters.push((idItem) => {
+                return objHas(idItem.item, pathParts)
             })
         }
 
@@ -368,11 +369,19 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     startAfter(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
-        fieldValues.forEach((fieldValue: any, i: number) => {
+        fieldValues.forEach((queryFieldValue: any, i: number) => {
             const fieldPath = Object.keys(this.query.orderings)[i]
-            newQuery.filters.push((item: IItem): boolean => {
-                const left = objGet(item, fieldPath.split("."))
-                return InProcessFirestoreQuery.compare(left, fieldValue) > 0
+            newQuery.filters.push((idItem: IIdItem): boolean => {
+                const itemFieldValue =
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
+                        ? idItem.id
+                        : objGet(idItem.item, fieldPath.split("."))
+                return (
+                    InProcessFirestoreQuery.compare(
+                        itemFieldValue,
+                        queryFieldValue,
+                    ) > 0
+                )
             })
         })
 
@@ -385,7 +394,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         value: any,
     ): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
-        let filter: (item: { [key: string]: any }) => boolean
+        let filter: (idItem: IIdItem) => boolean
         const fieldObjPath = fieldPath.split(/\.+/)
         switch (opStr) {
             case "<":
@@ -393,18 +402,21 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     newQuery,
                     fieldPath,
                 )
-                filter = (item) => objGet(item, fieldObjPath) < value
+                filter = (idItem) => objGet(idItem.item, fieldObjPath) < value
                 break
             case "<=":
                 InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
                     newQuery,
                     fieldPath,
                 )
-                filter = (item) => objGet(item, fieldObjPath) <= value
+                filter = (idItem) => objGet(idItem.item, fieldObjPath) <= value
                 break
             case "==":
-                filter = (item) => {
-                    return String(objGet(item, fieldObjPath)) === String(value)
+                filter = (idItem) => {
+                    return (
+                        String(objGet(idItem.item, fieldObjPath)) ===
+                        String(value)
+                    )
                 }
                 break
             case ">=":
@@ -412,19 +424,19 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     newQuery,
                     fieldPath,
                 )
-                filter = (item) => objGet(item, fieldObjPath) >= value
+                filter = (idItem) => objGet(idItem.item, fieldObjPath) >= value
                 break
             case ">":
                 InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
                     newQuery,
                     fieldPath,
                 )
-                filter = (item) => objGet(item, fieldObjPath) > value
+                filter = (idItem) => objGet(idItem.item, fieldObjPath) > value
                 break
             case "array-contains":
-                filter = (item) => {
-                    if (_.isArray(objGet(item, fieldObjPath))) {
-                        return objGet(item, fieldObjPath).includes(value)
+                filter = (idItem) => {
+                    if (_.isArray(objGet(idItem.item, fieldObjPath))) {
+                        return objGet(idItem.item, fieldObjPath).includes(value)
                     }
                     return false
                 }
@@ -433,7 +445,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 if (!_.isArray(value)) {
                     throw new Error("Value must be an array for in operator.")
                 }
-                filter = (item) => value.includes(objGet(item, fieldObjPath))
+                filter = (item) =>
+                    value.includes(objGet(item.item, fieldObjPath))
                 break
             case "array-contains-any":
                 if (!_.isArray(value)) {
@@ -442,8 +455,8 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     )
                 }
                 filter = (item) => {
-                    if (_.isArray(objGet(item, fieldObjPath))) {
-                        return objGet(item, fieldObjPath).some((el: any) =>
+                    if (_.isArray(objGet(item.item, fieldObjPath))) {
+                        return objGet(item.item, fieldObjPath).some((el: any) =>
                             value.includes(el),
                         )
                     }
@@ -489,7 +502,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         )
         for (const filter of this.query.filters) {
             collection = Object.keys(collection)
-                .filter((key) => filter(collection[key]))
+                .filter((key) => filter({ item: collection[key], id: key }))
                 .reduce((whole: IItem, key: string) => {
                     whole[key] = collection[key]
                     return whole
