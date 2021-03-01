@@ -85,6 +85,45 @@ describe("InProcessFirestore set", () => {
             })
         })
 
+        test("merge deep", async () => {
+            // Given there is a doc;
+            firestore.resetStorage({
+                myCollection: {
+                    id1: {
+                        container: {
+                            field2: 2,
+                        },
+                    },
+                },
+            })
+
+            // When we set the doc with a different value, using merge;
+            await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .set(
+                    {
+                        container: {
+                            field3: 3,
+                        },
+                    },
+                    { merge: true },
+                )
+
+            // Then the data should be stored correctly;
+            const stored = await firestore
+                .collection("myCollection")
+                .doc("id1")
+                .get()
+            expect(stored.exists).toBe(true)
+            expect(stored.data()).toEqual({
+                container: {
+                    field2: 2,
+                    field3: 3,
+                },
+            })
+        })
+
         test("throws with an undefined field", async () => {
             // When we set a new document in a collection, it throws;
             await expect(

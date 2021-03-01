@@ -872,11 +872,16 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
                 _meta: { updateTime: newUpdateTime },
             }),
         )
-        for (const path of Object.keys(updateDelta)) {
-            if (path.includes(".")) {
-                objSet(newValue, path.split("."), updateDelta[path])
+        for (const [path, value] of Object.entries(updateDelta)) {
+            const pathComponents = path.includes(".") ? path.split(".") : [path]
+            const existingValue = objGet(newValue, pathComponents)
+            const isValueAnObject =
+                typeof value === "object" && !Array.isArray(value)
+
+            if (isValueAnObject) {
+                objSet(newValue, pathComponents, _.merge(existingValue, value))
             } else {
-                objSet(newValue, [path], updateDelta[path])
+                objSet(newValue, pathComponents, value)
             }
         }
         this.firestore._setPath(this._dotPath(), newValue)
