@@ -795,11 +795,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     ): Promise<IFirestoreWriteResult> {
         // We only need to do a merge if something exists at the path
         // Due to how update is implemented, this will throw if it does
-        // not already exist
+        // not already exist.
         InProcessFirestoreDocRef.validateNoUndefinedFields(data)
         const current = this.firestore._getPath(this._dotPath())
         if (options && options.merge && current) {
-            return this.update(data)
+            return this.performUpdate(data, { mergeWithExisting: true })
         }
         const createTime = makeTimestamp()
         const updateTime = makeTimestamp()
@@ -842,6 +842,18 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             )
         }
 
+        return this.performUpdate(
+            dataOrField,
+            { mergeWithExisting: false },
+            valueOrPrecondition,
+        )
+    }
+
+    private async performUpdate(
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        { mergeWithExisting }: { mergeWithExisting: boolean },
+        valueOrPrecondition?: any | IPrecondition,
+    ): Promise<IFirestoreWriteResult> {
         const updateDelta = dataOrField as IFirestoreDocumentData
         InProcessFirestoreDocRef.validateNoUndefinedFields(updateDelta)
 
@@ -865,26 +877,26 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
                 return makeWriteResult()
             }
         }
-        const newValue = _.merge(
+        const valueToWrite = _.merge(
             _.cloneDeep({ _meta: { createTime: newUpdateTime, type } }),
             _.cloneDeep(current),
             _.cloneDeep({
                 _meta: { updateTime: newUpdateTime },
             }),
         )
-        for (const [path, value] of Object.entries(updateDelta)) {
+        for (const [path, newValue] of Object.entries(updateDelta)) {
             const pathComponents = path.includes(".") ? path.split(".") : [path]
-            const existingValue = objGet(newValue, pathComponents)
-            const isValueAnObject =
-                typeof value === "object" && !Array.isArray(value)
+            const existingValue = objGet(valueToWrite, pathComponents)
+            const mergedValue =
+                mergeWithExisting &&
+                _.isObject(existingValue) &&
+                _.isObject(newValue)
+                    ? _.merge(existingValue, newValue)
+                    : newValue
 
-            if (isValueAnObject) {
-                objSet(newValue, pathComponents, _.merge(existingValue, value))
-            } else {
-                objSet(newValue, pathComponents, value)
-            }
+            objSet(valueToWrite, pathComponents, mergedValue)
         }
-        this.firestore._setPath(this._dotPath(), newValue)
+        this.firestore._setPath(this._dotPath(), valueToWrite)
         this.firestore._setPath(
             [...this._dotPath().slice(0, -1), "_meta", "type"],
             ChildType.COLLECTION,
