@@ -795,11 +795,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     ): Promise<IFirestoreWriteResult> {
         // We only need to do a merge if something exists at the path
         // Due to how update is implemented, this will throw if it does
-        // not already exist
+        // not already exist.
         InProcessFirestoreDocRef.validateNoUndefinedFields(data)
         const current = this.firestore._getPath(this._dotPath())
         if (options && options.merge && current) {
-            return this.update(data)
+            return this.performUpdate(data, { mergeWithExisting: true })
         }
         const createTime = makeTimestamp()
         const updateTime = makeTimestamp()
@@ -842,49 +842,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             )
         }
 
-        const updateDelta = dataOrField as IFirestoreDocumentData
-        InProcessFirestoreDocRef.validateNoUndefinedFields(updateDelta)
-
-        const precondition = valueOrPrecondition as IPrecondition
-        const current = this.firestore._getPath(this._dotPath())
-
-        if (!current) {
-            throw new FirestoreError(
-                GRPCStatusCode.NOT_FOUND,
-                `No document to update: ${this.path}`,
-            )
-        }
-
-        const newUpdateTime = makeTimestamp()
-        const type = ChildType.DOC
-        if (precondition && precondition.lastUpdateTime) {
-            if (
-                current._meta.updateTime &&
-                !current._meta.updateTime.isEqual(precondition.lastUpdateTime)
-            ) {
-                return makeWriteResult()
-            }
-        }
-        const newValue = _.merge(
-            _.cloneDeep({ _meta: { createTime: newUpdateTime, type } }),
-            _.cloneDeep(current),
-            _.cloneDeep({
-                _meta: { updateTime: newUpdateTime },
-            }),
+        return this.performUpdate(
+            dataOrField,
+            { mergeWithExisting: false },
+            valueOrPrecondition,
         )
-        for (const path of Object.keys(updateDelta)) {
-            if (path.includes(".")) {
-                objSet(newValue, path.split("."), updateDelta[path])
-            } else {
-                objSet(newValue, [path], updateDelta[path])
-            }
-        }
-        this.firestore._setPath(this._dotPath(), newValue)
-        this.firestore._setPath(
-            [...this._dotPath().slice(0, -1), "_meta", "type"],
-            ChildType.COLLECTION,
-        )
-        return makeWriteResult()
     }
 
     async delete(): Promise<IFirestoreWriteResult> {
@@ -933,6 +895,61 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
     _dotPath(): string[] {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
+    }
+
+    private async performUpdate(
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        { mergeWithExisting }: { mergeWithExisting: boolean },
+        valueOrPrecondition?: any | IPrecondition,
+    ): Promise<IFirestoreWriteResult> {
+        const updateDelta = dataOrField as IFirestoreDocumentData
+        InProcessFirestoreDocRef.validateNoUndefinedFields(updateDelta)
+
+        const precondition = valueOrPrecondition as IPrecondition
+        const current = this.firestore._getPath(this._dotPath())
+
+        if (!current) {
+            throw new FirestoreError(
+                GRPCStatusCode.NOT_FOUND,
+                `No document to update: ${this.path}`,
+            )
+        }
+
+        const newUpdateTime = makeTimestamp()
+        const type = ChildType.DOC
+        if (precondition && precondition.lastUpdateTime) {
+            if (
+                current._meta.updateTime &&
+                !current._meta.updateTime.isEqual(precondition.lastUpdateTime)
+            ) {
+                return makeWriteResult()
+            }
+        }
+        const valueToWrite = _.merge(
+            _.cloneDeep({ _meta: { createTime: newUpdateTime, type } }),
+            _.cloneDeep(current),
+            _.cloneDeep({
+                _meta: { updateTime: newUpdateTime },
+            }),
+        )
+        for (const [path, newValue] of Object.entries(updateDelta)) {
+            const pathComponents = path.includes(".") ? path.split(".") : [path]
+            const existingValue = objGet(valueToWrite, pathComponents)
+            const mergedValue =
+                mergeWithExisting &&
+                _.isObject(existingValue) &&
+                _.isObject(newValue)
+                    ? _.merge(existingValue, newValue)
+                    : newValue
+
+            objSet(valueToWrite, pathComponents, mergedValue)
+        }
+        this.firestore._setPath(this._dotPath(), valueToWrite)
+        this.firestore._setPath(
+            [...this._dotPath().slice(0, -1), "_meta", "type"],
+            ChildType.COLLECTION,
+        )
+        return makeWriteResult()
     }
 }
 
