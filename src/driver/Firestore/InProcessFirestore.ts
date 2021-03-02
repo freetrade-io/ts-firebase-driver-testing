@@ -849,6 +849,54 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
     }
 
+    async delete(): Promise<IFirestoreWriteResult> {
+        this.firestore._deletePath(this._dotPath())
+        return makeWriteResult()
+    }
+
+    async listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
+        const collection = this.firestore._getPath(this._dotPath()) || {}
+        return Object.keys(collection)
+            .map((key: string): string[] => `${this.path}/${key}`.split("/"))
+            .filter((path: string[]): boolean => {
+                const valueAt = this.firestore._getPath(path)
+                return (
+                    typeof valueAt === "object" &&
+                    valueAt._meta &&
+                    valueAt._meta.type !== ChildType.DOC
+                )
+            })
+            .map(
+                (path: string[]): InProcessFirestoreCollectionRef => {
+                    return new InProcessFirestoreCollectionRef(
+                        this.firestore,
+                        path.join("/"),
+                    )
+                },
+            ) as InProcessFirestoreCollectionRef[]
+    }
+
+    onSnapshot(
+        onNext: (snapshot: IFirestoreDocumentSnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void {
+        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
+    }
+
+    isEqual(other: IFirestoreDocRef): boolean {
+        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
+    }
+
+    withConverter<U>(converter: any): IFirestoreDocRef<U> {
+        throw new Error(
+            "InProcessFirestoreDocRef.withConverter not implemented",
+        )
+    }
+
+    _dotPath(): string[] {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
+    }
+
     private async performUpdate(
         dataOrField: IFirestoreDocumentData | string | IFieldPath,
         { mergeWithExisting }: { mergeWithExisting: boolean },
@@ -902,54 +950,6 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
             ChildType.COLLECTION,
         )
         return makeWriteResult()
-    }
-
-    async delete(): Promise<IFirestoreWriteResult> {
-        this.firestore._deletePath(this._dotPath())
-        return makeWriteResult()
-    }
-
-    async listCollections(): Promise<InProcessFirestoreCollectionRef[]> {
-        const collection = this.firestore._getPath(this._dotPath()) || {}
-        return Object.keys(collection)
-            .map((key: string): string[] => `${this.path}/${key}`.split("/"))
-            .filter((path: string[]): boolean => {
-                const valueAt = this.firestore._getPath(path)
-                return (
-                    typeof valueAt === "object" &&
-                    valueAt._meta &&
-                    valueAt._meta.type !== ChildType.DOC
-                )
-            })
-            .map(
-                (path: string[]): InProcessFirestoreCollectionRef => {
-                    return new InProcessFirestoreCollectionRef(
-                        this.firestore,
-                        path.join("/"),
-                    )
-                },
-            ) as InProcessFirestoreCollectionRef[]
-    }
-
-    onSnapshot(
-        onNext: (snapshot: IFirestoreDocumentSnapshot) => void,
-        onError?: (error: Error) => void,
-    ): () => void {
-        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
-    }
-
-    isEqual(other: IFirestoreDocRef): boolean {
-        throw new Error("InProcessFirestoreDocRef.onSnapshot not implemented")
-    }
-
-    withConverter<U>(converter: any): IFirestoreDocRef<U> {
-        throw new Error(
-            "InProcessFirestoreDocRef.withConverter not implemented",
-        )
-    }
-
-    _dotPath(): string[] {
-        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }
 }
 
