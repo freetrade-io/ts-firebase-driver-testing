@@ -86,6 +86,37 @@ describe("InProcessRealtimeDatabaseRef get set", () => {
         },
     )
 
+    test("cannot set undefined", async () => {
+        // Given an in-process Firebase realtime database with a dataset;
+        database.reset({})
+
+        // When we set the value to undefined;
+        // Then the function should throw.
+        await expect(database.ref("animals").set(undefined)).rejects.toThrow()
+    })
+
+    test("cannot set an object with undefined", async () => {
+        // Given an in-process Firebase realtime database with a dataset;
+        database.reset({})
+
+        // When we set the value to an object with undefined;
+        // Then the function should throw.
+        await expect(
+            database.ref("animals").set({ name: "Bertie", age: undefined }),
+        ).rejects.toThrow()
+    })
+
+    test("cannot set an array with undefined", async () => {
+        // Given an in-process Firebase realtime database with a dataset;
+        database.reset({})
+
+        // When we set the value to undefined;
+        // Then the function should throw.
+        await expect(
+            database.ref("animals").set({ name: [undefined] }),
+        ).rejects.toThrow()
+    })
+
     test.each([
         [{}, "foobar", "hello", { foobar: "hello" }],
         [{ foobar: "hello" }, "foobar", "goodbye", { foobar: "goodbye" }],

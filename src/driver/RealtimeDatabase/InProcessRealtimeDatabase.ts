@@ -333,11 +333,12 @@ export class InProcessRealtimeDatabaseRef
     }
 
     async set(value: any): Promise<void> {
-        if (value === undefined) {
+        if (containsUndefinedDeep(value)) {
             throw new Error(
                 `Cannot set Firebase Realtime Database path to undefined (${this.path})`,
             )
         }
+
         this.db._setPath(this.path, value)
     }
 
@@ -617,4 +618,23 @@ function dotPathFromSlashed(path: string): string[] {
         .trim()
         .replace(/\/+/g, ".")
         .split(".")
+}
+
+function containsUndefinedDeep(value: any): boolean {
+    if (_.isObject(value)) {
+        return Object.keys(value).reduce(
+            (areAnyUndefined: boolean, currentKey: string) =>
+                containsUndefinedDeep((value as any)[currentKey]) ||
+                areAnyUndefined,
+            false,
+        )
+    }
+    if (Array.isArray(value)) {
+        return value.reduce(
+            (anyAreUndefined, current) =>
+                containsUndefinedDeep(current) || anyAreUndefined,
+            false,
+        )
+    }
+    return value === undefined
 }
