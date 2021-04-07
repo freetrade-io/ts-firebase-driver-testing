@@ -1,9 +1,9 @@
 import {
-    IFirebaseDriver,
-    InProcessFirebaseDriver,
     IFirebaseChange,
-    IFirestoreDocumentSnapshot,
+    IFirebaseDriver,
     IFirestoreDocumentData,
+    IFirestoreDocumentSnapshot,
+    InProcessFirebaseDriver,
 } from "../../../../src"
 import { IChangeContext } from "../../../../src/driver/ChangeObserver/DatabaseChangeObserver"
 
@@ -16,9 +16,9 @@ describe("onWrite trigger of in-process Firestore", () => {
 
     test("onWrite handler is triggered on doc create", async () => {
         // Given we set up an onCreate handler on a collection;
-        const receivedSnapshots: IFirebaseChange<
+        const receivedSnapshots: Array<IFirebaseChange<
             IFirestoreDocumentSnapshot<IFirestoreDocumentData>
-        >[] = []
+        >> = []
         const receivedContexts: IChangeContext[] = []
         driver
             .runWith()
