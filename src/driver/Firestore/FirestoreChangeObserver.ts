@@ -46,7 +46,11 @@ export function makeFirestoreChangeObserver(
                 firestore,
             )
         case "written":
-            return new FirestoreWrittenObserver(observedPath, handler, firestore)
+            return new FirestoreWrittenObserver(
+                observedPath,
+                handler,
+                firestore,
+            )
     }
 }
 
