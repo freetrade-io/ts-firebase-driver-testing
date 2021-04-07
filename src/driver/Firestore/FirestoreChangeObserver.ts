@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { InProcessFirestore, InProcessFirestoreDocRef } from "../.."
 import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
@@ -17,12 +18,11 @@ import {
 } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     IFirestore,
+    IFirestoreDocRef,
     IFirestoreDocumentData,
     IFirestoreDocumentSnapshot,
-    IFirestoreDocRef,
 } from "./IFirestore"
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
-import { InProcessFirestoreDocRef, InProcessFirestore } from "../.."
 
 export function makeFirestoreChangeObserver(
     changeType: ChangeType,
