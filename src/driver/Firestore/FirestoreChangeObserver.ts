@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { InProcessFirestore, InProcessFirestoreDocRef } from "../.."
 import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
@@ -17,6 +18,7 @@ import {
 } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     IFirestore,
+    IFirestoreDocRef,
     IFirestoreDocumentData,
     IFirestoreDocumentSnapshot,
 } from "./IFirestore"
@@ -44,7 +46,11 @@ export function makeFirestoreChangeObserver(
                 firestore,
             )
         case "written":
-            return new FirestoreWrittenObserver(observedPath, handler)
+            return new FirestoreWrittenObserver(
+                observedPath,
+                handler,
+                firestore,
+            )
     }
 }
 
@@ -152,22 +158,45 @@ class FirestoreDeletedObserver extends DatabaseChangeObserver<
 class FirestoreWrittenObserver extends DatabaseChangeObserver<
     IFirestoreChangeSnapshot
 > {
+    constructor(
+        protected readonly observedPath: string,
+        protected readonly handler: TriggerFunction<IFirestoreChangeSnapshot>,
+        private readonly firestore: IFirestore,
+    ) {
+        super(observedPath, handler)
+    }
+
     protected changeFilter(): IChangeFilter {
         return new WrittenChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
         pc: IParameterisedChange,
-    ): IChangeSnapshots<IFirestoreChangeSnapshot> | IFirestoreChangeSnapshot {
+    ): IChangeSnapshots<IFirestoreDocumentSnapshot> | IFirestoreChangeSnapshot {
+        const pathComponents = pc.path.split("/")
+        const id = pathComponents[pathComponents.length - 1]
+        const ref = new InProcessFirestoreDocRef(
+            pc.path,
+            this.firestore as InProcessFirestore,
+        ) as IFirestoreDocRef
+
+        const before = new InProcessFirestoreDocumentSnapshot(
+            id,
+            !_.isNil(pc.change.before),
+            ref,
+            prepareChangeData(pc.change.before),
+        )
+
+        const after = new InProcessFirestoreDocumentSnapshot(
+            id,
+            !_.isNil(pc.change.after),
+            ref,
+            prepareChangeData(pc.change.after),
+        )
+
         return {
-            before: {
-                exists: !_.isNil(pc.change.before),
-                data: () => prepareChangeData(pc.change.before),
-            },
-            after: {
-                exists: !_.isNil(pc.change.after),
-                data: () => prepareChangeData(pc.change.after),
-            },
+            before,
+            after,
             data: pc.change.data,
             delta: pc.change.delta,
         }

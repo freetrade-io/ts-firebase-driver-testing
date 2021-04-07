@@ -180,6 +180,7 @@ export class InProcessFirestore implements IFirestore {
         const before = this._getPath(dotPath)
         makeChange()
         const after = this._getPath(dotPath)
+
         const data = before
         const delta = makeDelta(before, after)
 

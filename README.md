@@ -143,3 +143,4 @@ The _Firebase Test SDK_ requires carefully stubbing out the correct parts of the
 application under test, whereas _ts-firebase-driver-testing_ allows swapping it all out and once and
 then checking that the application interacted with Firebase correctly.
 
+
