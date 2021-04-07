@@ -177,29 +177,12 @@ export class InProcessFirestore implements IFirestore {
             return
         }
 
-        const id = dotPath[dotPath.length - 1]
-        const path = dotPath.join("/")
-        const ref = new InProcessFirestoreDocRef(path, this) as IFirestoreDocRef
-
-        const beforeData = this._getPath(dotPath)
-        const before = new InProcessFirestoreDocumentSnapshot(
-            id,
-            !!beforeData,
-            ref,
-            beforeData,
-        )
-
+        const before = this._getPath(dotPath)
         makeChange()
-        const afterData = this._getPath(dotPath)
-        const after = new InProcessFirestoreDocumentSnapshot(
-            id,
-            !!afterData,
-            ref,
-            afterData,
-        )
+        const after = this._getPath(dotPath)
 
-        const data = beforeData
-        const delta = makeDelta(beforeData, afterData)
+        const data = before
+        const delta = makeDelta(before, after)
 
         const jobs = this.changeObservers.map(
             async (observer) =>

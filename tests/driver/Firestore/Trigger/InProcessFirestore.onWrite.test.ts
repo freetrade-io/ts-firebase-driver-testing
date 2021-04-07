@@ -43,7 +43,7 @@ describe("onWrite trigger of in-process Firestore", () => {
         expect(receivedSnapshots).toHaveLength(1)
         expect(receivedSnapshots[0]).toBeTruthy()
         expect(receivedSnapshots[0].after?.exists).toBeTruthy()
-        expect(receivedSnapshots[0].after?.ref.path).toEqual("/animals/tiger")
+        expect(receivedSnapshots[0].after?.ref.path).toEqual("animals/tiger")
         expect(receivedSnapshots[0].after?.data()).toEqual({
             colour: "orange",
             size: "large",

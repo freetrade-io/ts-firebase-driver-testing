@@ -4,7 +4,6 @@ import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
 import { JsonValue } from "../../util/json"
 import { makeDelta } from "../../util/makeDelta"
-import { IFirestoreQueryDocumentSnapshot } from "../.."
 
 /**
  * Firebase triggers get before/after, GCP cloud function triggers get
@@ -12,8 +11,8 @@ import { IFirestoreQueryDocumentSnapshot } from "../.."
  * two setups.
  */
 export interface IChange {
-    before?: JsonValue | IFirestoreQueryDocumentSnapshot | undefined
-    after?: JsonValue | IFirestoreQueryDocumentSnapshot | undefined
+    before?: JsonValue | undefined
+    after?: JsonValue | undefined
     data?: JsonValue | undefined
     delta?: JsonValue | undefined
 }
