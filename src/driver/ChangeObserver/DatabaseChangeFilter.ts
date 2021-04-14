@@ -157,7 +157,8 @@ export class CreatedChangeFilter extends ChangeFilter {
             const afterAtPath = objectPath.get(
                 change.after as object,
                 dotPath
-                    ? afterPath.slice( // Remove the path from the start of the string
+                    ? afterPath.slice(
+                          // Remove the path from the start of the string
                           afterPath.indexOf(completePath) + completePath.length,
                       )
                     : afterPath.replace(/\//g, "."),
