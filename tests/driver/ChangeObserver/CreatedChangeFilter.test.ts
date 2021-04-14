@@ -187,4 +187,31 @@ describe("CreatedChangeFilter", () => {
             expect(createdChangeEvents).toEqual(expectedChangeEvents)
         },
     )
+
+    test("firestore created change event with regex special characters", () => {
+        const filter = new CreatedChangeFilter("cars/{carName}")
+
+        // When we observe for created events from a change;
+        const createdChangeEvents = filter.changeEvents(
+            {
+                after: { name: "model t" },
+                delta: { name: "model t" },
+            },
+            ["cars", "car-with-unusual-suffix+0000"],
+        )
+
+        // Then we should get the expected Created change events.
+        expect(createdChangeEvents).toEqual([
+            {
+                parameters: {
+                    carName: "car-with-unusual-suffix+0000",
+                },
+                change: {
+                    after: { name: "model t" },
+                    delta: { name: "model t" },
+                },
+                path: "cars/car-with-unusual-suffix+0000",
+            },
+        ])
+    })
 })
