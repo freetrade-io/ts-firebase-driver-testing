@@ -152,12 +152,14 @@ export class CreatedChangeFilter extends ChangeFilter {
                 // This is not a newly created path.
                 continue
             }
+            const completePath = (dotPath || []).join("/")
+
             const afterAtPath = objectPath.get(
                 change.after as object,
                 dotPath
-                    ? afterPath
-                          .replace(new RegExp("^" + dotPath.join("/")), "")
-                          .replace(/\//g, ".")
+                    ? afterPath.slice( // Remove the path from the start of the string
+                          afterPath.indexOf(completePath) + completePath.length,
+                      )
                     : afterPath.replace(/\//g, "."),
             )
             if (afterAtPath === undefined || afterAtPath === null) {
