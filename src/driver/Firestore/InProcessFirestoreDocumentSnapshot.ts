@@ -1,3 +1,5 @@
+import { cloneDeep, get } from "lodash"
+import { objGet } from "../../util/objPath"
 import { stripFirestoreMeta } from "../../util/stripMeta"
 import { IFieldPath } from "./FieldPath"
 import {
@@ -49,9 +51,22 @@ export class InProcessFirestoreDocumentSnapshot
     }
 
     get(fieldPath: string | IFieldPath): any {
-        throw new Error(
-            "InProcessFirestoreDocumentSnapshot.get not implemented",
-        )
+        if (this.value) {
+            if (typeof fieldPath === "string") {
+                if (!/^[^*~/[\]]+$/.test(fieldPath)) {
+                    throw new Error(
+                        `Error: Paths can't be empty and must not contain
+                        "*~/[]".`,
+                    )
+                }
+                return cloneDeep(get(this.value, fieldPath))
+            }
+            const segments = fieldPath.segments
+            if (segments) {
+                return cloneDeep(objGet(this.value, segments))
+            }
+        }
+        return {}
     }
 
     isEqual(other: IFirestoreDocumentSnapshot): boolean {
