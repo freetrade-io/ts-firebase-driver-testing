@@ -1,14 +1,12 @@
 import {
-    InProcessFirestore,
-    InProcessFirestoreDocumentSnapshot,
-} from "../../../dist"
-import { FieldPath } from "../../../dist/driver/Firestore/FieldPath"
-import {
     IFirestore,
     IFirestoreDocRef,
     IFirestoreDocumentData,
+    InProcessFirestore,
     InProcessFirestoreDocRef,
+    InProcessFirestoreDocumentSnapshot,
 } from "../../../src"
+import { FieldPath } from "../../../src/driver/Firestore/FieldPath"
 
 describe("InProcessFirestoreDocumentSnapshot get", () => {
     test("simple field", async () => {
@@ -79,9 +77,7 @@ describe("InProcessFirestoreDocumentSnapshot get", () => {
         )
 
         const valueUsFromString = snapshot.get(pathUs)
-        const valueUsFromObject = snapshot.get(
-            new FieldPath(pathUs.split(".")),
-        )
+        const valueUsFromObject = snapshot.get(new FieldPath(pathUs.split(".")))
 
         const valueUndefinedFromString = snapshot.get(pathUndefined)
         const valueUndefinedFromObject = snapshot.get(
