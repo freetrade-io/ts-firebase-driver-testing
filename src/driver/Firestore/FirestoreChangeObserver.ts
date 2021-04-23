@@ -1,8 +1,4 @@
 import _ from "lodash"
-import {
-    InProcessFirestore,
-    InProcessFirestoreDocRef,
-} from "./InProcessFirestore"
 import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
@@ -25,6 +21,10 @@ import {
     IFirestoreDocumentData,
     IFirestoreDocumentSnapshot,
 } from "./IFirestore"
+import {
+    InProcessFirestore,
+    InProcessFirestoreDocRef,
+} from "./InProcessFirestore"
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 
 export function makeFirestoreChangeObserver(
