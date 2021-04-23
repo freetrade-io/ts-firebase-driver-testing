@@ -1,5 +1,8 @@
 import _ from "lodash"
-import { InProcessFirestore, InProcessFirestoreDocRef } from "../.."
+import {
+    InProcessFirestore,
+    InProcessFirestoreDocRef,
+} from "./InProcessFirestore"
 import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
