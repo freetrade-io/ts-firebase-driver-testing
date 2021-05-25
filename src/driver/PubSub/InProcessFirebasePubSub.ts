@@ -59,7 +59,10 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
         [key: string]: Array<CloudFunction<any>>
     } = {}
 
-    constructor(private readonly jobs: IAsyncJobs) {}
+    constructor(
+        private readonly jobs: IAsyncJobs,
+        private readonly now: () => Date = () => new Date(),
+    ) {}
 
     schedule(schedule: string): InProcessFirebaseScheduleBuilder {
         return new InProcessFirebaseScheduleBuilder()
@@ -86,7 +89,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
                     const message = new PubSubMessage(data, attributes ?? {})
                     resolve(
                         handler(message, {
-                            timestamp: new Date().toISOString(),
+                            timestamp: this.now().toISOString(),
                         }),
                     )
                 }, 1),
