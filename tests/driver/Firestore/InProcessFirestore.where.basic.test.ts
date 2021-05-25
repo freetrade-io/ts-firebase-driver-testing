@@ -161,6 +161,44 @@ describe("InProcessFirestore querying with where", () => {
         ])
     })
 
+    test("where != number", async () => {
+        // Given a collection of docs with differing values in a field;
+        firestore.resetStorage({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    popularityRating: 5,
+                },
+                hyena: {
+                    name: "hyena",
+                    popularityRating: 2,
+                },
+                lion: {
+                    name: "lion",
+                    popularityRating: 3,
+                },
+                bear: {
+                    name: "bear",
+                    popularityRating: 3,
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("popularityRating", "!=", 3)
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.docs).toHaveLength(2)
+        expect(result.docs.map((doc) => doc.id)).toEqual(["tiger", "hyena"])
+        expect(result.docs.map((doc) => doc.data())).toEqual([
+            { name: "tiger", popularityRating: 5 },
+            { name: "hyena", popularityRating: 2 },
+        ])
+    })
+
     test("where < number", async () => {
         // Given a collection of docs with differing values in a field;
         firestore.resetStorage({
