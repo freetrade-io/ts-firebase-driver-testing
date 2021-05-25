@@ -23,6 +23,7 @@ export interface IReadOptions {
 
 export type FirestoreWhereFilterOp =
     | "<"
+    | "!="
     | "<="
     | "=="
     | ">="

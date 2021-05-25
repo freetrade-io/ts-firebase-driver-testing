@@ -420,6 +420,14 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     )
                 }
                 break
+            case "!=":
+                filter = (idItem) => {
+                    return (
+                        String(objGet(idItem.item, fieldObjPath)) !==
+                        String(value)
+                    )
+                }
+                break
             case ">=":
                 InProcessFirestoreQuery.enforceSingleFieldRangeFilter(
                     newQuery,
