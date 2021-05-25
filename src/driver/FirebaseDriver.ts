@@ -41,8 +41,12 @@ export interface IPubSubTopic {
     publisher: IPubSubPublisher
 }
 
+export interface IAttributes {
+    [key: string]: string
+}
+
 export interface IPubSubPublisher {
-    publish(data: Buffer): Promise<any>
+    publish(data: Buffer, attributes?: IAttributes): Promise<any>
 }
 
 export interface IFirebaseBuilderPubSub {

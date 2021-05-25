@@ -1,3 +1,5 @@
+import { IAttributes } from "../FirebaseDriver"
+
 export interface IFirebaseRealtimeDatabase {
     ref(path?: string): IFirebaseRealtimeDatabaseRef
 }
@@ -82,4 +84,34 @@ export interface IPubSubMessage {
     readonly attributes: { [key: string]: string }
     readonly json: any
     toJSON(): any
+}
+
+export class PubSubMessage implements IPubSubMessage {
+    /**
+     * The data payload of this message object as a base64-encoded string.
+     */
+    readonly data: string
+    /**
+     * User-defined attributes published with the message, if any.
+     */
+    readonly attributes: {
+        [key: string]: string
+    }
+    constructor(data: Buffer, attributes: IAttributes) {
+        this.data = data.toString("base64")
+        this.attributes = attributes
+    }
+    /**
+     * The JSON data payload of this message object, if any.
+     */
+    get json(): any {
+        return JSON.parse(Buffer.from(this.data, "base64").toString("utf-8"))
+    }
+    /**
+     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
+     */
+    toJSON(): any {
+        return this.json
+    }
 }

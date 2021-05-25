@@ -1,6 +1,7 @@
 import { IAsyncJobs } from "../AsyncJobs"
 import {
     CloudFunction,
+    IAttributes,
     IFirebaseBuilderPubSub,
     IFirebaseScheduleBuilder,
     IFirebaseTopicBuilder,
@@ -11,6 +12,7 @@ import {
 import {
     IFirebaseEventContext,
     IPubSubMessage,
+    PubSubMessage,
 } from "../RealtimeDatabase/IFirebaseRealtimeDatabase"
 
 export class InProcessFirebaseScheduleBuilder
@@ -57,7 +59,10 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
         [key: string]: Array<CloudFunction<any>>
     } = {}
 
-    constructor(private readonly jobs: IAsyncJobs) {}
+    constructor(
+        private readonly jobs: IAsyncJobs,
+        private readonly now: () => Date = () => new Date(),
+    ) {}
 
     schedule(schedule: string): InProcessFirebaseScheduleBuilder {
         return new InProcessFirebaseScheduleBuilder()
@@ -74,14 +79,19 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
         this.subscriptions[topicName].push(handler)
     }
 
-    _publish(topicName: string, data: Buffer): void {
+    _publish(topicName: string, data: Buffer, attributes?: IAttributes): void {
         if (!this.subscriptions[topicName]) {
             return
         }
         for (const handler of this.subscriptions[topicName]) {
             const job = new Promise((resolve) =>
                 setTimeout(async () => {
-                    resolve(handler(JSON.parse(data.toString())))
+                    const message = new PubSubMessage(data, attributes ?? {})
+                    resolve(
+                        handler(message, {
+                            timestamp: this.now().toISOString(),
+                        }),
+                    )
                 }, 1),
             )
             this.jobs.pushJob(job)
@@ -93,8 +103,8 @@ class InProcessPubSubPublisher implements IPubSubPublisher {
     constructor(private readonly topic: InProcessFirebasePubSubTopic) {}
 
     // @ts-ignore
-    publish(data: Buffer): Promise<void> {
-        this.topic._publish(data)
+    publish(data: Buffer, attributes?: Attributes): Promise<void> {
+        this.topic._publish(data, attributes)
     }
 }
 
@@ -108,8 +118,8 @@ class InProcessFirebasePubSubTopic implements IPubSubTopic {
         this.publisher = new InProcessPubSubPublisher(this)
     }
 
-    _publish(data: Buffer) {
-        this.pubSub._publish(this.name, data)
+    _publish(data: Buffer, attributes?: IAttributes) {
+        this.pubSub._publish(this.name, data, attributes)
     }
 }
 
