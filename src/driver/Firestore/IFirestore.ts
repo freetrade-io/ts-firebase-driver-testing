@@ -8,6 +8,7 @@ export interface IFirestore {
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T>
     batch(): IFirestoreWriteBatch
+    bulkWriter(): IFirestoreBulkWriter
     settings(settings: object): void
     collectionGroup(collectionId: string): IFirestoreQuery
     getAll(
@@ -247,4 +248,51 @@ export interface IFirestoreWriteBatch {
     delete(documentRef: IFirestoreDocRef): IFirestoreWriteBatch
 
     commit(): Promise<IFirestoreWriteResult[]>
+}
+
+
+export interface IFirestoreBulkWriter {
+    close(): Promise<void>
+
+    create(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+    ): Promise<IFirestoreWriteResult>
+
+    delete(
+        documentRef: IFirestoreDocRef,
+        precondition?: IPrecondition,
+    ): Promise<IFirestoreWriteResult>
+    
+    flush(): Promise<void>
+    
+    onWriteError(
+        shouldRetryCallback: (error: Error) => boolean
+    ): void
+
+    onWriteResult(
+        callback: (
+          documentRef: IFirestoreDocRef<any>,
+          result: IFirestoreWriteResult
+        ) => void
+    ): void
+
+    set(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+        options?: { merge?: boolean },
+    ): Promise<IFirestoreWriteResult>
+
+    update(
+        documentRef: IFirestoreDocRef,
+        data: IFirestoreDocumentData,
+        precondition?: IPrecondition,
+    ): Promise<IFirestoreWriteResult>
+
+    update(
+        documentRef: IFirestoreDocRef,
+        field: string | IFieldPath,
+        value: any,
+        ...fieldsOrPrecondition: any[]
+    ): Promise<IFirestoreWriteResult>
 }

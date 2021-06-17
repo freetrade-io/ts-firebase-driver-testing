@@ -6,7 +6,6 @@ import {
     IFirestoreQueryDocumentSnapshot,
     IReadOptions,
 } from "../.."
-import { expandDotPaths } from "../../util/expandDotPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
 import { sleep } from "../../util/sleep"
@@ -21,7 +20,6 @@ import { IFirestoreBuilder, IFirestoreDocumentBuilder } from "../FirebaseDriver"
 import { fireStoreLikeId } from "../identifiers"
 import {
     FIELD_PATH_DOCUMENT_ID,
-    FieldPath,
     IFieldPath,
     isFieldPathDocumentId,
 } from "./FieldPath"
@@ -30,6 +28,7 @@ import { FirestoreError } from "./FirestoreError"
 import {
     FirestoreWhereFilterOp,
     IFirestore,
+    IFirestoreBulkWriter,
     IFirestoreCollectionRef,
     IFirestoreDocRef,
     IFirestoreDocumentData,
@@ -98,6 +97,10 @@ export class InProcessFirestore implements IFirestore {
 
     batch(): IFirestoreWriteBatch {
         return new InProcessFirestoreWriteBatch()
+    }
+
+    bulkWriter(): IFirestoreBulkWriter {
+        return new InProcessFirestoreBulkWriter()
     }
 
     settings(settings: object): void {
@@ -1222,6 +1225,118 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
         if (this.committed) {
             throw new Error(
                 "Cannot modify a WriteBatch that has been committed.",
+            )
+        }
+    }
+}
+
+/*
+    Simple in-process implementation of Firestore BulkWriter
+    https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html
+*/
+class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
+    private readonly writeOperations: Array<() => Promise<void>> = []
+
+    private readonly mockIFirestoreWriteResult: Promise<IFirestoreWriteResult> = 
+        new Promise((resolve) => resolve({} as IFirestoreWriteResult))
+    
+    private closed = false
+
+    async close(): Promise<void> {
+        await this.flush()
+        this.closed = true
+    }
+
+    create(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+        this.throwIfClosed()
+
+        this.writeOperations.push(async () => {
+            if ((await documentRef.get()).exists) {
+                throw new FirestoreError(
+                    GRPCStatusCode.ALREADY_EXISTS,
+                    `Document already exists: ${documentRef.path}`,
+                )
+            }
+            await documentRef.set(data)
+        })
+        return this.mockIFirestoreWriteResult
+    }
+
+    delete(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, precondition?: IPrecondition): Promise<IFirestoreWriteResult> {
+        if(precondition) {
+            throw new Error(
+                "InProcessFirestorBulkWriter.delete with precondition is not implemented",
+            )
+        }
+        this.throwIfClosed()
+
+        this.writeOperations.push(async () => {
+            await documentRef.delete()
+        })
+        return this.mockIFirestoreWriteResult
+    }
+
+    async flush(): Promise<void> {
+        this.throwIfClosed()
+
+        await Promise.all(this.writeOperations.map(async (writeOperation) => await writeOperation()))
+        .catch((error) => {throw error})
+    }
+
+    onWriteError(_shouldRetryCallback: (error: Error) => boolean): void {
+        throw new Error("Method not implemented.")
+    }
+
+    onWriteResult(_callback: (documentRef: IFirestoreDocRef<any>, result: IFirestoreWriteResult) => void): void {
+        throw new Error("Method not implemented.")
+    }
+
+    set(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData, options?: { merge?: boolean | undefined }): Promise<IFirestoreWriteResult> {
+        this.throwIfClosed()
+
+        this.writeOperations.push(async() => { 
+            await documentRef.set(data, options)
+        })
+        return this.mockIFirestoreWriteResult
+    }
+
+    update(
+        documentRef: IFirestoreDocRef,
+        dataOrField: IFirestoreDocumentData | string | IFieldPath,
+        preconditionOrValue?: any | IPrecondition,
+        ...fieldsOrPrecondition: any[]
+    ): Promise<IFirestoreWriteResult> {
+        this.throwIfClosed()
+
+        if (typeof dataOrField === "string" || dataOrField.segments) {
+            throw new Error(
+                "InProcessFirestorBulkWriter.update with string or field path is not implemented",
+            )
+        }
+        if (preconditionOrValue && !preconditionOrValue.lastUpdateTime) {
+            throw new Error(
+                "InProcessFirestorBulkWriter.update with 3rd arg as value is not implemented",
+            )
+        }
+        if (fieldsOrPrecondition && fieldsOrPrecondition.length > 0) {
+            throw new Error(
+                "InProcessFirestorBulkWriter.update with 4th arg is not implemented",
+            )
+        }
+
+        const data = dataOrField as IFirestoreDocumentData
+        const precondition = preconditionOrValue as IPrecondition
+
+        this.writeOperations.push(async () => {
+            await documentRef.update(data, precondition)
+        })
+        return this.mockIFirestoreWriteResult
+    }
+
+    private throwIfClosed(): void {
+        if (this.closed) {
+            throw new Error(
+                "BulkWriter instance is closed. All subsequent calls will throw an error",
             )
         }
     }
