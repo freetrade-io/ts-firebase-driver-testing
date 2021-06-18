@@ -8,7 +8,7 @@ describe('In-process Firestore BulkWriter', () => {
     beforeEach(() => {
         db.resetStorage()
     })
-    test('delivers correct functionality', async () =>{
+    test('handles create, delete, set, update operations and flushes successfully', async () =>{
         // Given we have a in-process Firestore DB;
         // And there is some initial data;
         await db
