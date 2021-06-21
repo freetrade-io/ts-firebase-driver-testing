@@ -11,7 +11,13 @@
     "semicolon": [true, "never"],
     "member-access": [true, "no-public"],
     "max-classes-per-file": [false, 1],
-    "object-literal-sort-keys": [false]
+    "object-literal-sort-keys": [false],
+    "no-empty": [true, "allow-empty-functions"],
+    "variable-name": {
+      "options": [
+        "allow-leading-underscore"
+      ]
+    }
   },
   "rulesDirectory": []
 }
