@@ -1374,13 +1374,13 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
     
     constructor(op: () => Promise<IFirestoreWriteResult>) {
         this.op = op
-        this.deferred = new Deferred();
+        this.deferred = new Deferred()
     }
 
     // BulkWriter does this Deferred promise logic to give the following functionality:
     // The Promise (from flush()) will never be rejected since the results for each individual operation are conveyed via their individual Promises.
     get promise() {
-        return this.deferred.promise;
+        return this.deferred.promise
     }
 
     onError(error: Error) {
@@ -1407,12 +1407,12 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         this.promise = new Promise((resolve, reject) => {
             this.resolve = resolve
             this.reject = reject
-        });
+        })
     }
 }
 
 // Swallows errors
 // Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L191
 function silencePromise(promise: Promise<unknown>) {
-    return promise.then(() => { }, () => { });
+    return promise.then(() => { }, () => { })
 }

@@ -110,7 +110,7 @@ describe('In-process Firestore BulkWriter', () => {
         // When we get a new BulkWriter
         const bulkWriter = db.bulkWriter()
 
-        // And update the population of SF;
+        // And update the population of SF
         bulkWriter.update(docRef, { population: 1000000 })
 
         // when we flush
@@ -187,13 +187,13 @@ describe('In-process Firestore BulkWriter', () => {
         expect(doc.data()).toEqual({})
     })
     test('cannot create existing document in a bulk write', async () => {
-        // Given there is an existing document;
+        // Given there is an existing document
         await db
             .collection('animals')
             .doc('tiger')
             .set({ description: 'stripey' })
 
-        // When we create the same document;
+        // When we create the same document
         let error: Error | null = null
         const bulkWriter = db.bulkWriter()
         
@@ -205,7 +205,7 @@ describe('In-process Firestore BulkWriter', () => {
 
         await bulkWriter.flush()
  
-        // Then the write should fail;
+        // Then the write should fail
         expect(error).isFirestoreErrorWithCode(
             GRPCStatusCode.ALREADY_EXISTS,
             new RegExp('animals/tiger'),
@@ -244,7 +244,7 @@ describe('In-process Firestore BulkWriter', () => {
     })
 
     test('throws if calls made after close()', async () => {
-        // Given we have a write batch;
+        // Given we have a write batch
         const bulkWriter = db.bulkWriter()
 
         await bulkWriter.close()
