@@ -40,7 +40,7 @@ import {
     IFirestoreWriteBatch,
     IFirestoreWriteResult,
     IPrecondition,
-    SetOptions,
+    ISetOptions,
 } from "./IFirestore"
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 import { makeTimestamp } from "./makeTimestamp"
@@ -1236,7 +1236,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
     https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html
 */
 class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
-    private readonly writeOperations: Array<BulkWriterOperation> = []
+    private readonly writeOperations: BulkWriterOperation[] = []
 
     private closed = false
 
@@ -1249,51 +1249,60 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
 
     // Create a document with the provided data. This single operation will fail if a document exists at its location.
     // https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html#create
-    create(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
+    create(
+        documentRef: IFirestoreDocRef<IFirestoreDocumentData>,
+        data: IFirestoreDocumentData,
+    ): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
 
-        const createPromise = 
-            async () => {
-                if ((await documentRef.get()).exists) {
-                    throw new FirestoreError(
-                        GRPCStatusCode.ALREADY_EXISTS,
-                        `Document already exists: ${documentRef.path}`,
-                    )
-                }
-                await documentRef.set(data)
+        const createPromise = async () => {
+            if ((await documentRef.get()).exists) {
+                throw new FirestoreError(
+                    GRPCStatusCode.ALREADY_EXISTS,
+                    `Document already exists: ${documentRef.path}`,
+                )
             }
+            await documentRef.set(data)
+        }
         const bulkWriteOpPromise = this.enqueue(createPromise)
         silencePromise(bulkWriteOpPromise)
         return bulkWriteOpPromise
     }
 
-    delete(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, precondition?: IPrecondition): Promise<IFirestoreWriteResult> {
+    delete(
+        documentRef: IFirestoreDocRef<IFirestoreDocumentData>,
+        precondition?: IPrecondition,
+    ): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
-        if(precondition) {
+        if (precondition) {
             throw new Error(
                 "InProcessFirestorBulkWriter.delete with precondition is not implemented",
             )
         }
 
-        const bulkWriteOpPromise = this.enqueue(async () => await documentRef.delete())
+        const bulkWriteOpPromise = this.enqueue(
+            async () => await documentRef.delete(),
+        )
         silencePromise(bulkWriteOpPromise)
         return bulkWriteOpPromise
     }
 
     // Commits all writes that have been enqueued up to this point in parallel.
-    // Returns a Promise that resolves when all currently queued operations have been committed. 
+    // Returns a Promise that resolves when all currently queued operations have been committed.
     // https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html#flush
     async flush(): Promise<void> {
         this.throwIfClosed()
 
-        await Promise.all(this.writeOperations.map(async (writeOperation) => {
-            try {
-                const res = await writeOperation.op()
-                writeOperation.onSuccess(res)
-            } catch(error) {
-                writeOperation.onError(error)
-            }
-        }))
+        await Promise.all(
+            this.writeOperations.map(async (writeOperation) => {
+                try {
+                    const res = await writeOperation.op()
+                    writeOperation.onSuccess(res)
+                } catch (error) {
+                    writeOperation.onError(error)
+                }
+            }),
+        )
     }
 
     onWriteError(_shouldRetryCallback: (error: Error) => boolean): void {
@@ -1301,17 +1310,28 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         throw new Error("onWriteError method not implemented.")
     }
 
-    onWriteResult(_callback: (documentRef: IFirestoreDocRef<any>, result: IFirestoreWriteResult) => void): void {
+    onWriteResult(
+        _callback: (
+            documentRef: IFirestoreDocRef<any>,
+            result: IFirestoreWriteResult,
+        ) => void,
+    ): void {
         this.throwIfClosed()
         throw new Error("onWriteResult method not implemented.")
     }
 
-    set(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData, options?: SetOptions): Promise<IFirestoreWriteResult> {
+    set(
+        documentRef: IFirestoreDocRef<IFirestoreDocumentData>,
+        data: IFirestoreDocumentData,
+        options?: ISetOptions,
+    ): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
-        
-        const bulkWriteOpPromise = this.enqueue(async () =>  await documentRef.set(data, options))
+
+        const bulkWriteOpPromise = this.enqueue(
+            async () => await documentRef.set(data, options),
+        )
         silencePromise(bulkWriteOpPromise)
-        return bulkWriteOpPromise    
+        return bulkWriteOpPromise
     }
 
     update(
@@ -1341,9 +1361,11 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         const data = dataOrField as IFirestoreDocumentData
         const precondition = preconditionOrValue as IPrecondition
 
-        const bulkWriteOpPromise = this.enqueue(async() =>  await documentRef.update(data, precondition))
+        const bulkWriteOpPromise = this.enqueue(
+            async () => await documentRef.update(data, precondition),
+        )
         silencePromise(bulkWriteOpPromise)
-        return bulkWriteOpPromise  
+        return bulkWriteOpPromise
     }
 
     private throwIfClosed(): void {
@@ -1353,7 +1375,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
             )
         }
     }
-    
+
     // Creates a BulkWriterOperation and adds it to array for resolution on flush() or close() calls
     // Returns deferred promise to allow handling of errors per write operation
     private enqueue(op: () => Promise<any>): Promise<any> {
@@ -1368,10 +1390,10 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
  * and error handling.
  * Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/bulk-writer.ts#L105
  */
- class BulkWriterOperation {
+class BulkWriterOperation {
     deferred: Deferred
     op: () => Promise<IFirestoreWriteResult>
-    
+
     constructor(op: () => Promise<IFirestoreWriteResult>) {
         this.op = op
         this.deferred = new Deferred()
@@ -1387,7 +1409,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         this.deferred.reject(error)
     }
 
-    onSuccess(result: IFirestoreWriteResult){
+    onSuccess(result: IFirestoreWriteResult) {
         this.deferred.resolve(result)
     }
 }
@@ -1396,14 +1418,14 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
  * A Promise implementation that supports deferred resolution.
  * Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L28
  */
- class Deferred {
+class Deferred {
     resolve: (value: unknown) => void
     reject: (reason: unknown) => void
     promise: Promise<unknown>
 
     constructor() {
-        this.resolve = () => { }
-        this.reject = () => { }
+        this.resolve = () => {}
+        this.reject = () => {}
         this.promise = new Promise((resolve, reject) => {
             this.resolve = resolve
             this.reject = reject
@@ -1414,5 +1436,8 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
 // Swallows errors
 // Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L191
 function silencePromise(promise: Promise<unknown>) {
-    return promise.then(() => { }, () => { })
+    return promise.then(
+        () => {},
+        () => {},
+    )
 }

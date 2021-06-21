@@ -250,7 +250,6 @@ export interface IFirestoreWriteBatch {
     commit(): Promise<IFirestoreWriteResult[]>
 }
 
-
 export interface IFirestoreBulkWriter {
     close(): Promise<void>
 
@@ -263,24 +262,22 @@ export interface IFirestoreBulkWriter {
         documentRef: IFirestoreDocRef,
         precondition?: IPrecondition,
     ): Promise<IFirestoreWriteResult>
-    
+
     flush(): Promise<void>
-    
-    onWriteError(
-        shouldRetryCallback: (error: Error) => boolean
-    ): void
+
+    onWriteError(shouldRetryCallback: (error: Error) => boolean): void
 
     onWriteResult(
         callback: (
-          documentRef: IFirestoreDocRef<any>,
-          result: IFirestoreWriteResult
-        ) => void
+            documentRef: IFirestoreDocRef<any>,
+            result: IFirestoreWriteResult,
+        ) => void,
     ): void
 
     set(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
-        options?: SetOptions,
+        options?: ISetOptions,
     ): Promise<IFirestoreWriteResult>
 
     update(
@@ -297,8 +294,8 @@ export interface IFirestoreBulkWriter {
     ): Promise<IFirestoreWriteResult>
 }
 
-export interface SetOptions {
-    merge?: boolean,
+export interface ISetOptions {
+    merge?: boolean
     // Not currently implemented
     // mergeFields?: string[],
 }
