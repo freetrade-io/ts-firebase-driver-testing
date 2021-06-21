@@ -233,6 +233,35 @@ describe("In-process Firestore BulkWriter", () => {
         expect(db.storage).toEqual({})
     })
 
+    test("only throws for single operation and not on flush", async () => {
+        // Given we have a bulk writer
+        const bulkWriter = db.bulkWriter()
+
+        let bulkWriterCreateError = null
+
+        // And we make a bulk write with an undefined field
+        const docRef = db.collection("things").doc("thingA")
+        bulkWriter
+            .create(docRef, { foo: "bar", bar: undefined })
+            .catch((createError) => {
+                bulkWriterCreateError = createError
+            })
+
+        // And we make a bulk write with valid fields
+        const validDocRef = db.collection("things").doc("thingB")
+        bulkWriter.create(validDocRef, { foo: "bar", bar: "foo" })
+
+        // When we flush the bulk writer
+        await bulkWriter.flush()
+
+        // We expect the invalid create op to have thrown an error
+        expect(bulkWriterCreateError).toBeInstanceOf(FirestoreError)
+
+        // And the valid create op to have created a doc
+        const doc = await validDocRef.get()
+        expect(doc.data()).toEqual({ foo: "bar", bar: "foo" })
+    })
+
     test("throws if calls made after close()", async () => {
         // Given we have a write batch
         const bulkWriter = db.bulkWriter()

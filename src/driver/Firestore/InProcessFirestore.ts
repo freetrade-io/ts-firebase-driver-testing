@@ -1433,9 +1433,10 @@ class Deferred {
     }
 }
 
-// Swallows errors
+// Takes a promise and swallows all errors so it never throws if it's not handled (i.e. await or .then() used)
+// Used to ensure WriteOperation completes but result discarded
 // Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L191
-function silencePromise(promise: Promise<unknown>) {
+function silencePromise(promise: Promise<unknown>): Promise<void> {
     return promise.then(
         () => {},
         () => {},
