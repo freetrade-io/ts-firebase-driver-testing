@@ -280,7 +280,7 @@ export interface IFirestoreBulkWriter {
     set(
         documentRef: IFirestoreDocRef,
         data: IFirestoreDocumentData,
-        options?: { merge?: boolean },
+        options?: SetOptions,
     ): Promise<IFirestoreWriteResult>
 
     update(
@@ -295,4 +295,10 @@ export interface IFirestoreBulkWriter {
         value: any,
         ...fieldsOrPrecondition: any[]
     ): Promise<IFirestoreWriteResult>
+}
+
+export interface SetOptions {
+    merge?: boolean,
+    // Not currently implemented
+    // mergeFields?: string[],
 }

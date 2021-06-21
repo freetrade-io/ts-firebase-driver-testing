@@ -40,6 +40,7 @@ import {
     IFirestoreWriteBatch,
     IFirestoreWriteResult,
     IPrecondition,
+    SetOptions,
 } from "./IFirestore"
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 import { makeTimestamp } from "./makeTimestamp"
@@ -1237,16 +1238,17 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
 class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
     private readonly writeOperations: Array<BulkWriterOperation> = []
 
-    private readonly mockIFirestoreWriteResult: Promise<IFirestoreWriteResult> = 
-        new Promise((resolve) => resolve({} as IFirestoreWriteResult))
-    
     private closed = false
 
+    // Commits all enqueued writes and marks the BulkWriter instance as closed.
+    // https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html#close
     async close(): Promise<void> {
         await this.flush()
         this.closed = true
     }
 
+    // Create a document with the provided data. This single operation will fail if a document exists at its location.
+    // https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html#create
     create(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
 
@@ -1266,19 +1268,21 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
     }
 
     delete(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, precondition?: IPrecondition): Promise<IFirestoreWriteResult> {
+        this.throwIfClosed()
         if(precondition) {
             throw new Error(
                 "InProcessFirestorBulkWriter.delete with precondition is not implemented",
             )
         }
 
-        this.throwIfClosed()
-
-        const bulkWriteOpPromise = this.enqueue(async() => await documentRef.delete())
+        const bulkWriteOpPromise = this.enqueue(async () => await documentRef.delete())
         silencePromise(bulkWriteOpPromise)
         return bulkWriteOpPromise
     }
 
+    // Commits all writes that have been enqueued up to this point in parallel.
+    // Returns a Promise that resolves when all currently queued operations have been committed. 
+    // https://googleapis.dev/nodejs/firestore/latest/BulkWriter.html#flush
     async flush(): Promise<void> {
         this.throwIfClosed()
 
@@ -1293,17 +1297,19 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
     }
 
     onWriteError(_shouldRetryCallback: (error: Error) => boolean): void {
-        throw new Error("Method not implemented.")
+        this.throwIfClosed()
+        throw new Error("onWriteError method not implemented.")
     }
 
     onWriteResult(_callback: (documentRef: IFirestoreDocRef<any>, result: IFirestoreWriteResult) => void): void {
-        throw new Error("Method not implemented.")
+        this.throwIfClosed()
+        throw new Error("onWriteResult method not implemented.")
     }
 
-    set(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData, options?: { merge?: boolean | undefined }): Promise<IFirestoreWriteResult> {
+    set(documentRef: IFirestoreDocRef<IFirestoreDocumentData>, data: IFirestoreDocumentData, options?: SetOptions): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
         
-        const bulkWriteOpPromise = this.enqueue(async() =>  await documentRef.set(data, options))
+        const bulkWriteOpPromise = this.enqueue(async () =>  await documentRef.set(data, options))
         silencePromise(bulkWriteOpPromise)
         return bulkWriteOpPromise    
     }
@@ -1348,6 +1354,8 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         }
     }
     
+    // Creates a BulkWriterOperation and adds it to array for resolution on flush() or close() calls
+    // Returns deferred promise to allow handling of errors per write operation
     private enqueue(op: () => Promise<any>): Promise<any> {
         const bulkWriterOp = new BulkWriterOperation(op)
         this.writeOperations.push(bulkWriterOp)
@@ -1358,6 +1366,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
 /**
  * Represents a single write for BulkWriter, encapsulating operation execution
  * and error handling.
+ * Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/bulk-writer.ts#L105
  */
  class BulkWriterOperation {
     deferred: Deferred
@@ -1368,6 +1377,8 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
         this.deferred = new Deferred();
     }
 
+    // BulkWriter does this Deferred promise logic to give the following functionality:
+    // The Promise (from flush()) will never be rejected since the results for each individual operation are conveyed via their individual Promises.
     get promise() {
         return this.deferred.promise;
     }
@@ -1383,7 +1394,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
 
 /**
  * A Promise implementation that supports deferred resolution.
- * Source: BulkWriter implementation
+ * Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L28
  */
  class Deferred {
     resolve: (value: unknown) => void
@@ -1401,6 +1412,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
 }
 
 // Swallows errors
+// Source: https://github.com/googleapis/nodejs-firestore/blob/master/dev/src/util.ts#L191
 function silencePromise(promise: Promise<unknown>) {
     return promise.then(() => { }, () => { });
 }
