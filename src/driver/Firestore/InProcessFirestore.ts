@@ -1327,6 +1327,12 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
     ): Promise<IFirestoreWriteResult> {
         this.throwIfClosed()
 
+        if (options?.mergeFields) {
+            throw new Error(
+                "InProcessFirestorBulkWriter.set with mergeFields option is not implemented",
+            )
+        }
+
         const bulkWriteOpPromise = this.enqueue(
             async () => await documentRef.set(data, options),
         )

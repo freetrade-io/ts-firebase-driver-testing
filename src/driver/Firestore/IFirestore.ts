@@ -297,5 +297,5 @@ export interface IFirestoreBulkWriter {
 export interface ISetOptions {
     merge?: boolean
     // Not currently implemented
-    // mergeFields?: string[],
+    mergeFields?: string[]
 }
