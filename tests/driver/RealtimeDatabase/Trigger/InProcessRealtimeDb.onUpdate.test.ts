@@ -114,6 +114,79 @@ describe("onUpdate trigger of in-process realtime database", () => {
         })
     })
 
+    test("onUpdate handler is triggered on nested object update", async () => {
+        // Given we have an object at a path;
+        await driver
+            .realTimeDatabase()
+            .ref("/animals/tiger")
+            .set({
+                colour: "orange",
+                size: "large",
+                sound: "purr",
+                mealTimes: {
+                    breakfast: 7,
+                    lunch: 13,
+                    dinner: 20,
+                },
+            })
+
+        // And we set up an onUpdate handler on that path;
+        let receivedChange: any
+        let receivedContext: IChangeContext | undefined
+        driver
+            .runWith()
+            .database.ref("/animals/{animalName}")
+            .onUpdate(async (change, context) => {
+                receivedChange = change
+                receivedContext = context
+            })
+
+        // When the object is updated;
+        await driver
+            .realTimeDatabase()
+            .ref("/animals/tiger")
+            .update({
+                colour: "orange",
+                size: "large",
+                sound: "meow",
+                ["mealTimes/breakfast"]: 8,
+            })
+
+        // And Firebase finishes its jobs;
+        await driver.jobsComplete()
+
+        // Then the handler should be triggered with the change and context.
+        expect(receivedChange!).toBeTruthy()
+        expect(receivedChange!.before.exists()).toBeTruthy()
+        expect(receivedChange!.before.val()).toEqual({
+            colour: "orange",
+            size: "large",
+            sound: "purr",
+            mealTimes: {
+                breakfast: 7,
+                lunch: 13,
+                dinner: 20,
+            },
+        })
+        expect(receivedChange!.after.exists()).toBeTruthy()
+        expect(receivedChange!.after.val()).toEqual({
+            colour: "orange",
+            size: "large",
+            sound: "meow",
+            mealTimes: {
+                breakfast: 8,
+                lunch: 13,
+                dinner: 20,
+            },
+        })
+
+        expect(receivedContext!).toBeTruthy()
+        expect(receivedContext!).toEqual({
+            params: { animalName: "tiger" },
+            timestamp: expect.any(String),
+        })
+    })
+
     test("onUpdate handler is not triggered on no change", async () => {
         // Given we have an object at a path;
         await driver
