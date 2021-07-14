@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { expandSlashPaths } from "../../util/expandSlashPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objSet } from "../../util/objPath"
 import { IAsyncJobs } from "../AsyncJobs"
@@ -483,10 +484,13 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
                 objSet(this.storage, dotPath, value)
                 return
             }
-            objSet(this.storage, dotPath, {
+
+            const updatedObject = expandSlashPaths({
                 ...(existing as object),
                 ...value,
             })
+
+            objSet(this.storage, dotPath, updatedObject)
         })
     }
 
