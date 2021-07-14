@@ -1,7 +1,7 @@
 import _ from "lodash"
 import { objGet, objSet } from "./objPath"
 
-export function expandSlashPaths<T>(dotNotatedObject: T): T {
+export function expandPaths<T>(dotNotatedObject: T, splitter: string = "."): T {
     if (
         dotNotatedObject &&
         _.isObject(dotNotatedObject) &&
@@ -13,7 +13,7 @@ export function expandSlashPaths<T>(dotNotatedObject: T): T {
             const value = objGet(dotNotatedObject as { [key: string]: any }, [
                 path,
             ])
-            objSet(expanded, path.split(/\/+/), expandSlashPaths(value))
+            objSet(expanded, path.split(splitter), expandPaths(value, splitter))
         }
         return expanded
     }
