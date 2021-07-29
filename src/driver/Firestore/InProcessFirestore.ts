@@ -1,3 +1,4 @@
+import flatten from "flat"
 import _ from "lodash"
 import {
     CloudFunction,
@@ -752,8 +753,11 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
     private static extractUndefinedFields(
         updateDelta: IFirestoreDocumentData,
     ): string[] {
-        return Object.keys(updateDelta).filter(
-            (path) => updateDelta[path] === undefined,
+        const flattenedUpdateDelta: IFirestoreDocumentData = flatten(
+            updateDelta,
+        )
+        return Object.keys(flattenedUpdateDelta).filter(
+            (path) => flattenedUpdateDelta[path] === undefined,
         )
     }
 
