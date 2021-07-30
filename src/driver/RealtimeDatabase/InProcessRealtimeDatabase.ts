@@ -355,7 +355,7 @@ export class InProcessRealtimeDatabaseRef
             const splitKeys = key.split("/")
             if (splitKeys.length > 1) {
                 // @ts-ignore
-                setNestedValue(updatedValue, key, value[`${key}`])
+                setNestedValue(updatedValue, key, value[key])
             } else {
                 // @ts-ignore
                 updatedValue[key] = value[key]
