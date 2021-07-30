@@ -349,20 +349,7 @@ export class InProcessRealtimeDatabaseRef
                 `Cannot update Firebase Realtime Database path to undefined (${this.path})`,
             )
         }
-        const keys = Object.keys(value)
-        const updatedValue = {}
-        keys.forEach((key) => {
-            const splitKeys = key.split("/")
-            if (splitKeys.length > 1) {
-                // @ts-ignore
-                setNestedValue(updatedValue, key, value[`${key}`])
-            } else {
-                // @ts-ignore
-                updatedValue[key] = value[key]
-            }
-        })
-
-        this.db._updatePath(this.path, updatedValue)
+        this.db._updatePath(this.path, value)
     }
 
     async once(
@@ -657,14 +644,4 @@ function containsUndefinedDeep(value: any): boolean {
         )
     }
     return value === undefined
-}
-
-function setNestedValue(object: any, path: string, value: string) {
-    let keys = path.split("/")
-    // remove empty strings
-    keys = keys.filter(Boolean)
-    const last = keys.pop()
-    if (last) {
-        keys.reduce((o, k) => (o[k] = o[k] || {}), object)[last] = value
-    }
 }
