@@ -1,5 +1,6 @@
 import flatten from "flat"
 import _ from "lodash"
+import { Readable } from "stream"
 import {
     CloudFunction,
     IFirebaseChange,
@@ -511,6 +512,34 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     async get(): Promise<IFirestoreQuerySnapshot> {
+        return this.getQuerySnapshot()
+    }
+
+    stream(): NodeJS.ReadableStream {
+        const snapshot = this.getQuerySnapshot()
+        return Readable.from(snapshot.docs)
+    }
+
+    onSnapshot(
+        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
+        onError?: (error: Error) => void,
+    ): () => void {
+        throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
+    }
+
+    isEqual(other: IFirestoreQuery): boolean {
+        throw new Error("InProcessFirestoreQuery.isEqual not implemented")
+    }
+
+    withConverter(converter: any): IFirestoreQuery {
+        throw new Error("InProcessFirestoreQuery.withConverter not implemented")
+    }
+
+    _dotPath(): string[] {
+        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
+    }
+
+    private getQuerySnapshot(): IFirestoreQuerySnapshot {
         let collection = stripMeta(
             this.firestore._getPath(this._dotPath()) || {},
         )
@@ -578,29 +607,6 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             collection as IFirestoreQueryDocumentSnapshot[],
             this,
         ) as unknown) as IFirestoreQuerySnapshot
-    }
-
-    stream(): NodeJS.ReadableStream {
-        throw new Error("InProcessFirestoreQuery.stream not implemented")
-    }
-
-    onSnapshot(
-        onNext: (snapshot: IFirestoreQuerySnapshot) => void,
-        onError?: (error: Error) => void,
-    ): () => void {
-        throw new Error("InProcessFirestoreQuery.onSnapshot not implemented")
-    }
-
-    isEqual(other: IFirestoreQuery): boolean {
-        throw new Error("InProcessFirestoreQuery.isEqual not implemented")
-    }
-
-    withConverter(converter: any): IFirestoreQuery {
-        throw new Error("InProcessFirestoreQuery.withConverter not implemented")
-    }
-
-    _dotPath(): string[] {
-        return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }
 }
 
