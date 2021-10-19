@@ -9,6 +9,7 @@ import {
     IReadOptions,
 } from "../.."
 import { makeDelta } from "../../util/makeDelta"
+import { versionCheck } from "../../util/nodeVersionCheck"
 import { objDel, objGet, objHas, objSet } from "../../util/objPath"
 import { sleep } from "../../util/sleep"
 import { pickSubMeta, stripMeta } from "../../util/stripMeta"
@@ -516,8 +517,13 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     stream(): NodeJS.ReadableStream {
-        const snapshot = this.getQuerySnapshot()
-        return Readable.from(snapshot.docs)
+        const NODE_MAJOR_VERSION = versionCheck()
+        if (NODE_MAJOR_VERSION < 12) {
+            throw new Error("Requires Node 12 (or higher)")
+        } else {
+            const snapshot = this.getQuerySnapshot()
+            return Readable.from(snapshot.docs)
+        }
     }
 
     onSnapshot(
