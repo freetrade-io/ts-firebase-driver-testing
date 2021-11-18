@@ -112,7 +112,25 @@ export class InProcessFirestore implements IFirestore {
     }
 
     collectionGroup(collectionId: string): IFirestoreQuery {
-        throw new Error("Not implemented")
+        const storage = this._getPath([""]) || {}
+        const newFirestore = new InProcessFirestore()
+
+        const flattenStorage: any = (collection: any, key: string) => {
+            const children = Object.keys(collection)
+                .filter((childKey) => typeof collection[childKey] === "object")
+                .map((childKey) => flattenStorage(collection[childKey], key))
+            const mergedChildren = _.merge({}, collection, ...children)
+            return {
+                [key]: mergedChildren[key],
+            }
+        }
+        const newStorage = flattenStorage(storage, collectionId)
+        newFirestore.resetStorage(newStorage)
+
+        return new InProcessFirestoreCollectionRef(
+            newFirestore,
+            collectionId,
+        ) as IFirestoreCollectionRef
     }
 
     getAll(
