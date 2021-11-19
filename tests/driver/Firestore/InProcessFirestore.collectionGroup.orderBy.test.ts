@@ -243,24 +243,24 @@ describe("InProcessFirestore orderBy on collectionGroup", () => {
     test("orderBy date asc", async () => {
         // Given there is a collection of with a date field;
         await db
-            .collection("dates")
+            .collection("calendar/dates")
             .add({ id: 1, date: new Date("2020-12-06") })
         await db
-            .collection("dates")
+            .collection("calendar/dates")
             .add({ id: 2, date: new Date("1999-01-15") })
         await db
-            .collection("dates")
+            .collection("calendar/dates")
             .add({ id: 3, date: new Date("1976-05-23") })
         await db
-            .collection("dates")
+            .collection("calendar/dates")
             .add({ id: 4, date: new Date("2009-10-17") })
         await db
-            .collection("dates")
+            .collection("calendar/dates")
             .add({ id: 5, date: new Date("2006-08-08") })
 
         // When we order the collection by that field;
         const result = await db
-            .collection("dates")
+            .collectionGroup("dates")
             .orderBy("date")
             .get()
 
@@ -363,7 +363,7 @@ describe("InProcessFirestore orderBy on collectionGroup", () => {
 
         // When we order the collection by the document id;
         const result = await db
-            .collection("livingthings/animals")
+            .collectionGroup("animals")
             .orderBy(FieldPath.documentId())
             .get()
 
