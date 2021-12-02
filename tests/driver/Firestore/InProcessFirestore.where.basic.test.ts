@@ -641,4 +641,38 @@ describe("InProcessFirestore querying with where", () => {
             { name: "bear", eats: ["honey", "chips"] },
         ])
     })
+
+    test("where == 'true'", async () => {
+        // Given a collection of docs with differing values in a field;
+        firestore.resetStorage({
+            animals: {
+                tiger: {
+                    name: "tiger",
+                    cat: true,
+                },
+                hyena: {
+                    name: "hyena",
+                    cat: false,
+                },
+                lion: {
+                    name: "lion",
+                    cat: true,
+                },
+                bear: {
+                    name: "bear",
+                    cat: false,
+                },
+            },
+        })
+
+        // When we query docs by that field;
+        const result = await firestore
+            .collection("animals")
+            .where("cat", "==", "true")
+            .get()
+
+        // Then we should get the correct results.
+        expect(result.size).toBe(0)
+        expect(result.empty).toBeTruthy()
+    })
 })
