@@ -1,4 +1,4 @@
-import { enumeratePaths } from "../../src/util/enumeratePaths"
+import { enumeratePaths, getChangePaths } from "../../src/util/enumeratePaths"
 
 describe("enumerating object paths", () => {
     test.each([
@@ -51,4 +51,53 @@ describe("enumerating object paths", () => {
             expect(paths).toEqual(expectedPaths)
         },
     )
+})
+
+describe("getChangePaths", () => {
+    test("it processes a simple object", () => {
+        expect(getChangePaths({ test: "me" })).toEqual(["test"])
+    })
+
+    test("it processes a nested object", () => {
+        expect(getChangePaths({ test: { this: { nest: "please" } } })).toEqual([
+            "test",
+            "test/this",
+            "test/this/nest",
+        ])
+    })
+
+    test("it processes an array", () => {
+        expect(getChangePaths([1, 2, 3])).toEqual(["0", "1", "2"])
+    })
+
+    test("it processes a nested array", () => {
+        expect(
+            getChangePaths({
+                cast: [
+                    {
+                        name: "Don",
+                        seasons: [1, 2, 3],
+                    },
+                    {
+                        name: "Roger",
+                        seasons: [2, 3, 4],
+                    },
+                ],
+            }),
+        ).toEqual([
+            "cast",
+            "cast/0",
+            "cast/1",
+            "cast/0/name",
+            "cast/0/seasons",
+            "cast/1/name",
+            "cast/1/seasons",
+            "cast/0/seasons/0",
+            "cast/0/seasons/1",
+            "cast/0/seasons/2",
+            "cast/1/seasons/0",
+            "cast/1/seasons/1",
+            "cast/1/seasons/2",
+        ])
+    })
 })

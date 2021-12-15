@@ -1,7 +1,7 @@
 import { flatten } from "flat"
 import _ from "lodash"
 import objectPath = require("object-path")
-import { enumeratePaths } from "../../util/enumeratePaths"
+import { enumeratePaths, getChangePaths } from "../../util/enumeratePaths"
 import { JsonValue } from "../../util/json"
 import { makeDelta } from "../../util/makeDelta"
 
@@ -80,34 +80,27 @@ abstract class ChangeFilter implements IChangeFilter {
         dotPath?: string[],
     ): IParameterisedChange[]
 
+    private generatePaths(dotPath: string[] | undefined, changeset: any) {
+        const startingPath = dotPath?.join("/") ?? ""
+        const paths = dotPath
+            ? getChangePaths(changeset)
+            : enumeratePaths(changeset)
+        paths.push(startingPath)
+        return paths
+    }
+
     protected changePaths(
         change: IChange,
         dotPath?: string[],
     ): { beforePaths: string[]; afterPaths: string[] } {
         let beforePaths: string[] = []
-        const startingPath = (dotPath && dotPath.join("/")) || ""
         if (typeof change.before === "object") {
-            beforePaths = [
-                ...(dotPath
-                    ? Object.keys(flatten(change.before)).map(
-                          (path) =>
-                              `${startingPath}/${path.split(".").join("/")}`,
-                      )
-                    : enumeratePaths(change.before)),
-                startingPath,
-            ]
+            beforePaths = this.generatePaths(dotPath, change.before)
         }
+
         let afterPaths: string[] = []
         if (typeof change.after === "object") {
-            afterPaths = [
-                ...(dotPath
-                    ? Object.keys(flatten(change.after)).map(
-                          (path) =>
-                              `${startingPath}/${path.split(".").join("/")}`,
-                      )
-                    : enumeratePaths(change.after)),
-                startingPath,
-            ]
+            afterPaths = this.generatePaths(dotPath, change.after)
         }
 
         return {
