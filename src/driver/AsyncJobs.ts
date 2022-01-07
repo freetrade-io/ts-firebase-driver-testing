@@ -1,11 +1,14 @@
 import _ from "lodash"
+import pLimit from "p-limit"
 import { sleep } from "../util/sleep"
 import { IDatabaseChangePerformanceStats } from "./ChangeObserver/DatabaseChangeObserver"
 
 export interface IAsyncJobs {
     shouldDebugJobsCompletePerformance: boolean
     pushJob(job: Promise<any>): void
+
     pushJobs(jobs: Array<Promise<any>>): void
+
     jobsComplete(): Promise<void>
 }
 
@@ -31,9 +34,12 @@ export class AsyncJobs implements IAsyncJobs {
         while (this.jobs.length > 0) {
             this.randomiseJobsOrder()
 
-            const itemsToResolve = this.jobs.slice(0, this.maxConcurrentJobs)
+            const itemsToResolve = [...this.jobs]
 
-            const results = await Promise.all(itemsToResolve)
+            const limit = pLimit(this.maxConcurrentJobs)
+            const results = await Promise.all(
+                itemsToResolve.map((item) => limit(() => item)),
+            )
             changePerformanceStats.push(...results)
 
             // Remove the items we just processed from the front of the job queue
