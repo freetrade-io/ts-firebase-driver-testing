@@ -1,4 +1,6 @@
+import { performance } from "perf_hooks"
 import { IAsyncJobs } from "../AsyncJobs"
+import { IDatabaseChangePerformanceStats } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     CloudFunction,
     IAttributes,
@@ -84,15 +86,19 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
             return
         }
         for (const handler of this.subscriptions[topicName]) {
-            const job = new Promise((resolve) =>
-                setTimeout(async () => {
+            const start = performance.now()
+            const job = new Promise<IDatabaseChangePerformanceStats>(
+                (resolve) => {
                     const message = new PubSubMessage(data, attributes ?? {})
-                    resolve(
-                        handler(message, {
-                            timestamp: this.now().toISOString(),
+                    handler(message, {
+                        timestamp: this.now().toISOString(),
+                    }).then(() =>
+                        resolve({
+                            topicName,
+                            durationMillis: start - performance.now(),
                         }),
                     )
-                }, 1),
+                },
             )
             this.jobs.pushJob(job)
         }

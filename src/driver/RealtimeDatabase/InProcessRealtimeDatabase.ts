@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { performance } from "perf_hooks"
 import { expandPaths } from "../../util/expandPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objSet } from "../../util/objPath"
@@ -6,6 +7,7 @@ import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
     IDatabaseChangeObserver,
+    IDatabaseChangePerformanceStats,
 } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     CloudFunction,
@@ -464,7 +466,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _setPath(path: string, value: any): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             objSet(this.storage, dotPath, value)
@@ -472,7 +474,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _updatePath(path: string, value: any): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             const existing = objGet(this.storage, dotPath)
@@ -498,7 +500,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _removePath(path: string): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             objDel(this.storage, dotPath)
@@ -524,7 +526,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         this.changeObservers = []
     }
 
-    private triggerChangeEvents(makeChange: () => any): void {
+    private triggerChangeEvents(path: string, makeChange: () => any): void {
         if (!this.jobs) {
             makeChange()
             return
@@ -537,11 +539,17 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         const delta = makeDelta(before, after)
 
         for (const observer of this.changeObservers) {
-            const job = new Promise((resolve) => {
-                setTimeout(async () => {
-                    resolve(observer.onChange({ before, after, data, delta }))
-                }, 1)
-            })
+            const start = performance.now()
+            const job = new Promise<IDatabaseChangePerformanceStats>(
+                (resolve) => {
+                    observer.onChange({ before, after, data, delta }).then(() =>
+                        resolve({
+                            path,
+                            durationMillis: start - performance.now(),
+                        }),
+                    )
+                },
+            )
             this.jobs.pushJob(job)
         }
     }

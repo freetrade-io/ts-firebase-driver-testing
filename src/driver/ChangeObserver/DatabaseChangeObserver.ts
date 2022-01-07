@@ -1,3 +1,4 @@
+import { performance } from "perf_hooks"
 import { JsonValue } from "../../util/json"
 import {
     IChange,
@@ -6,8 +7,17 @@ import {
     IParameterisedChange,
 } from "./DatabaseChangeFilter"
 
+export interface IDatabaseChangePerformanceStats {
+    path?: string
+    topicName?: string
+    durationMillis: number
+}
+
 export interface IDatabaseChangeObserver {
-    onChange(change: IChange, dotPath?: string[]): Promise<void>
+    onChange(
+        change: IChange,
+        dotPath?: string[],
+    ): Promise<IDatabaseChangePerformanceStats>
 }
 
 export type ChangeType = "created" | "updated" | "deleted" | "written"
@@ -36,19 +46,32 @@ export abstract class DatabaseChangeObserver<T>
         protected readonly handler: TriggerFunction<T>,
     ) {}
 
-    async onChange(change: IChange, dotPath?: string[]): Promise<void> {
+    async onChange(
+        change: IChange,
+        dotPath?: string[],
+    ): Promise<IDatabaseChangePerformanceStats> {
+        const start = performance.now()
         const relevantChanges = this.changeFilter().changeEvents(
             change,
             dotPath,
         )
         await Promise.all(
             relevantChanges.map((pc: IParameterisedChange) => {
-                return this.handler(this.makeChangeObject(pc), {
-                    params: pc.parameters,
-                    timestamp: new Date().toISOString(),
+                return new Promise((resolve, reject) => {
+                    this.handler(this.makeChangeObject(pc), {
+                        params: pc.parameters,
+                        timestamp: new Date().toISOString(),
+                    }).then(resolve, reject)
                 })
             }),
         )
+
+        const path = (dotPath || []).join("/")
+        const duration = performance.now() - start
+        return {
+            path,
+            durationMillis: Math.abs(duration),
+        }
     }
 
     protected abstract changeFilter(): IChangeFilter
