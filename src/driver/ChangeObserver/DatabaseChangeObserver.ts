@@ -44,7 +44,8 @@ export abstract class DatabaseChangeObserver<T>
     constructor(
         protected readonly observedPath: string,
         protected readonly handler: TriggerFunction<T>,
-    ) {}
+    ) {
+    }
 
     async onChange(
         change: IChange,
@@ -70,7 +71,7 @@ export abstract class DatabaseChangeObserver<T>
         const duration = performance.now() - start
         return {
             path,
-            durationMillis: Math.abs(duration),
+            durationMillis: duration,
         }
     }
 

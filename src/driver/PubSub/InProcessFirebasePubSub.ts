@@ -36,7 +36,8 @@ export class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     constructor(
         readonly name: string,
         private readonly pubSub: InProcessFirebaseBuilderPubSub,
-    ) {}
+    ) {
+    }
 
     onPublish(
         handler: (
@@ -64,7 +65,8 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
     constructor(
         private readonly jobs: IAsyncJobs,
         private readonly now: () => Date = () => new Date(),
-    ) {}
+    ) {
+    }
 
     schedule(schedule: string): InProcessFirebaseScheduleBuilder {
         return new InProcessFirebaseScheduleBuilder()
@@ -95,7 +97,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
                     }).then(() =>
                         resolve({
                             topicName,
-                            durationMillis: start - performance.now(),
+                            durationMillis: performance.now() - start,
                         }),
                     )
                 },
@@ -106,7 +108,8 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
 }
 
 class InProcessPubSubPublisher implements IPubSubPublisher {
-    constructor(private readonly topic: InProcessFirebasePubSubTopic) {}
+    constructor(private readonly topic: InProcessFirebasePubSubTopic) {
+    }
 
     // @ts-ignore
     publish(data: Buffer, attributes?: Attributes): Promise<void> {
@@ -134,7 +137,8 @@ export class InProcessFirebasePubSubCl implements IPubSub {
         [key: string]: InProcessFirebasePubSubTopic
     } = {}
 
-    constructor(private readonly pubSub: InProcessFirebaseBuilderPubSub) {}
+    constructor(private readonly pubSub: InProcessFirebaseBuilderPubSub) {
+    }
 
     topic(name: string): InProcessFirebasePubSubTopic {
         if (!this.topics[name]) {
