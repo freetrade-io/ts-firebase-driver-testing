@@ -1,9 +1,9 @@
 import { flatten } from "flat"
 import _ from "lodash"
+import objectPath = require("object-path")
 import { enumeratePaths } from "../../util/enumeratePaths"
 import { JsonValue } from "../../util/json"
 import { makeDelta } from "../../util/makeDelta"
-import objectPath = require("object-path")
 
 /**
  * Firebase triggers get before/after, GCP cloud function triggers get
@@ -378,7 +378,7 @@ export class FirestoreDeletedChangeFilter extends ChangeFilter {
                 change: {
                     before: change.before,
                     after: undefined,
-                    data: change.after,
+                    data: change.before,
                     delta: undefined,
                 },
                 path: documentPath,

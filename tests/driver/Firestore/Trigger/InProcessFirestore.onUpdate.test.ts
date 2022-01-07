@@ -1,4 +1,9 @@
-import { IFirebaseChange, IFirebaseDriver, IFirestoreDocumentSnapshot, InProcessFirebaseDriver } from "../../../../src"
+import {
+    IFirebaseChange,
+    IFirebaseDriver,
+    IFirestoreDocumentSnapshot,
+    InProcessFirebaseDriver,
+} from "../../../../src"
 
 describe("onUpdate trigger of in-process Firestore", () => {
     let driver: InProcessFirebaseDriver & IFirebaseDriver
@@ -9,7 +14,9 @@ describe("onUpdate trigger of in-process Firestore", () => {
 
     test("onUpdate handler is not triggered on doc create", async () => {
         // Given we set up an onUpdate handler on a collection;
-        const receivedSnapshots: IFirebaseChange<IFirestoreDocumentSnapshot>[] = []
+        const receivedSnapshots: Array<IFirebaseChange<
+            IFirestoreDocumentSnapshot
+        >> = []
         driver
             .runWith()
             .region("europe-west1")
@@ -34,7 +41,9 @@ describe("onUpdate trigger of in-process Firestore", () => {
 
     test("onUpdate handler is not triggered on doc delete", async () => {
         // Given we set up an onUpdate handler on a collection;
-        const receivedSnapshots: IFirebaseChange<IFirestoreDocumentSnapshot>[] = []
+        const receivedSnapshots: Array<IFirebaseChange<
+            IFirestoreDocumentSnapshot
+        >> = []
         driver
             .runWith()
             .region("europe-west1")
@@ -66,7 +75,9 @@ describe("onUpdate trigger of in-process Firestore", () => {
 
     test("onUpdate handler is triggered when a doc is updated", async () => {
         // Given we set up an onUpdate handler on a collection;
-        const receivedSnapshots: IFirebaseChange<IFirestoreDocumentSnapshot>[] = []
+        const receivedSnapshots: Array<IFirebaseChange<
+            IFirestoreDocumentSnapshot
+        >> = []
         driver
             .runWith()
             .region("europe-west1")
@@ -94,8 +105,9 @@ describe("onUpdate trigger of in-process Firestore", () => {
 
         // Then the handler should be triggered.
         expect(receivedSnapshots).toHaveLength(1)
-        expect(receivedSnapshots[0].after!.data()).toEqual({ colour: "red", size: "large" })
+        expect(receivedSnapshots[0].after!.data()).toEqual({
+            colour: "red",
+            size: "large",
+        })
     })
-
-
 })

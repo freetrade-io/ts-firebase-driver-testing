@@ -1,4 +1,8 @@
-import { IFirebaseDriver, IFirestoreDocumentSnapshot, InProcessFirebaseDriver } from "../../../../src"
+import {
+    IFirebaseDriver,
+    IFirestoreDocumentSnapshot,
+    InProcessFirebaseDriver,
+} from "../../../../src"
 
 describe("onDelete trigger of in-process Firestore", () => {
     let driver: InProcessFirebaseDriver & IFirebaseDriver
@@ -24,7 +28,8 @@ describe("onDelete trigger of in-process Firestore", () => {
             .collection("animals")
             .doc("tiger")
             .set({
-                colour: "orange", size: "large",
+                colour: "orange",
+                size: "large",
             })
 
         // And Firebase finishes its jobs;
@@ -98,6 +103,4 @@ describe("onDelete trigger of in-process Firestore", () => {
         // Then the handler should not be triggered.
         expect(receivedSnapshots).toHaveLength(0)
     })
-
-
 })
