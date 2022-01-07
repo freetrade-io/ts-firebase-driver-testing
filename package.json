@@ -20,7 +20,8 @@
     "lodash": ">=4",
     "object-path": "^0",
     "object.entries": "^1",
-    "object.values": "^1"
+    "object.values": "^1",
+    "p-limit": "^3.1.0"
   },
   "devDependencies": {
     "@types/flat": "^5.0.0",

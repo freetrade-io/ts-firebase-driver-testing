@@ -1,9 +1,12 @@
 import _ from "lodash"
+import pLimit from "p-limit"
 import { sleep } from "../util/sleep"
 
 export interface IAsyncJobs {
     pushJob(job: Promise<any>): void
+
     pushJobs(jobs: Array<Promise<any>>): void
+
     jobsComplete(): Promise<void>
 }
 
@@ -12,7 +15,8 @@ export class AsyncJobs implements IAsyncJobs {
 
     // To prevent trying to resolve 100s or possibly 1000s of promises at once
     // maxConcurrentJobs was added
-    constructor(private maxConcurrentJobs: number = 20) {}
+    constructor(private maxConcurrentJobs: number = 20) {
+    }
 
     pushJobs(jobs: Array<Promise<any>>): void {
         this.jobs = this.jobs.concat(jobs.map((job) => randomDelayJob(job)))
@@ -27,9 +31,10 @@ export class AsyncJobs implements IAsyncJobs {
         while (this.jobs.length > 0) {
             this.randomiseJobsOrder()
 
-            const itemsToResolve = this.jobs.slice(0, this.maxConcurrentJobs)
+            const itemsToResolve = this.jobs.slice(0, this.jobs.length)
 
-            await Promise.all(itemsToResolve)
+            const limit = pLimit(this.maxConcurrentJobs)
+            await Promise.all(itemsToResolve.map(item => limit(() => item)))
 
             // Remove the items we just processed from the front of the job queue
             this.jobs.splice(0, itemsToResolve.length)
