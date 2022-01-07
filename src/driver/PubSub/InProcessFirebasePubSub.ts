@@ -95,7 +95,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
                     }).then(() =>
                         resolve({
                             topicName,
-                            durationMillis: start - performance.now(),
+                            durationMillis: performance.now() - start,
                         }),
                     )
                 },

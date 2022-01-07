@@ -70,7 +70,7 @@ export abstract class DatabaseChangeObserver<T>
         const duration = performance.now() - start
         return {
             path,
-            durationMillis: Math.abs(duration),
+            durationMillis: duration,
         }
     }
 

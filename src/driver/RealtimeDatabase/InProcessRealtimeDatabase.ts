@@ -545,7 +545,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
                     observer.onChange({ before, after, data, delta }).then(() =>
                         resolve({
                             path,
-                            durationMillis: start - performance.now(),
+                            durationMillis: performance.now() - start,
                         }),
                     )
                 },
