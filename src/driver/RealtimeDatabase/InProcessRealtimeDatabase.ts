@@ -360,7 +360,7 @@ export class InProcessRealtimeDatabaseRef
         eventType: "value",
     ): Promise<InProcessFirebaseRealtimeDatabaseSnapshot> {
         if (eventType !== "value") {
-            throw new Error("Only the \"value\" event type is supported.")
+            throw new Error('Only the "value" event type is supported.')
         }
         let value = this.db._getPath(this.path)
         if (typeof value === "object") {
@@ -546,7 +546,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
             const job = new Promise<IDatabaseChangePerformanceStats>((resolve) => {
                 observer.onChange({ before, after, data, delta }).then(() => resolve({
                     path,
-                    durationMillis: Math.abs(performance.now() - start),
+                    durationMillis: start - performance.now(),
                 }))
             })
             this.jobs.pushJob(job)

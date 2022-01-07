@@ -95,7 +95,7 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
                         timestamp: this.now().toISOString(),
                     }).then(() => resolve({
                         topicName: topicName,
-                        durationMillis: Math.abs(performance.now() - start),
+                        durationMillis: start - performance.now(),
                     }))
                 },
             )

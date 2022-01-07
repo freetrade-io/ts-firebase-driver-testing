@@ -58,7 +58,7 @@ export class AsyncJobs implements IAsyncJobs {
         })
         const uniqueCollections = new Set(pathsWithoutIds)
         console.log(`jobsComplete stats: there were ${stats.length} paths updated`)
-        console.log(`jobsComplete stats: there were ${uniqueCollections.size} collections updated, the ones that were updated were:`)
+        console.log(`jobsComplete stats: there were ${uniqueCollections.size} collections updated`)
         console.log(`jobsComplete stats: the collections that were updated were: ${JSON.stringify(Array.from(uniqueCollections), null, 2)}`)
         console.log(`jobsComplete stats: the ${maxSlowToShow} slowest paths to process were:`)
         console.table(slowest.slice(0, maxSlowToShow))
