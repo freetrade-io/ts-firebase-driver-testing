@@ -44,8 +44,7 @@ export abstract class DatabaseChangeObserver<T>
     constructor(
         protected readonly observedPath: string,
         protected readonly handler: TriggerFunction<T>,
-    ) {
-    }
+    ) {}
 
     async onChange(
         change: IChange,
