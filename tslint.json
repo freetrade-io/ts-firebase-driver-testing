@@ -13,6 +13,7 @@
     "max-classes-per-file": [false, 1],
     "object-literal-sort-keys": [false],
     "no-empty": [true, "allow-empty-functions"],
+    "no-console": false,
     "variable-name": {
       "options": [
         "allow-leading-underscore"

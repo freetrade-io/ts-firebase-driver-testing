@@ -32,8 +32,7 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
         readonly key: string,
         readonly ref: InProcessRealtimeDatabaseRef,
         private readonly value: any,
-    ) {
-    }
+    ) {}
 
     exists(): boolean {
         if (this.value && typeof this.value === "object") {
@@ -127,8 +126,7 @@ export class InProcessRealtimeDatabaseRef
             keyOrdering: false,
             childOrderingPath: undefined,
         },
-    ) {
-    }
+    ) {}
 
     orderByKey(): InProcessRealtimeDatabaseRef {
         const ordering = (a: IKeyVal, b: IKeyVal): number => {
@@ -453,8 +451,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     constructor(
         private readonly jobs?: IAsyncJobs,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
-    ) {
-    }
+    ) {}
 
     ref(path: string): InProcessRealtimeDatabaseRef {
         return new InProcessRealtimeDatabaseRef(
@@ -543,12 +540,16 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
 
         for (const observer of this.changeObservers) {
             const start = performance.now()
-            const job = new Promise<IDatabaseChangePerformanceStats>((resolve) => {
-                observer.onChange({ before, after, data, delta }).then(() => resolve({
-                    path,
-                    durationMillis: start - performance.now(),
-                }))
-            })
+            const job = new Promise<IDatabaseChangePerformanceStats>(
+                (resolve) => {
+                    observer.onChange({ before, after, data, delta }).then(() =>
+                        resolve({
+                            path,
+                            durationMillis: start - performance.now(),
+                        }),
+                    )
+                },
+            )
             this.jobs.pushJob(job)
         }
     }
@@ -558,8 +559,7 @@ export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
     constructor(
         readonly path: string,
         private readonly database: InProcessRealtimeDatabase,
-    ) {
-    }
+    ) {}
 
     onCreate(
         handler: (
@@ -620,8 +620,7 @@ export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
 
 export class InProcessFirebaseBuilderDatabase
     implements IFirebaseBuilderDatabase {
-    constructor(private readonly database: InProcessRealtimeDatabase) {
-    }
+    constructor(private readonly database: InProcessRealtimeDatabase) {}
 
     ref(path: string): InProcessFirebaseRefBuilder {
         return new InProcessFirebaseRefBuilder(path, this.database)

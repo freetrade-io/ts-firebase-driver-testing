@@ -14,7 +14,10 @@ export interface IDatabaseChangePerformanceStats {
 }
 
 export interface IDatabaseChangeObserver {
-    onChange(change: IChange, dotPath?: string[]): Promise<IDatabaseChangePerformanceStats>
+    onChange(
+        change: IChange,
+        dotPath?: string[],
+    ): Promise<IDatabaseChangePerformanceStats>
 }
 
 export type ChangeType = "created" | "updated" | "deleted" | "written"
@@ -41,10 +44,12 @@ export abstract class DatabaseChangeObserver<T>
     constructor(
         protected readonly observedPath: string,
         protected readonly handler: TriggerFunction<T>,
-    ) {
-    }
+    ) {}
 
-    async onChange(change: IChange, dotPath?: string[]): Promise<IDatabaseChangePerformanceStats> {
+    async onChange(
+        change: IChange,
+        dotPath?: string[],
+    ): Promise<IDatabaseChangePerformanceStats> {
         const start = performance.now()
         const relevantChanges = this.changeFilter().changeEvents(
             change,

@@ -3,15 +3,14 @@ import { sleep } from "../util/sleep"
 import { IDatabaseChangePerformanceStats } from "./ChangeObserver/DatabaseChangeObserver"
 
 export interface IAsyncJobs {
+    shouldDebugJobsCompletePerformance: boolean
     pushJob(job: Promise<any>): void
     pushJobs(jobs: Array<Promise<any>>): void
     jobsComplete(): Promise<void>
-
-    shouldDebugJobsCompletePerformance: boolean
 }
 
 export class AsyncJobs implements IAsyncJobs {
-    public shouldDebugJobsCompletePerformance = false
+    shouldDebugJobsCompletePerformance = false
     private jobs: Array<Promise<IDatabaseChangePerformanceStats>> = []
 
     // To prevent trying to resolve 100s or possibly 1000s of promises at once
@@ -44,23 +43,39 @@ export class AsyncJobs implements IAsyncJobs {
         this.logChangePerformanceStats(changePerformanceStats)
     }
 
-    private logChangePerformanceStats(stats: IDatabaseChangePerformanceStats[]) {
+    private logChangePerformanceStats(
+        stats: IDatabaseChangePerformanceStats[],
+    ) {
         if (!this.shouldDebugJobsCompletePerformance) {
             return
         }
 
         const maxSlowToShow = 20
         const slowest = _.orderBy(stats, "durationMillis", ["desc"])
-        const pathsWithoutIds = stats.map(stat => {
+        const pathsWithoutIds = stats.map((stat) => {
             const name = stat.path ?? stat.topicName ?? ""
             const components = name.split("/")
-            return components.map((val, i) => i % 2 === 0 ? val : "*").join("/")
+            return components
+                .map((val, i) => (i % 2 === 0 ? val : "*"))
+                .join("/")
         })
         const uniqueCollections = new Set(pathsWithoutIds)
-        console.log(`jobsComplete stats: there were ${stats.length} paths updated`)
-        console.log(`jobsComplete stats: there were ${uniqueCollections.size} collections updated`)
-        console.log(`jobsComplete stats: the collections that were updated were: ${JSON.stringify(Array.from(uniqueCollections), null, 2)}`)
-        console.log(`jobsComplete stats: the ${maxSlowToShow} slowest paths to process were:`)
+        console.log(
+            `jobsComplete stats: there were ${stats.length} paths updated`,
+        )
+        console.log(
+            `jobsComplete stats: there were ${uniqueCollections.size} collections updated`,
+        )
+        console.log(
+            `jobsComplete stats: the collections that were updated were: ${JSON.stringify(
+                Array.from(uniqueCollections),
+                null,
+                2,
+            )}`,
+        )
+        console.log(
+            `jobsComplete stats: the ${maxSlowToShow} slowest paths to process were:`,
+        )
         console.table(slowest.slice(0, maxSlowToShow))
     }
 
