@@ -1,4 +1,5 @@
 import _ from "lodash"
+import { performance } from "perf_hooks"
 import { expandPaths } from "../../util/expandPaths"
 import { makeDelta } from "../../util/makeDelta"
 import { objDel, objGet, objSet } from "../../util/objPath"
@@ -6,6 +7,7 @@ import { IAsyncJobs } from "../AsyncJobs"
 import {
     ChangeType,
     IDatabaseChangeObserver,
+    IDatabaseChangePerformanceStats,
 } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     CloudFunction,
@@ -30,7 +32,8 @@ export class InProcessFirebaseRealtimeDatabaseSnapshot
         readonly key: string,
         readonly ref: InProcessRealtimeDatabaseRef,
         private readonly value: any,
-    ) {}
+    ) {
+    }
 
     exists(): boolean {
         if (this.value && typeof this.value === "object") {
@@ -124,7 +127,8 @@ export class InProcessRealtimeDatabaseRef
             keyOrdering: false,
             childOrderingPath: undefined,
         },
-    ) {}
+    ) {
+    }
 
     orderByKey(): InProcessRealtimeDatabaseRef {
         const ordering = (a: IKeyVal, b: IKeyVal): number => {
@@ -356,7 +360,7 @@ export class InProcessRealtimeDatabaseRef
         eventType: "value",
     ): Promise<InProcessFirebaseRealtimeDatabaseSnapshot> {
         if (eventType !== "value") {
-            throw new Error('Only the "value" event type is supported.')
+            throw new Error("Only the \"value\" event type is supported.")
         }
         let value = this.db._getPath(this.path)
         if (typeof value === "object") {
@@ -449,7 +453,8 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     constructor(
         private readonly jobs?: IAsyncJobs,
         private readonly idGenerator: IdGenerator = firebaseLikeId,
-    ) {}
+    ) {
+    }
 
     ref(path: string): InProcessRealtimeDatabaseRef {
         return new InProcessRealtimeDatabaseRef(
@@ -464,7 +469,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _setPath(path: string, value: any): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             objSet(this.storage, dotPath, value)
@@ -472,7 +477,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _updatePath(path: string, value: any): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             const existing = objGet(this.storage, dotPath)
@@ -498,7 +503,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
     }
 
     _removePath(path: string): void {
-        this.triggerChangeEvents(() => {
+        this.triggerChangeEvents(path, () => {
             path = _.trim(path, "/")
             const dotPath: string[] = dotPathFromSlashed(path)
             objDel(this.storage, dotPath)
@@ -524,7 +529,7 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         this.changeObservers = []
     }
 
-    private triggerChangeEvents(makeChange: () => any): void {
+    private triggerChangeEvents(path: string, makeChange: () => any): void {
         if (!this.jobs) {
             makeChange()
             return
@@ -537,10 +542,12 @@ export class InProcessRealtimeDatabase implements IFirebaseRealtimeDatabase {
         const delta = makeDelta(before, after)
 
         for (const observer of this.changeObservers) {
-            const job = new Promise((resolve) => {
-                setTimeout(async () => {
-                    resolve(observer.onChange({ before, after, data, delta }))
-                }, 1)
+            const start = performance.now()
+            const job = new Promise<IDatabaseChangePerformanceStats>((resolve) => {
+                observer.onChange({ before, after, data, delta }).then(() => resolve({
+                    path,
+                    durationMillis: Math.abs(performance.now() - start),
+                }))
             })
             this.jobs.pushJob(job)
         }
@@ -551,7 +558,8 @@ export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
     constructor(
         readonly path: string,
         private readonly database: InProcessRealtimeDatabase,
-    ) {}
+    ) {
+    }
 
     onCreate(
         handler: (
@@ -612,7 +620,8 @@ export class InProcessFirebaseRefBuilder implements IFirebaseRefBuilder {
 
 export class InProcessFirebaseBuilderDatabase
     implements IFirebaseBuilderDatabase {
-    constructor(private readonly database: InProcessRealtimeDatabase) {}
+    constructor(private readonly database: InProcessRealtimeDatabase) {
+    }
 
     ref(path: string): InProcessFirebaseRefBuilder {
         return new InProcessFirebaseRefBuilder(path, this.database)

@@ -1,4 +1,6 @@
+import { performance } from "perf_hooks"
 import { IAsyncJobs } from "../AsyncJobs"
+import { IDatabaseChangePerformanceStats } from "../ChangeObserver/DatabaseChangeObserver"
 import {
     CloudFunction,
     IAttributes,
@@ -34,7 +36,8 @@ export class InProcessFirebaseTopicBuilder implements IFirebaseTopicBuilder {
     constructor(
         readonly name: string,
         private readonly pubSub: InProcessFirebaseBuilderPubSub,
-    ) {}
+    ) {
+    }
 
     onPublish(
         handler: (
@@ -62,7 +65,8 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
     constructor(
         private readonly jobs: IAsyncJobs,
         private readonly now: () => Date = () => new Date(),
-    ) {}
+    ) {
+    }
 
     schedule(schedule: string): InProcessFirebaseScheduleBuilder {
         return new InProcessFirebaseScheduleBuilder()
@@ -84,15 +88,16 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
             return
         }
         for (const handler of this.subscriptions[topicName]) {
-            const job = new Promise((resolve) =>
-                setTimeout(async () => {
+            const start = performance.now()
+            const job = new Promise<IDatabaseChangePerformanceStats>((resolve) => {
                     const message = new PubSubMessage(data, attributes ?? {})
-                    resolve(
-                        handler(message, {
-                            timestamp: this.now().toISOString(),
-                        }),
-                    )
-                }, 1),
+                    handler(message, {
+                        timestamp: this.now().toISOString(),
+                    }).then(() => resolve({
+                        topicName: topicName,
+                        durationMillis: Math.abs(performance.now() - start),
+                    }))
+                },
             )
             this.jobs.pushJob(job)
         }
@@ -100,7 +105,8 @@ export class InProcessFirebaseBuilderPubSub implements IFirebaseBuilderPubSub {
 }
 
 class InProcessPubSubPublisher implements IPubSubPublisher {
-    constructor(private readonly topic: InProcessFirebasePubSubTopic) {}
+    constructor(private readonly topic: InProcessFirebasePubSubTopic) {
+    }
 
     // @ts-ignore
     publish(data: Buffer, attributes?: Attributes): Promise<void> {
@@ -128,7 +134,8 @@ export class InProcessFirebasePubSubCl implements IPubSub {
         [key: string]: InProcessFirebasePubSubTopic
     } = {}
 
-    constructor(private readonly pubSub: InProcessFirebaseBuilderPubSub) {}
+    constructor(private readonly pubSub: InProcessFirebaseBuilderPubSub) {
+    }
 
     topic(name: string): InProcessFirebasePubSubTopic {
         if (!this.topics[name]) {

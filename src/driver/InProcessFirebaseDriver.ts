@@ -25,7 +25,8 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
         readonly pubsub: InProcessFirebaseBuilderPubSub,
         readonly database: InProcessFirebaseBuilderDatabase,
         readonly firestore: InProcessFirestoreBuilder,
-    ) {}
+    ) {
+    }
 
     region(
         ...regions: Array<typeof SUPPORTED_REGIONS[number]>
@@ -35,6 +36,7 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
 }
 
 export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
+    public shouldDebugJobsCompletePerformance: boolean = false
     private rtDb: InProcessRealtimeDatabase | undefined
     private firestoreDb: InProcessFirestore | undefined
     private asyncJobs: IAsyncJobs
@@ -129,5 +131,9 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
 
     async jobsComplete(): Promise<void> {
         await this.asyncJobs.jobsComplete()
+    }
+
+    setDebugJobsCompletePerformanceEnabled(debugEnabled: boolean) {
+        this.asyncJobs.shouldDebugJobsCompletePerformance = debugEnabled
     }
 }
