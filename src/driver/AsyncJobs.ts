@@ -1,7 +1,10 @@
 import _ from "lodash"
+import pLimit from "p-limit"
 import { sleep } from "../util/sleep"
+import { IDatabaseChangePerformanceStats } from "./ChangeObserver/DatabaseChangeObserver"
 
 export interface IAsyncJobs {
+    shouldDebugJobsCompletePerformance: boolean
     pushJob(job: Promise<any>): void
 
     pushJobs(jobs: Array<Promise<any>>): void
@@ -10,32 +13,76 @@ export interface IAsyncJobs {
 }
 
 export class AsyncJobs implements IAsyncJobs {
-    private jobs: Array<Promise<any>> = []
+    shouldDebugJobsCompletePerformance = false
+    private jobs: Array<Promise<IDatabaseChangePerformanceStats>> = []
 
     // To prevent trying to resolve 100s or possibly 1000s of promises at once
     // maxConcurrentJobs was added
     constructor(private maxConcurrentJobs: number) {}
 
-    pushJobs(jobs: Array<Promise<any>>): void {
+    pushJobs(jobs: Array<Promise<IDatabaseChangePerformanceStats>>): void {
         this.jobs = this.jobs.concat(jobs.map((job) => randomDelayJob(job)))
     }
 
-    pushJob(job: Promise<any>): void {
+    pushJob(job: Promise<IDatabaseChangePerformanceStats>): void {
         this.jobs.push(randomDelayJob(job))
     }
 
     async jobsComplete(): Promise<void> {
         // More jobs might be added by each job, so we can't just await Promise.all() here
+        const changePerformanceStats: IDatabaseChangePerformanceStats[] = []
         while (this.jobs.length > 0) {
             this.randomiseJobsOrder()
 
-            const itemsToResolve = this.jobs.slice(0, this.maxConcurrentJobs)
+            const itemsToResolve = [...this.jobs]
 
-            await Promise.all(itemsToResolve)
+            const limit = pLimit(this.maxConcurrentJobs)
+            const results = await Promise.all(
+                itemsToResolve.map((item) => limit(() => item)),
+            )
+            changePerformanceStats.push(...results)
 
             // Remove the items we just processed from the front of the job queue
             this.jobs.splice(0, itemsToResolve.length)
         }
+
+        this.logChangePerformanceStats(changePerformanceStats)
+    }
+
+    private logChangePerformanceStats(
+        stats: IDatabaseChangePerformanceStats[],
+    ) {
+        if (!this.shouldDebugJobsCompletePerformance) {
+            return
+        }
+
+        const maxSlowToShow = 20
+        const slowest = _.orderBy(stats, "durationMillis", ["desc"])
+        const pathsWithoutIds = stats.map((stat) => {
+            const name = stat.path ?? stat.topicName ?? ""
+            const components = name.split("/")
+            return components
+                .map((val, i) => (i % 2 === 0 ? val : "*"))
+                .join("/")
+        })
+        const uniqueCollections = new Set(pathsWithoutIds)
+        console.log(
+            `jobsComplete stats: there were ${stats.length} paths updated`,
+        )
+        console.log(
+            `jobsComplete stats: there were ${uniqueCollections.size} collections updated`,
+        )
+        console.log(
+            `jobsComplete stats: the collections that were updated were: ${JSON.stringify(
+                Array.from(uniqueCollections),
+                null,
+                2,
+            )}`,
+        )
+        console.log(
+            `jobsComplete stats: the ${maxSlowToShow} slowest paths to process were:`,
+        )
+        console.table(slowest.slice(0, maxSlowToShow))
     }
 
     /**
@@ -54,6 +101,6 @@ export class AsyncJobs implements IAsyncJobs {
 function randomDelayJob(job: Promise<any>): Promise<any> {
     return (async () => {
         await sleep(Math.random() * 5)
-        await job
+        return job
     })()
 }

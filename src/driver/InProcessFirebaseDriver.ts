@@ -35,6 +35,7 @@ class InProcessFirebaseFunctionBuilder implements IFirebaseFunctionBuilder {
 }
 
 export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
+    shouldDebugJobsCompletePerformance: boolean = false
     private rtDb: InProcessRealtimeDatabase | undefined
     private firestoreDb: InProcessFirestore | undefined
     private asyncJobs: IAsyncJobs
@@ -129,5 +130,9 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
 
     async jobsComplete(): Promise<void> {
         await this.asyncJobs.jobsComplete()
+    }
+
+    setDebugJobsCompletePerformanceEnabled(debugEnabled: boolean) {
+        this.asyncJobs.shouldDebugJobsCompletePerformance = debugEnabled
     }
 }

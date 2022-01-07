@@ -1,6 +1,6 @@
 {
   "name": "ts-firebase-driver-testing",
-  "version": "1.0.10",
+  "version": "1.0.12",
   "description": "Swap out Firebase as a driver for in-process testing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,7 +20,8 @@
     "lodash": ">=4",
     "object-path": "^0",
     "object.entries": "^1",
-    "object.values": "^1"
+    "object.values": "^1",
+    "p-limit": "^3.1.0"
   },
   "devDependencies": {
     "@types/flat": "^5.0.0",
