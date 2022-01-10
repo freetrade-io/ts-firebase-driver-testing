@@ -9,7 +9,7 @@ describe("InProcessFirebasePubSubTopic publisher.publish", () => {
     test("Publishes a message to a topic with attributes and context.", async () => {
         // Given the mocks
         const topic = "Test-Topic"
-        const asyncJobs = new AsyncJobs()
+        const asyncJobs = new AsyncJobs(20)
         const dateMock = jest.fn()
 
         // Given the time is

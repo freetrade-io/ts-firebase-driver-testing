@@ -207,18 +207,8 @@ export class InProcessFirestore implements IFirestore {
         const data = before
         const delta = makeDelta(before, after)
 
-        const jobs = this.changeObservers.map(
-            async (observer) =>
-                new Promise((resolve) => {
-                    setTimeout(async () => {
-                        resolve(
-                            observer.onChange(
-                                { before, after, data, delta },
-                                dotPath,
-                            ),
-                        )
-                    }, 1)
-                }),
+        const jobs = this.changeObservers.map(async (observer) =>
+            observer.onChange({ before, after, data, delta }, dotPath),
         )
 
         this.jobs.pushJobs(jobs)
@@ -302,6 +292,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         }
         query.rangeFilterField = fieldPath
     }
+
     constructor(
         readonly firestore: IFirestore & InProcessFirestore,
         readonly path: string,

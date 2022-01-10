@@ -18,7 +18,7 @@ export class AsyncJobs implements IAsyncJobs {
 
     // To prevent trying to resolve 100s or possibly 1000s of promises at once
     // maxConcurrentJobs was added
-    constructor(private maxConcurrentJobs: number = 20) {}
+    constructor(private maxConcurrentJobs: number) {}
 
     pushJobs(jobs: Array<Promise<IDatabaseChangePerformanceStats>>): void {
         this.jobs = this.jobs.concat(jobs.map((job) => randomDelayJob(job)))
@@ -100,7 +100,7 @@ export class AsyncJobs implements IAsyncJobs {
  */
 function randomDelayJob(job: Promise<any>): Promise<any> {
     return (async () => {
-        await sleep(Math.random() * 10)
+        await sleep(Math.random() * 5)
         return job
     })()
 }
