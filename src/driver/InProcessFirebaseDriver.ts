@@ -46,8 +46,8 @@ export class InProcessFirebaseDriver implements IFirebaseDriver, IAsyncJobs {
     private functionBuilder: InProcessFirebaseFunctionBuilder | undefined
     private firebaseAuth: InProcessFirebaseAuth | undefined
 
-    constructor(maxConcurrentAsyncJobs: number = 20) {
-        this.asyncJobs = new AsyncJobs(maxConcurrentAsyncJobs)
+    constructor() {
+        this.asyncJobs = new AsyncJobs()
     }
 
     realTimeDatabase(

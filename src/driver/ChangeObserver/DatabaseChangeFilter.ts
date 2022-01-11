@@ -30,7 +30,6 @@ export interface IChangeParams {
 export interface IChangeFilter {
     readonly observedPath: string
     readonly observedPathRegex: RegExp
-
     changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[]
 }
 
@@ -48,7 +47,6 @@ abstract class ChangeFilter implements IChangeFilter {
         name: string
         index: number
     }>
-
     constructor(readonly observedPath: string) {
         this.observedPath = normalisePath(observedPath)
         const pathParts = this.observedPath.split("/")
@@ -136,39 +134,6 @@ abstract class ChangeFilter implements IChangeFilter {
             match: false,
             parameters: {},
         }
-    }
-}
-
-export class FirestoreCreatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange, _dotPath?: string[]): IParameterisedChange[] {
-        const dotPath = _dotPath! // inProcessFirestore always provides dotPath
-        // Firestore doesn't use dotPath change observers, so don't bother looking up nested paths
-        const documentPath = dotPath.join("/")
-        const isPreexistingDocument = typeof change.before === "object"
-        const doesntExistAfter = typeof change.after !== "object"
-        if (isPreexistingDocument || doesntExistAfter) {
-            // This is not a newly created path.
-            return []
-        }
-
-        const matchPath = this.matchPath(documentPath)
-        if (!matchPath.match) {
-            // We're not interested in this path.
-            return []
-        }
-
-        return [
-            {
-                parameters: matchPath.parameters,
-                change: {
-                    before: undefined,
-                    after: change.after,
-                    data: undefined,
-                    delta: change.after,
-                },
-                path: documentPath,
-            },
-        ]
     }
 }
 
@@ -268,44 +233,6 @@ export class UpdatedChangeFilter extends ChangeFilter {
     }
 }
 
-export class FirestoreUpdatedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange, _dotPath?: string[]): IParameterisedChange[] {
-        const dotPath = _dotPath! // inProcessFirestore always provides dotPath
-        // Firestore doesn't use dotPath change observers, so don't bother looking up nested paths
-        const documentPath = dotPath.join("/")
-        const doesntExistBefore = typeof change.before !== "object"
-        const doesntExistAfter = typeof change.after !== "object"
-
-        if (doesntExistBefore || doesntExistAfter) {
-            // This is not an updated path, it's been created/deleted so ignore it
-            return []
-        }
-
-        const matchPath = this.matchPath(documentPath)
-        if (!matchPath.match) {
-            // We're not interested in this path.
-            return []
-        }
-
-        if (!_.isEqual(change.after, change.before)) {
-            return [
-                {
-                    parameters: matchPath.parameters,
-                    change: {
-                        before: change.before,
-                        after: change.after,
-                        data: change.before,
-                        delta: makeDelta(change.before!, change.after!),
-                    },
-                    path: documentPath,
-                },
-            ]
-        }
-
-        return []
-    }
-}
-
 export class DeletedChangeFilter extends ChangeFilter {
     changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
         const paths = this.changePaths(change, dotPath)
@@ -354,39 +281,6 @@ export class DeletedChangeFilter extends ChangeFilter {
     }
 }
 
-export class FirestoreDeletedChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange, _dotPath?: string[]): IParameterisedChange[] {
-        const dotPath = _dotPath! // inProcessFirestore always provides dotPath
-        // Firestore doesn't use dotPath change observers, so don't bother looking up nested paths
-        const documentPath = dotPath.join("/")
-        const doesntExistBefore = typeof change.before !== "object"
-        const existsAfter = typeof change.after === "object"
-        if (doesntExistBefore || existsAfter) {
-            // This is not a deleted path.
-            return []
-        }
-
-        const matchPath = this.matchPath(documentPath)
-        if (!matchPath.match) {
-            // We're not interested in this path.
-            return []
-        }
-
-        return [
-            {
-                parameters: matchPath.parameters,
-                change: {
-                    before: change.before,
-                    after: undefined,
-                    data: change.before,
-                    delta: undefined,
-                },
-                path: documentPath,
-            },
-        ]
-    }
-}
-
 export class WrittenChangeFilter extends ChangeFilter {
     changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
         return [
@@ -399,25 +293,6 @@ export class WrittenChangeFilter extends ChangeFilter {
                 dotPath,
             ),
             ...new DeletedChangeFilter(this.observedPath).changeEvents(
-                change,
-                dotPath,
-            ),
-        ]
-    }
-}
-
-export class FirestoreWrittenChangeFilter extends ChangeFilter {
-    changeEvents(change: IChange, dotPath?: string[]): IParameterisedChange[] {
-        return [
-            ...new FirestoreCreatedChangeFilter(this.observedPath).changeEvents(
-                change,
-                dotPath,
-            ),
-            ...new FirestoreUpdatedChangeFilter(this.observedPath).changeEvents(
-                change,
-                dotPath,
-            ),
-            ...new FirestoreDeletedChangeFilter(this.observedPath).changeEvents(
                 change,
                 dotPath,
             ),

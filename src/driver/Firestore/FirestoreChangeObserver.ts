@@ -2,12 +2,12 @@ import _ from "lodash"
 import { JsonValue } from "../../util/json"
 import { stripMeta } from "../../util/stripMeta"
 import {
-    FirestoreCreatedChangeFilter,
-    FirestoreDeletedChangeFilter,
-    FirestoreUpdatedChangeFilter,
-    FirestoreWrittenChangeFilter,
+    CreatedChangeFilter,
+    DeletedChangeFilter,
     IChangeFilter,
     IParameterisedChange,
+    UpdatedChangeFilter,
+    WrittenChangeFilter,
 } from "../ChangeObserver/DatabaseChangeFilter"
 import {
     ChangeType,
@@ -59,7 +59,6 @@ export function makeFirestoreChangeObserver(
 
 export interface IFirestoreChangeSnapshot {
     exists: boolean
-
     data(): any
 }
 
@@ -88,7 +87,7 @@ class FirestoreCreatedObserver extends DatabaseChangeObserver<
     }
 
     protected changeFilter(): IChangeFilter {
-        return new FirestoreCreatedChangeFilter(this.observedPath)
+        return new CreatedChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
@@ -109,7 +108,7 @@ class FirestoreUpdatedObserver extends DatabaseChangeObserver<
     IFirestoreChangeSnapshot
 > {
     protected changeFilter(): IChangeFilter {
-        return new FirestoreUpdatedChangeFilter(this.observedPath)
+        return new UpdatedChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
@@ -142,7 +141,7 @@ class FirestoreDeletedObserver extends DatabaseChangeObserver<
     }
 
     protected changeFilter(): IChangeFilter {
-        return new FirestoreDeletedChangeFilter(this.observedPath)
+        return new DeletedChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
@@ -171,7 +170,7 @@ class FirestoreWrittenObserver extends DatabaseChangeObserver<
     }
 
     protected changeFilter(): IChangeFilter {
-        return new FirestoreWrittenChangeFilter(this.observedPath)
+        return new WrittenChangeFilter(this.observedPath)
     }
 
     protected makeChangeObject(
