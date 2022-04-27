@@ -1,3 +1,4 @@
+import { FieldValue } from "@google-cloud/firestore"
 import flatten from "flat"
 import _ from "lodash"
 import { Readable } from "stream"
@@ -973,6 +974,16 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         )
         for (const [path, newValue] of Object.entries(updateDelta)) {
             const pathComponents = path.includes(".") ? path.split(".") : [path]
+
+            // Handling deleteTransform. The class type is not exported from the lib, so we need to decode it
+            if (
+                newValue.constructor.name === "DeleteTransform" &&
+                newValue.methodName === "FieldValue.delete"
+            ) {
+                objDel(valueToWrite, pathComponents)
+                continue
+            }
+
             const existingValue = objGet(valueToWrite, pathComponents)
             const mergedValue =
                 mergeWithExisting &&
