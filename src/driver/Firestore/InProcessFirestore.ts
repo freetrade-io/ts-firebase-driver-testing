@@ -977,8 +977,8 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
 
             // Handling deleteTransform. The class type is not exported from the lib, so we need to decode it
             if (
-                newValue.constructor.name === "DeleteTransform" &&
-                newValue.methodName === "FieldValue.delete"
+                newValue?.constructor?.name === "DeleteTransform" &&
+                newValue?.methodName === "FieldValue.delete"
             ) {
                 objDel(valueToWrite, pathComponents)
                 continue
