@@ -1,3 +1,4 @@
+import { FieldValue } from "@google-cloud/firestore"
 import { GRPCStatusCode } from "../../../src/driver/Common/GRPCStatusCode"
 import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFirestore"
 
@@ -54,4 +55,34 @@ describe("InProcessFirestore update", () => {
             })
         },
     )
+
+    test(".doc().update() deleting existing field", async () => {
+        // Given there is a doc;
+        await firestore
+            .collection("myCollection")
+            .doc("id1")
+            .create({
+                name: "thing",
+                good: true,
+                nop: null,
+            })
+
+        // When we set the doc with a different value;
+        await firestore
+            .collection("myCollection")
+            .doc("id1")
+            .update({ name: FieldValue.delete() })
+
+        // Then the data should be stored correctly;
+        const stored = await firestore
+            .collection("myCollection")
+            .doc("id1")
+            .get()
+
+        expect(stored.exists).toBe(true)
+        expect(stored.data()).toEqual({
+            nop: null,
+            good: true,
+        })
+    })
 })
