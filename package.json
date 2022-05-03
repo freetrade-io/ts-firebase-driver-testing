@@ -1,5 +1,5 @@
 {
-  "name": "ts-firebase-driver-test",
+  "name": "ts-firebase-driver-testing",
   "version": "0.0.2",
   "description": "Swap out Firebase as a driver for in-process testing",
   "main": "dist/index.js",
