@@ -422,7 +422,7 @@ export class InProcessRealtimeDatabaseRef
                 continue
             }
             await this.set(result)
-            await new Promise((resolve) =>
+            await new Promise<void>((resolve) =>
                 setTimeout(async () => {
                     resolve()
                 }, Math.random() * 10),

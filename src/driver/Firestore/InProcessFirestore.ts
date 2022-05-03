@@ -1336,7 +1336,9 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
                     const res = await writeOperation.op()
                     writeOperation.onSuccess(res)
                 } catch (error) {
-                    writeOperation.onError(error)
+                    if (error instanceof Error) {
+                        writeOperation.onError(error)
+                    }
                 }
             }),
         )
