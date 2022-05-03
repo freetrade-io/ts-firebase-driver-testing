@@ -8,7 +8,7 @@ on:
     types: [created]
   push:
     branches:    
-      - 'publish_package_action'
+      - publish_package_action
 
 jobs:
 
