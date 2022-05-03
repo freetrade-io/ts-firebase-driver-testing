@@ -22,9 +22,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 10
-          registry-url: 'https://npm.pkg.github.com'
-          scope: 'freetrade-io'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@freetrade-io'
       - run: yarn install
-      - run: npm publish
+      - run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
