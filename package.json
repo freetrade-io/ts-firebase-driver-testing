@@ -11,8 +11,11 @@
     "build": "tsc"
   },
   "prepublish": "tsc",
-  "repository": "https://github.com/freetrade-io/ts-firebase-driver-testing",
-  "author": "Hugh Grigg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freetrade-io/ts-firebase-driver-testing.git"
+  },
+  "author": "Freetrade",
   "license": "MIT",
   "private": false,
   "dependencies": {
