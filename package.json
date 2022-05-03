@@ -11,10 +11,7 @@
     "build": "tsc",
     "prepublishOnly": "yarn build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/freetrade-io/ts-firebase-driver-testing.git"
-  },
+  "repository": "https://github.com/freetrade-io/ts-firebase-driver-testing",
   "author": "Freetrade",
   "license": "MIT",
   "private": false,
