@@ -39,7 +39,7 @@ describe("InProcessFirestore create", () => {
                 .doc("tiger")
                 .create({ size: "large" })
         } catch (err) {
-            error = err
+            error = err as any
         }
 
         // Then the write should fail;
