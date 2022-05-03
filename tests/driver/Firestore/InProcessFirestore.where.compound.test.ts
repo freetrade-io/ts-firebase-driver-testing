@@ -249,7 +249,7 @@ describe("InProcessFirestore compound querying with where", () => {
                 .where("name", ">", "b")
                 .where("strength", "<", 20)
         } catch (err) {
-            error = err
+            error = err as any
         }
 
         // Then we should get an error.

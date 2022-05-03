@@ -144,7 +144,7 @@ describe("In-process Firestore batched writes", () => {
 
             await batch.commit()
         } catch (err) {
-            error = err
+            error = err as any
         }
 
         // Then the write should fail;
@@ -179,7 +179,7 @@ describe("In-process Firestore batched writes", () => {
         try {
             batch.update(docRef, { foo: "bar2" })
         } catch (err) {
-            error = err
+            error = err as any
         }
 
         // Then an error should be thrown.
