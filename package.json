@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/freetrade-io/ts-firebase-driver-testing.git"
+    "url": "git://github.com/freetrade-io/ts-firebase-driver-testing.git"
   },
   "author": "Freetrade",
   "license": "MIT",

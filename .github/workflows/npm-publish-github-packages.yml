@@ -22,6 +22,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 10
+          registry-url: https://npm.pkg.github.com/
+          scope: @freetrade-io
       - run: yarn install
       - run: npm publish
         env:
