@@ -1,6 +1,6 @@
 # Firebase Driver Testing
 
-[![Build Status](https://github.com/github/docs/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/github/docs/actions/workflows/build-and-test.yml/badge.svg)
+[![Build Status](https://github.com/freetrade-io/ts-firebase-driver-testing/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/freetrade-io/ts-firebase-driver-testing/actions/workflows/build-and-test.yml/badge.svg)
 [![npm version](https://badge.fury.io/js/ts-firebase-driver-testing.svg)](http://badge.fury.io/js/ts-firebase-driver-testing)
 
 ## Swap out Firebase as a driver for in-process testing
