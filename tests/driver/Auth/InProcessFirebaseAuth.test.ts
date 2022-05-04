@@ -17,7 +17,7 @@ describe("In-process mock Firebase auth", () => {
         try {
             await firebase.auth().verifyIdToken(token)
         } catch (err) {
-            error = err
+            error = err as any
         }
 
         // Then the token should not be verified.

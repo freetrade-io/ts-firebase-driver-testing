@@ -61,8 +61,9 @@ export class InProcessFirebaseAuth implements IFirebaseAuth {
                 Buffer.from(String(tokenParts[1]), "base64").toString(),
             )
         } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : ""
             throw new Error(
-                `Failed to parse idToken ${idToken}: ${err.message}`,
+                `Failed to parse idToken ${idToken}: ${errorMessage}`,
             )
         }
         const uid = String(payload.sub || "")
