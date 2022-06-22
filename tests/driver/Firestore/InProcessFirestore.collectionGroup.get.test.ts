@@ -83,4 +83,51 @@ describe("InProcessFirestore collectionGroup get", () => {
         expect(collectionSnapshot.docs).toHaveLength(0)
         expect(collectionSnapshot.docs).toEqual([])
     })
+
+    test(".collectionGroup() document contains nulls", async () => {
+        // Given there is a collection
+        firestore.resetStorage({
+            topLevelCollection: {
+                myCollection: {
+                    id1: { field: "value 1" },
+                    id2: { field: "value 2" },
+                    id3: { field: "value 3" },
+                },
+            },
+            anotherCollection: {
+                myCollection: {
+                    idA: { field: "value A" },
+                    idB: { field: null },
+                },
+            },
+        })
+
+        // When we get the collectionGroup
+        const collectionSnapshot = await firestore
+            .collectionGroup("myCollection")
+            .get()
+
+        // Then we should get the expected collection.
+        expect(collectionSnapshot.docs.map((doc) => doc.exists)).toEqual([
+            true,
+            true,
+            true,
+            true,
+            true,
+        ])
+        expect(collectionSnapshot.docs.map((doc) => doc.id)).toEqual([
+            "id1",
+            "id2",
+            "id3",
+            "idA",
+            "idB",
+        ])
+        expect(collectionSnapshot.docs.map((doc) => doc.data())).toEqual([
+            { field: "value 1" },
+            { field: "value 2" },
+            { field: "value 3" },
+            { field: "value A" },
+            { field: null },
+        ])
+    })
 })

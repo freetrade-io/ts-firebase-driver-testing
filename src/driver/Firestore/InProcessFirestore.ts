@@ -114,12 +114,16 @@ export class InProcessFirestore implements IFirestore {
 
     collectionGroup(collectionId: string): IFirestoreQuery {
         const flattenStorage: any = (storage: any, key: string) => {
-            const children = Object.keys(storage)
-                .filter((childKey) => typeof storage[childKey] === "object")
-                .map((childKey) => flattenStorage(storage[childKey], key))
-            const mergedChildren = _.merge({}, storage, ...children)
-            return {
-                [key]: mergedChildren[key],
+            if (storage) {
+                const children = Object.keys(storage)
+                    .filter((childKey) => typeof storage[childKey] === "object")
+                    .map((childKey) => flattenStorage(storage[childKey], key))
+                const mergedChildren = _.merge({}, storage, ...children)
+                return {
+                    [key]: mergedChildren[key],
+                }
+            } else {
+                return null
             }
         }
         const newStorage = flattenStorage(this.storage, collectionId)
