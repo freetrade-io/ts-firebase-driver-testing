@@ -826,7 +826,7 @@ export class InProcessFirestoreDocRef implements IFirestoreDocRef {
         if (existing.exists) {
             throw new FirestoreError(
                 GRPCStatusCode.ALREADY_EXISTS,
-                `Document already exists: ${this.path}`,
+                `Document already exists: /documents/${this.path}`,
             )
         }
         InProcessFirestoreDocRef.validateNoUndefinedFields(data)
@@ -1194,7 +1194,7 @@ class InProcessFirestoreWriteBatch implements IFirestoreWriteBatch {
             if ((await documentRef.get()).exists) {
                 throw new FirestoreError(
                     GRPCStatusCode.ALREADY_EXISTS,
-                    `Document already exists: ${documentRef.path}`,
+                    `Document already exists: /documents/${documentRef.path}`,
                 )
             }
             return documentRef.set(data)
@@ -1300,7 +1300,7 @@ class InProcessFirestoreBulkWriter implements IFirestoreBulkWriter {
             if ((await documentRef.get()).exists) {
                 throw new FirestoreError(
                     GRPCStatusCode.ALREADY_EXISTS,
-                    `Document already exists: ${documentRef.path}`,
+                    `Document already exists: /documents/${documentRef.path}`,
                 )
             }
             await documentRef.set(data)

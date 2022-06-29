@@ -198,7 +198,7 @@ describe("In-process Firestore BulkWriter", () => {
         // Then the write should fail
         expect(error).isFirestoreErrorWithCode(
             GRPCStatusCode.ALREADY_EXISTS,
-            new RegExp("animals/tiger"),
+            new RegExp("/documents/animals/tiger"),
         )
 
         // And the document should not be changed.
