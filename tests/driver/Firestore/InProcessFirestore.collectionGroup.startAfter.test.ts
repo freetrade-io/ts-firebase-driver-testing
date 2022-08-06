@@ -130,4 +130,28 @@ describe("In-process Firestore start after query on collectionGroup", () => {
             result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
         ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
     })
+
+    test("startAfter document reference", async () => {
+        // Given there is a collection of documents with ids;
+        await db.doc("livingthings/animals/22da618d").set({ name: "aardvark" })
+        await db.doc("livingthings/animals/00a3382").set({ name: "badger" })
+        await db.doc("livingthings/animals/11cbe6b5").set({ name: "camel" })
+
+        const offsetReference = db.doc("livingthings/animals/00a3382")
+
+        // When we order the collection by the document id;
+        const result = await db
+            .collectionGroup("animals")
+            .orderBy("name")
+            .startAfter(offsetReference)
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        expect(result.size).toBe(1)
+        expect(result.empty).toBeFalsy()
+        expect(result.docs).toHaveLength(1)
+        expect(result.docs.map((doc) => doc.data())).toStrictEqual([
+            { name: "camel" },
+        ])
+    })
 })

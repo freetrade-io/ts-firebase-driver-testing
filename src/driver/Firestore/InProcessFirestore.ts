@@ -1,4 +1,3 @@
-import { FieldValue } from "@google-cloud/firestore"
 import flatten from "flat"
 import _ from "lodash"
 import { Readable } from "stream"
@@ -245,7 +244,7 @@ interface IIdItem {
 
 interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
-    filters: Array<(idItem: IIdItem) => boolean>
+    filters: Array<(idItem: IIdItem, allItems: IIdItem[]) => boolean>
     orderings: { [fieldPath: string]: (a: IIdItem, b: IIdItem) => number }
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
@@ -307,6 +306,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         }
         query.rangeFilterField = fieldPath
     }
+
     constructor(
         readonly firestore: IFirestore & InProcessFirestore,
         readonly path: string,
@@ -397,6 +397,34 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
     startAfter(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
+
+        const isADocumentSnapshot =
+            fieldValues.length === 1 &&
+            _.get(fieldValues[0], "path") !== undefined
+
+        if (isADocumentSnapshot) {
+            const filterReference = fieldValues[0]
+            newQuery.filters.push(
+                (idItem: IIdItem, allItems: IIdItem[]): boolean => {
+                    const offsetItem = allItems.find(
+                        (item) => item.id === filterReference.id,
+                    )
+                    if (offsetItem === undefined) {
+                        return true
+                    }
+
+                    const fieldPath = Object.keys(this.query.orderings)[0]
+                    return (
+                        InProcessFirestoreQuery.compare(
+                            objGet(idItem.item, fieldPath.split(".")),
+                            objGet(offsetItem.item, fieldPath.split(".")),
+                        ) > 0
+                    )
+                },
+            )
+
+            return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
+        }
 
         fieldValues.forEach((queryFieldValue: any, i: number) => {
             const fieldPath = Object.keys(this.query.orderings)[i]
@@ -565,8 +593,15 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             this.firestore._getPath(this._dotPath()) || {},
         )
         for (const filter of this.query.filters) {
+            const allItems = Object.keys(collection).map((key) => ({
+                item: collection[key],
+                id: key,
+            }))
+
             collection = Object.keys(collection)
-                .filter((key) => filter({ item: collection[key], id: key }))
+                .filter((key) =>
+                    filter({ item: collection[key], id: key }, allItems),
+                )
                 .reduce((whole: IItem, key: string) => {
                     whole[key] = collection[key]
                     return whole
