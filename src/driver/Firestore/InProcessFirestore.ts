@@ -423,7 +423,11 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 },
             )
 
-            return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
+            return new InProcessFirestoreQuery(
+                this.firestore,
+                this.path,
+                newQuery,
+            )
         }
 
         fieldValues.forEach((queryFieldValue: any, i: number) => {
