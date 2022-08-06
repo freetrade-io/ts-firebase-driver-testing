@@ -139,7 +139,7 @@ describe("In-process Firestore start after query on collectionGroup", () => {
 
         const offsetReference = db.doc("livingthings/animals/00a3382")
 
-        // When we order the collection by the document id;
+        // When we order the collection by a value, and pass a document reference
         const result = await db
             .collectionGroup("animals")
             .orderBy("name")
