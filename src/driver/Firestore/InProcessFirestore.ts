@@ -49,15 +49,20 @@ import {
 import { InProcessFirestoreDocumentSnapshot } from "./InProcessFirestoreDocumentSnapshot"
 import { makeTimestamp } from "./makeTimestamp"
 
+type NormalisedPath = string & { readonly __symbol: unique symbol }
+const normalisedPathFromString = (input: string): NormalisedPath => {
+  const normalised = input.replace(/^\//g, '').replace('/\/$/', '')
+  return normalised as NormalisedPath
+}
+
 export class InProcessFirestore implements IFirestore {
     private changeObservers: IDatabaseChangeObserver[] = []
-
     private mutex = false
+    private storageMap = new Map<string, object>()
 
     constructor(
         private readonly jobs?: IAsyncJobs,
         public makeId: () => string = fireStoreLikeId,
-        public storage = {},
     ) {}
 
     collection(collectionPath: string): IFirestoreCollectionRef {
@@ -75,10 +80,6 @@ export class InProcessFirestore implements IFirestore {
         updateFunction: (transaction: IFirestoreTransaction) => Promise<T>,
         transactionOptions?: { maxAttempts?: number },
     ): Promise<T> {
-        while (this.mutex) {
-            await sleep(0)
-        }
-
         let result
         try {
             this.mutex = true
@@ -87,7 +88,7 @@ export class InProcessFirestore implements IFirestore {
             const transaction = new InProcessFirestoreTransaction()
 
             try {
-                result = await updateFunction(transaction)
+                const { result, affectedPaths } = await updateFunction(transaction)
                 await transaction.commit()
             } catch (err) {
                 this.storage = initialState
