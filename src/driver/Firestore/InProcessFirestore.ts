@@ -284,7 +284,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             return val
         }
         if (val instanceof InProcessFirestoreDocRef) {
-          return val.id
+            return val.id
         }
         if (val && typeof val.toISOString === "function") {
             val = val.toISOString()
