@@ -283,13 +283,16 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         if (_.isNumber(val)) {
             return val
         }
-
+        if (val instanceof InProcessFirestoreDocRef) {
+          return val.id
+        }
         if (val && typeof val.toISOString === "function") {
             val = val.toISOString()
         }
         if (val && typeof val.toString === "function") {
             val = val.toString()
         }
+
         return String(val)
     }
 
