@@ -130,4 +130,42 @@ describe("In-process Firestore start after query on collectionGroup", () => {
             result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
         ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
     })
+
+    test("startAfter document id", async () => {
+        // Given there is a collection of documents with ids;
+        await db.doc("livingthings/animals/22da618d").set({ name: "aardvark" })
+        await db.doc("livingthings/animals/00a3382").set({ name: "badger" })
+        await db.doc("livingthings/animals/11cbe6b5").set({ name: "camel" })
+
+        const startAfterDoc = db.doc("livingthings/animals/11cbe6b5")
+
+        // When we order the collection by the document id;
+        const result = await db
+            .collectionGroup("animals")
+            .orderBy(FieldPath.documentId())
+            .startAfter(startAfterDoc)
+            .get()
+
+        // Then we should get the collection ordered by that field.
+        expect(result.size).toEqual(1)
+        expect(
+            result.docs.map((doc) => ({ id: doc.id, data: doc.data() })),
+        ).toStrictEqual([{ id: "22da618d", data: { name: "aardvark" } }])
+    })
+
+    test("startAfter document id after using doc ref", async () => {
+        // Given there is a collection of documents with ids;
+        await db.doc("livingthings/animals/22da618d").set({ name: "aardvark" })
+        const startAfterDoc = db.doc("livingthings/animals/22da618d")
+
+        // When we order the collection by the document id;
+        const result = await db
+            .collectionGroup("animals")
+            .orderBy(FieldPath.documentId())
+            .startAfter(startAfterDoc)
+            .get()
+
+        // Then we should get no items
+        expect(result.size).toEqual(0)
+    })
 })
