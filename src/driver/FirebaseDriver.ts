@@ -16,6 +16,8 @@ export interface IFirebaseDriver {
     runWith(runtimeOptions?: {
         memory: MemoryOption
         timeoutSeconds: number
+        maxInstances: number
+        minInstances: number
     }): IFirebaseFunctionBuilder
     initializeApp(
         options?: {
