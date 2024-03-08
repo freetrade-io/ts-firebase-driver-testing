@@ -61,7 +61,7 @@ export class InProcessFirestore implements IFirestore {
     ) {}
 
     asFirestore(): Firestore {
-        return this as unknown as Firestore
+        return (this as unknown) as Firestore
     }
 
     collection(collectionPath: string): IFirestoreCollectionRef {
