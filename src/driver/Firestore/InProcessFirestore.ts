@@ -1,4 +1,4 @@
-import { FieldValue } from "@google-cloud/firestore"
+import { Firestore } from "@google-cloud/firestore"
 import flatten from "flat"
 import _ from "lodash"
 import { Readable } from "stream"
@@ -59,6 +59,10 @@ export class InProcessFirestore implements IFirestore {
         public makeId: () => string = fireStoreLikeId,
         public storage = {},
     ) {}
+
+    asFirestore(): Firestore {
+        return (this as unknown) as Firestore
+    }
 
     collection(collectionPath: string): IFirestoreCollectionRef {
         return new InProcessFirestoreCollectionRef(
