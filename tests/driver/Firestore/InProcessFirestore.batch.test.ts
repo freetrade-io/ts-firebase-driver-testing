@@ -8,7 +8,7 @@ import { InProcessFirestore } from "../../../src/driver/Firestore/InProcessFires
 describe("In-process Firestore batched writes", () => {
     test("documentation example batch", async () => {
         // Given we have a in-process Firestore DB;
-        const db = new InProcessFirestore()
+        const db = new InProcessFirestore().asFirestore()
 
         // And there is some initial data;
         await db
@@ -110,7 +110,7 @@ describe("In-process Firestore batched writes", () => {
         "can set in batch on a document that doesn't exist, with merge %s",
         async (merge) => {
             // Given we have a in-process Firestore DB;
-            const db = new InProcessFirestore()
+            const db = new InProcessFirestore().asFirestore()
 
             // When we get a new write batch;
             const batch = db.batch()
@@ -127,7 +127,7 @@ describe("In-process Firestore batched writes", () => {
     )
 
     test("cannot create existing document in a batch write", async () => {
-        const db = new InProcessFirestore()
+        const db = new InProcessFirestore().asFirestore()
         // Given there is an existing document;
         const initial = await db
             .collection("animals")
@@ -164,7 +164,7 @@ describe("In-process Firestore batched writes", () => {
 
     test("cannot reuse committed batch", async () => {
         // Given we have a write batch;
-        const db = new InProcessFirestore()
+        const db = new InProcessFirestore().asFirestore()
         const batch = db.batch()
 
         // And we make a change in the batch;
@@ -192,10 +192,11 @@ describe("In-process Firestore batched writes", () => {
     test("throws if an undefined field is written in a batch", async () => {
         // Given we have a write batch;
         const db = new InProcessFirestore()
-        const batch = db.batch()
+        const fs = db.asFirestore()
+        const batch = fs.batch()
 
         // And we make a change in the batch;
-        const docRef = db.collection("things").doc("thingA")
+        const docRef = fs.collection("things").doc("thingA")
         batch.create(docRef, { foo: "bar", bar: undefined })
 
         // The commit should throw
