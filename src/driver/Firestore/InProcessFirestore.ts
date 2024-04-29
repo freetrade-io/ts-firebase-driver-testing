@@ -251,6 +251,7 @@ interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
     filters: Array<(idItem: IIdItem) => boolean>
     orderings: { [fieldPath: string]: (a: IIdItem, b: IIdItem) => number }
+    orderDirection: { [fieldPath: string]: "asc" | "desc"}
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
 }
@@ -325,6 +326,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             transforms: [],
             maps: [],
             orderings: {},
+            orderDirection: {},
             rangeFilterField: "",
         },
     ) {
@@ -355,6 +357,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         }
 
         if (directionStr === "asc") {
+            newQuery.orderDirection[fieldPath] = "asc"
             newQuery.orderings[fieldPath] = (a, b) => {
                 const compareOfA =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
@@ -367,6 +370,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                 return InProcessFirestoreQuery.compare(compareOfA, compareOfB)
             }
         } else {
+            newQuery.orderDirection[fieldPath] = "desc"
             newQuery.orderings[fieldPath] = (a, b) => {
                 const compareOfA =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
@@ -410,17 +414,17 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
 
         fieldValues.forEach((queryFieldValue: any, i: number) => {
             const fieldPath = Object.keys(this.query.orderings)[i]
+            const isDesc = this.query.orderDirection[fieldPath] === "desc"
             newQuery.filters.push((idItem: IIdItem): boolean => {
                 const itemFieldValue =
                     fieldPath === FIELD_PATH_DOCUMENT_ID
                         ? idItem.id
                         : objGet(idItem.item, fieldPath.split("."))
-                return (
-                    InProcessFirestoreQuery.compare(
-                        itemFieldValue,
-                        queryFieldValue,
-                    ) > 0
+                const comparisonResult = InProcessFirestoreQuery.compare(
+                    itemFieldValue,
+                    queryFieldValue,
                 )
+                return isDesc ? comparisonResult < 0 : comparisonResult > 0
             })
         })
 
@@ -632,6 +636,7 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             filters: [],
             transforms: [],
             orderings: {},
+            orderDirection: {},
             rangeFilterField: "",
         }
         return (new InProcessFirestoreQuerySnapshot(
@@ -654,6 +659,7 @@ export class InProcessFirestoreCollectionRef extends InProcessFirestoreQuery
             transforms: [],
             maps: [],
             orderings: {},
+            orderDirection: {},
             rangeFilterField: "",
         },
     ) {
