@@ -251,7 +251,7 @@ interface IQueryBuilder {
     maps: Array<(item: IItem) => IItem>
     filters: Array<(idItem: IIdItem) => boolean>
     orderings: { [fieldPath: string]: (a: IIdItem, b: IIdItem) => number }
-    orderDirection: { [fieldPath: string]: "asc" | "desc"}
+    orderDirection: { [fieldPath: string]: "asc" | "desc" }
     transforms: Array<(collection: ICollection) => ICollection>
     rangeFilterField: string
 }
