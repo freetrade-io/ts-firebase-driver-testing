@@ -529,16 +529,62 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
+    /**
+     * Matches documents >= the cursor values (inclusive).
+     */
     startAt(...fieldValues: any[]): IFirestoreQuery {
-        throw new Error("InProcessFirestoreQuery.startAt not implemented")
+        const newQuery: IQueryBuilder = _.cloneDeep(this.query)
+
+        fieldValues.forEach((cursorValue, i) => {
+            const fieldPath = Object.keys(this.query.orderings)[i]
+            const isDesc = this.query.orderDirection[fieldPath] === "desc"
+
+            newQuery.filters.push((idItem: IIdItem) => {
+                const itemValue =
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
+                        ? idItem.id
+                        : objGet(idItem.item, fieldPath.split("."))
+                const cmp = InProcessFirestoreQuery.compare(
+                    itemValue,
+                    cursorValue,
+                )
+                // asc => >=, desc => <=
+                return isDesc ? cmp <= 0 : cmp >= 0
+            })
+        })
+
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     endBefore(...fieldValues: any[]): IFirestoreQuery {
         throw new Error("InProcessFirestoreQuery.endBefore not implemented")
     }
 
+    /**
+     * Matches documents <= the cursor values (inclusive).
+     */
     endAt(...fieldValues: any[]): IFirestoreQuery {
-        throw new Error("InProcessFirestoreQuery.endAt not implemented")
+        const newQuery: IQueryBuilder = _.cloneDeep(this.query)
+
+        fieldValues.forEach((cursorValue, i) => {
+            const fieldPath = Object.keys(this.query.orderings)[i]
+            const isDesc = this.query.orderDirection[fieldPath] === "desc"
+
+            newQuery.filters.push((idItem: IIdItem) => {
+                const itemValue =
+                    fieldPath === FIELD_PATH_DOCUMENT_ID
+                        ? idItem.id
+                        : objGet(idItem.item, fieldPath.split("."))
+                const cmp = InProcessFirestoreQuery.compare(
+                    itemValue,
+                    cursorValue,
+                )
+                // asc => <=, desc => >=
+                return isDesc ? cmp >= 0 : cmp <= 0
+            })
+        })
+
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     async get(): Promise<IFirestoreQuerySnapshot> {

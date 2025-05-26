@@ -292,4 +292,94 @@ describe("In-process Firestore start after query", () => {
         expect(result.size).toEqual(0)
         expect(result.empty).toBeTruthy()
     })
+
+    describe("startAt", () => {
+        test("startAt inclusive semantics", async () => {
+            // Given some data in a collection;
+            await db.collection("animals").add({ name: "aardvark" })
+            await db.collection("animals").add({ name: "badger" })
+            await db.collection("animals").add({ name: "camel" })
+            await db.collection("animals").add({ name: "donkey" })
+
+            // When we get the items starting at "camel";
+            const result = await db
+                .collection("animals")
+                .orderBy("name")
+                .startAt("camel")
+                .get()
+
+            // Then we should get camel, donkey
+            expect(result.size).toBe(2)
+            expect(result.docs.map((doc) => doc.data())).toStrictEqual([
+                { name: "camel" },
+                { name: "donkey" },
+            ])
+        })
+
+        test("startAt with document id", async () => {
+            // Given documents with IDs;
+            await db.doc("animals/01").set({ name: "aardvark" })
+            await db.doc("animals/02").set({ name: "badger" })
+            await db.doc("animals/03").set({ name: "camel" })
+
+            // When we startAt using document ID "02";
+            const result = await db
+                .collection("animals")
+                .orderBy(FieldPath.documentId())
+                .startAt("02")
+                .get()
+
+            // Then we should get IDs 02 and 03
+            expect(result.size).toEqual(2)
+            expect(result.docs.map((doc) => doc.id)).toStrictEqual(["02", "03"])
+        })
+    })
+
+    describe("endAt", () => {
+        test("endAt inclusive semantics", async () => {
+            // Given some data in a collection;
+            await db.collection("animals").add({ name: "aardvark" })
+            await db.collection("animals").add({ name: "badger" })
+            await db.collection("animals").add({ name: "camel" })
+            await db.collection("animals").add({ name: "donkey" })
+
+            // When we get the items ending at "camel";
+            const result = await db
+                .collection("animals")
+                .orderBy("name")
+                .endAt("camel")
+                .get()
+
+            // Then we should get aardvark, badger, camel
+            expect(result.size).toBe(3)
+            expect(result.docs.map((doc) => doc.data())).toStrictEqual([
+                { name: "aardvark" },
+                { name: "badger" },
+                { name: "camel" },
+            ])
+        })
+
+        test("endAt and startAt combined", async () => {
+            // Given some data in a collection;
+            await db.collection("animals").add({ name: "aardvark" })
+            await db.collection("animals").add({ name: "badger" })
+            await db.collection("animals").add({ name: "camel" })
+            await db.collection("animals").add({ name: "donkey" })
+
+            // When we startAt "badger" and endAt "camel";
+            const result = await db
+                .collection("animals")
+                .orderBy("name")
+                .startAt("badger")
+                .endAt("camel")
+                .get()
+
+            // Then we should get badger, camel
+            expect(result.size).toBe(2)
+            expect(result.docs.map((doc) => doc.data())).toStrictEqual([
+                { name: "badger" },
+                { name: "camel" },
+            ])
+        })
+    })
 })
