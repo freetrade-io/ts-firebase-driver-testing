@@ -388,7 +388,21 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     }
 
     offset(offset: number): IFirestoreQuery {
-        throw new Error("InProcessFirestoreQuery.offset not implemented")
+        const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
+
+        newQuery.transforms.push((collection) => {
+            if (_.isObject(collection)) {
+                collection = Object.keys(collection)
+                    .slice(offset)
+                    .reduce((obj: { [key: string]: any }, key: string) => {
+                        obj[key] = collection[key]
+                        return obj
+                    }, {})
+            }
+            return collection
+        })
+
+        return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
 
     limit(limit: number): IFirestoreQuery {
