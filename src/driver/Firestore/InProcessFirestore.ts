@@ -32,6 +32,8 @@ import { FirestoreError } from "./FirestoreError"
 import {
     FirestoreWhereFilterOp,
     IFirestore,
+    IFirestoreAggregateQuery,
+    IFirestoreAggregateQuerySnapshot,
     IFirestoreBulkWriter,
     IFirestoreCollectionRef,
     IFirestoreDocRef,
@@ -599,6 +601,27 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         })
 
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
+    }
+
+    count(): IFirestoreAggregateQuery {
+        const countQueryState = _.cloneDeep(this.query)
+
+        return {
+            get: async (): Promise<IFirestoreAggregateQuerySnapshot> => {
+                const queryForCount = new InProcessFirestoreQuery(
+                    this.firestore,
+                    this.path,
+                    _.cloneDeep(countQueryState),
+                )
+                const snapshot = await queryForCount.get()
+
+                return {
+                    data: () => ({
+                        count: snapshot.size,
+                    }),
+                }
+            },
+        }
     }
 
     async get(): Promise<IFirestoreQuerySnapshot> {
