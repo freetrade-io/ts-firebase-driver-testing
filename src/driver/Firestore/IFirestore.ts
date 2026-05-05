@@ -152,6 +152,7 @@ export interface IFirestoreQuery<T = IFirestoreDocumentData> {
     ): IFirestoreQuery<T>
     select(...field: string[]): IFirestoreQuery<T>
     startAt(...fieldValues: any[]): IFirestoreQuery<T>
+    count(): IFirestoreAggregateQuery
     get(): Promise<IFirestoreQuerySnapshot>
     stream(): NodeJS.ReadableStream
     onSnapshot(
@@ -160,6 +161,16 @@ export interface IFirestoreQuery<T = IFirestoreDocumentData> {
     ): () => void
     isEqual(other: IFirestoreQuery): boolean
     withConverter<U>(converter: any): IFirestoreQuery<U>
+}
+
+export interface IFirestoreAggregateQuery {
+    get(): Promise<IFirestoreAggregateQuerySnapshot>
+}
+
+export interface IFirestoreAggregateQuerySnapshot {
+    data(): {
+        count: number
+    }
 }
 
 export interface IFirestoreQuerySnapshot<T = IFirestoreDocumentData> {
