@@ -228,6 +228,60 @@ describe("In-process Firestore start after query", () => {
         },
     )
 
+    test("startAfter scalar cursor applies multi-field ordering lexicographically", async () => {
+        await db.doc("events/01-before").set({ group: "a", priority: 3 })
+        await db.doc("events/02-cursor").set({ group: "a", priority: 2 })
+        await db.doc("events/03-same-group").set({ group: "a", priority: 1 })
+        await db
+            .doc("events/04-next-group-high")
+            .set({ group: "b", priority: 4 })
+        await db
+            .doc("events/05-next-group-low")
+            .set({ group: "b", priority: 0 })
+
+        const result = await db
+            .collection("events")
+            .orderBy("group", "asc")
+            .orderBy("priority", "desc")
+            .startAfter("a", 2)
+            .get()
+
+        expect(result.docs.map((doc) => doc.id)).toStrictEqual([
+            "03-same-group",
+            "04-next-group-high",
+            "05-next-group-low",
+        ])
+    })
+
+    test("startAfter document snapshot applies multi-field ordering lexicographically", async () => {
+        await db.doc("events/01-before").set({ group: "a", priority: 3 })
+        await db.doc("events/02-cursor").set({ group: "a", priority: 2 })
+        await db.doc("events/03-same-group").set({ group: "a", priority: 1 })
+        await db
+            .doc("events/04-next-group-high")
+            .set({ group: "b", priority: 4 })
+        await db
+            .doc("events/05-next-group-low")
+            .set({ group: "b", priority: 0 })
+
+        const query = db
+            .collection("events")
+            .orderBy("group", "asc")
+            .orderBy("priority", "desc")
+        const firstPage = await query.limit(2).get()
+        const result = await query.startAfter(firstPage.docs[1]).get()
+
+        expect(firstPage.docs.map((doc) => doc.id)).toStrictEqual([
+            "01-before",
+            "02-cursor",
+        ])
+        expect(result.docs.map((doc) => doc.id)).toStrictEqual([
+            "03-same-group",
+            "04-next-group-high",
+            "05-next-group-low",
+        ])
+    })
+
     test("startAfter descending order, including half", async () => {
         // Given some data in a collection
         await db.collection("animals").add({ name: "aardvark" })
