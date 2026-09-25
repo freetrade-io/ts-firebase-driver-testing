@@ -201,6 +201,33 @@ describe("In-process Firestore start after query", () => {
         expect(result.size).toEqual(0)
     })
 
+    test.each(["asc", "desc"] as const)(
+        "startAfter document snapshot distinguishes equal ordered values in %s order",
+        async (direction) => {
+            await db.doc("events/04-newest").set({ createdAt: 3 })
+            await db.doc("events/03-cursor").set({ createdAt: 2 })
+            await db.doc("events/02-peer").set({ createdAt: 2 })
+            await db.doc("events/01-oldest").set({ createdAt: 1 })
+
+            const query = db
+                .collection("events")
+                .orderBy("createdAt", direction)
+            const firstPage = await query.limit(2).get()
+            const result = await query.startAfter(firstPage.docs[1]).get()
+
+            expect(firstPage.docs.map((doc) => doc.id)).toStrictEqual(
+                direction === "asc"
+                    ? ["01-oldest", "02-peer"]
+                    : ["04-newest", "03-cursor"],
+            )
+            expect(result.docs.map((doc) => doc.id)).toStrictEqual(
+                direction === "asc"
+                    ? ["03-cursor", "04-newest"]
+                    : ["02-peer", "01-oldest"],
+            )
+        },
+    )
+
     test("startAfter descending order, including half", async () => {
         // Given some data in a collection
         await db.collection("animals").add({ name: "aardvark" })

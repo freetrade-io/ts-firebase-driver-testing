@@ -320,6 +320,13 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         }
         query.rangeFilterField = fieldPath
     }
+
+    private static getItemFieldValue(idItem: IIdItem, fieldPath: string): any {
+        return fieldPath === FIELD_PATH_DOCUMENT_ID
+            ? idItem.id
+            : objGet(idItem.item, fieldPath.split("."))
+    }
+
     constructor(
         readonly firestore: IFirestore & InProcessFirestore,
         readonly path: string,
@@ -428,21 +435,21 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     startAfter(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
-        fieldValues.forEach((queryFieldValue: any, i: number) => {
-            const fieldPath = Object.keys(this.query.orderings)[i]
-            const isDesc = this.query.orderDirection[fieldPath] === "desc"
-            newQuery.filters.push((idItem: IIdItem): boolean => {
-                const itemFieldValue =
-                    fieldPath === FIELD_PATH_DOCUMENT_ID
-                        ? idItem.id
-                        : objGet(idItem.item, fieldPath.split("."))
-                const comparisonResult = InProcessFirestoreQuery.compare(
-                    itemFieldValue,
-                    queryFieldValue,
-                )
-                return isDesc ? comparisonResult < 0 : comparisonResult > 0
-            })
-        })
+        if (
+            fieldValues.length === 1 &&
+            fieldValues[0] instanceof InProcessFirestoreDocumentSnapshot
+        ) {
+            const snapshot = fieldValues[0]
+            newQuery.filters.push(
+                (idItem: IIdItem): boolean =>
+                    this.compareItemToSnapshot(idItem, snapshot) > 0,
+            )
+        } else if (fieldValues.length > 0) {
+            newQuery.filters.push(
+                (idItem: IIdItem): boolean =>
+                    this.compareItemToCursorValues(idItem, fieldValues) > 0,
+            )
+        }
 
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
@@ -657,6 +664,75 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
         return _.trim(this.path.replace(/[\/.]+/g, "."), ".").split(".")
     }
 
+    private compareItems(itemA: IIdItem, itemB: IIdItem): number {
+        const fieldPaths = Object.keys(this.query.orderings)
+        for (const fieldPath of fieldPaths) {
+            const comparison = this.query.orderings[fieldPath](itemA, itemB)
+            if (comparison !== 0) {
+                return comparison
+            }
+        }
+
+        const idComparison = InProcessFirestoreQuery.compare(itemA.id, itemB.id)
+        const lastFieldPath = fieldPaths[fieldPaths.length - 1]
+        return lastFieldPath &&
+            this.query.orderDirection[lastFieldPath] === "desc"
+            ? -idComparison
+            : idComparison
+    }
+
+    private compareItemToCursorValues(
+        idItem: IIdItem,
+        fieldValues: any[],
+    ): number {
+        const fieldPaths = Object.keys(this.query.orderings)
+        for (let i = 0; i < fieldValues.length; i += 1) {
+            const fieldPath = fieldPaths[i]
+            const comparison = InProcessFirestoreQuery.compare(
+                InProcessFirestoreQuery.getItemFieldValue(idItem, fieldPath),
+                fieldValues[i],
+            )
+            if (comparison !== 0) {
+                return this.query.orderDirection[fieldPath] === "desc"
+                    ? -comparison
+                    : comparison
+            }
+        }
+        return 0
+    }
+
+    private compareItemToSnapshot(
+        idItem: IIdItem,
+        snapshot: InProcessFirestoreDocumentSnapshot,
+    ): number {
+        const fieldPaths = Object.keys(this.query.orderings)
+        for (const fieldPath of fieldPaths) {
+            const snapshotValue =
+                fieldPath === FIELD_PATH_DOCUMENT_ID
+                    ? snapshot.id
+                    : snapshot.get(fieldPath)
+            const comparison = InProcessFirestoreQuery.compare(
+                InProcessFirestoreQuery.getItemFieldValue(idItem, fieldPath),
+                snapshotValue,
+            )
+            if (comparison !== 0) {
+                return this.query.orderDirection[fieldPath] === "desc"
+                    ? -comparison
+                    : comparison
+            }
+        }
+
+        const idComparison = InProcessFirestoreQuery.compare(
+            idItem.id,
+            snapshot.id,
+        )
+        const lastFieldPath = fieldPaths[fieldPaths.length - 1]
+        return lastFieldPath &&
+            this.query.orderDirection[lastFieldPath] === "desc"
+            ? -idComparison
+            : idComparison
+    }
+
     private getQuerySnapshot(): IFirestoreQuerySnapshot {
         let collection = stripMeta(
             this.firestore._getPath(this._dotPath()) || {},
@@ -669,11 +745,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
                     return whole
                 }, {})
         }
-        for (const fieldPath of Object.keys(this.query.orderings)) {
-            const ordering = this.query.orderings[fieldPath]
+        if (Object.keys(this.query.orderings).length > 0) {
             collection = Object.keys(collection)
                 .sort((keyA, keyB) => {
-                    return ordering(
+                    return this.compareItems(
                         {
                             id: keyA,
                             item: collection[keyA],
