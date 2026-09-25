@@ -414,6 +414,37 @@ describe("In-process Firestore start after query", () => {
             expect(result.size).toEqual(2)
             expect(result.docs.map((doc) => doc.id)).toStrictEqual(["02", "03"])
         })
+
+        test("startAt applies multi-field ordering lexicographically", async () => {
+            await db
+                .doc("events/00-previous-group-low")
+                .set({ group: "0", priority: 0 })
+            await db.doc("events/01-before").set({ group: "a", priority: 3 })
+            await db.doc("events/02-cursor").set({ group: "a", priority: 2 })
+            await db
+                .doc("events/03-same-group")
+                .set({ group: "a", priority: 1 })
+            await db
+                .doc("events/04-next-group-high")
+                .set({ group: "b", priority: 4 })
+            await db
+                .doc("events/05-next-group-low")
+                .set({ group: "b", priority: 0 })
+
+            const result = await db
+                .collection("events")
+                .orderBy("group", "asc")
+                .orderBy("priority", "desc")
+                .startAt("a", 2)
+                .get()
+
+            expect(result.docs.map((doc) => doc.id)).toStrictEqual([
+                "02-cursor",
+                "03-same-group",
+                "04-next-group-high",
+                "05-next-group-low",
+            ])
+        })
     })
 
     describe("endAt", () => {
@@ -460,6 +491,36 @@ describe("In-process Firestore start after query", () => {
             expect(result.docs.map((doc) => doc.data())).toStrictEqual([
                 { name: "badger" },
                 { name: "camel" },
+            ])
+        })
+
+        test("endAt applies multi-field ordering lexicographically", async () => {
+            await db
+                .doc("events/00-previous-group-low")
+                .set({ group: "0", priority: 0 })
+            await db.doc("events/01-before").set({ group: "a", priority: 3 })
+            await db.doc("events/02-cursor").set({ group: "a", priority: 2 })
+            await db
+                .doc("events/03-same-group")
+                .set({ group: "a", priority: 1 })
+            await db
+                .doc("events/04-next-group-high")
+                .set({ group: "b", priority: 4 })
+            await db
+                .doc("events/05-next-group-low")
+                .set({ group: "b", priority: 0 })
+
+            const result = await db
+                .collection("events")
+                .orderBy("group", "asc")
+                .orderBy("priority", "desc")
+                .endAt("a", 2)
+                .get()
+
+            expect(result.docs.map((doc) => doc.id)).toStrictEqual([
+                "00-previous-group-low",
+                "01-before",
+                "02-cursor",
             ])
         })
     })

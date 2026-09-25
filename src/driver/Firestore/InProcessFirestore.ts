@@ -435,19 +435,10 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     startAfter(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep<IQueryBuilder>(this.query)
 
-        if (
-            fieldValues.length === 1 &&
-            fieldValues[0] instanceof InProcessFirestoreDocumentSnapshot
-        ) {
-            const snapshot = fieldValues[0]
+        if (fieldValues.length > 0) {
             newQuery.filters.push(
                 (idItem: IIdItem): boolean =>
-                    this.compareItemToSnapshot(idItem, snapshot) > 0,
-            )
-        } else if (fieldValues.length > 0) {
-            newQuery.filters.push(
-                (idItem: IIdItem): boolean =>
-                    this.compareItemToCursorValues(idItem, fieldValues) > 0,
+                    this.compareItemToCursor(idItem, fieldValues) > 0,
             )
         }
 
@@ -558,23 +549,12 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     startAt(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep(this.query)
 
-        fieldValues.forEach((cursorValue, i) => {
-            const fieldPath = Object.keys(this.query.orderings)[i]
-            const isDesc = this.query.orderDirection[fieldPath] === "desc"
-
-            newQuery.filters.push((idItem: IIdItem) => {
-                const itemValue =
-                    fieldPath === FIELD_PATH_DOCUMENT_ID
-                        ? idItem.id
-                        : objGet(idItem.item, fieldPath.split("."))
-                const cmp = InProcessFirestoreQuery.compare(
-                    itemValue,
-                    cursorValue,
-                )
-                // asc => >=, desc => <=
-                return isDesc ? cmp <= 0 : cmp >= 0
-            })
-        })
+        if (fieldValues.length > 0) {
+            newQuery.filters.push(
+                (idItem: IIdItem): boolean =>
+                    this.compareItemToCursor(idItem, fieldValues) >= 0,
+            )
+        }
 
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
@@ -589,23 +569,12 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
     endAt(...fieldValues: any[]): IFirestoreQuery {
         const newQuery: IQueryBuilder = _.cloneDeep(this.query)
 
-        fieldValues.forEach((cursorValue, i) => {
-            const fieldPath = Object.keys(this.query.orderings)[i]
-            const isDesc = this.query.orderDirection[fieldPath] === "desc"
-
-            newQuery.filters.push((idItem: IIdItem) => {
-                const itemValue =
-                    fieldPath === FIELD_PATH_DOCUMENT_ID
-                        ? idItem.id
-                        : objGet(idItem.item, fieldPath.split("."))
-                const cmp = InProcessFirestoreQuery.compare(
-                    itemValue,
-                    cursorValue,
-                )
-                // asc => <=, desc => >=
-                return isDesc ? cmp >= 0 : cmp <= 0
-            })
-        })
+        if (fieldValues.length > 0) {
+            newQuery.filters.push(
+                (idItem: IIdItem): boolean =>
+                    this.compareItemToCursor(idItem, fieldValues) <= 0,
+            )
+        }
 
         return new InProcessFirestoreQuery(this.firestore, this.path, newQuery)
     }
@@ -679,6 +648,13 @@ export class InProcessFirestoreQuery implements IFirestoreQuery {
             this.query.orderDirection[lastFieldPath] === "desc"
             ? -idComparison
             : idComparison
+    }
+
+    private compareItemToCursor(idItem: IIdItem, fieldValues: any[]): number {
+        return fieldValues.length === 1 &&
+            fieldValues[0] instanceof InProcessFirestoreDocumentSnapshot
+            ? this.compareItemToSnapshot(idItem, fieldValues[0])
+            : this.compareItemToCursorValues(idItem, fieldValues)
     }
 
     private compareItemToCursorValues(
